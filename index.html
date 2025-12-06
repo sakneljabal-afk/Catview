@@ -31,19 +31,19 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-let player, platforms;
+let player, platforms, sceneRef;
 
 function preload() {
-  // صورة القطة
- this.load.image('player', 'assets/cat.png');
- // يمكن استبدالها بصورة محلية
-  this.load.image('platform', 'https://i.ibb.co/pw5mWvh/platform.png'); // منصة أكبر
+  // صورة القطة (صغيرة الحجم لتظهر كاملة)
+  this.load.image('player', 'https://i.imgur.com/Ou7hZzX.png'); 
+  this.load.image('platform', 'https://i.ibb.co/pw5mWvh/platform.png'); 
 }
 
 function create() {
+  sceneRef = this;
   platforms = this.physics.add.staticGroup();
 
-  // إنشاء المنصات بمواقع مختلفة
+  // إنشاء المنصات بمواقع مختلفة وكبيرة الحجم
   const positions = [
     {x: 300, y: 500}, 
     {x: 200, y: 400}, 
@@ -54,12 +54,11 @@ function create() {
   positions.forEach(pos => platforms.create(pos.x, pos.y, 'platform').setScale(1.5,0.5).refreshBody());
 
   // اللاعب
-  player = this.physics.add.sprite(300, 500 - 32, 'player').setScale(0.5);
+  player = this.physics.add.sprite(300, 500 - 32, 'player').setScale(0.2);
   player.setCollideWorldBounds(true);
-
   this.physics.add.collider(player, platforms);
 
-  // حركة خفيفة للرأس/القطة لأعلى وأسفل باستمرار
+  // حركة خفيفة للقطة لأعلى وأسفل (رأس يتحرك)
   this.tweens.add({
     targets: player,
     y: player.y - 5,
@@ -98,11 +97,16 @@ function answer(selected) {
   setTimeout(() => { player.clearTint(); showQuestion(); }, 500);
 }
 
-// تحريك اللاعب للمنصة المطلوبة
+// تحريك اللاعب للمنصة المطلوبة بقفز سلس
 function movePlayerToPlatform(index){
   const plat = platforms.getChildren()[index];
-  player.x = plat.x;
-  player.y = plat.y - player.height/2;
+  sceneRef.tweens.add({
+    targets: player,
+    x: plat.x,
+    y: plat.y - player.displayHeight/2,
+    duration: 500,
+    ease: 'Power2'
+  });
 }
 
 function update() {
