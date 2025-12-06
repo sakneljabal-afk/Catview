@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>لعبة تعليمية - Phaser</title>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+<style>
+  body { margin:0; background:#ccf2ff; overflow:hidden; }
+  #questionBox { position:absolute; top:10px; width:100%; text-align:center; font-family:tahoma; font-size:18px; }
+  .option { margin:5px; padding:5px 10px; border:1px solid #333; display:inline-block; cursor:pointer; background:#fff; }
+</style>
+</head>
+<body>
+<div id="questionBox"></div>
+<script>
+const questions = [
+  { q: "ما لون السماء؟", c: ["أحمر","أزرق","أصفر"], a: 1 },
+  { q: "كم عدد أرجل القط؟", c: ["2","4","6"], a: 1 },
+  { q: "هل الشمس نجمة؟", c: ["نعم","لا","ممكن"], a: 0 },
+];
+
+let currentQuestion = 0;
+let currentPlatformIndex = 0;
+
+const config = {
+  type: Phaser.AUTO,
+  width: 600,
+  height: 600,
+  physics: { default: 'arcade', arcade: { gravity: { y: 500 } } },
+  scene: { preload, create, update }
+};
+
+const game = new Phaser.Game(config);
+let player, platforms;
+
+function preload() {
+  // صورة القطة
+ this.load.image('player', 'assets/cat.png');
+ // يمكن استبدالها بصورة محلية
+  this.load.image('platform', 'https://i.ibb.co/pw5mWvh/platform.png'); // منصة أكبر
+}
+
+function create() {
+  platforms = this.physics.add.staticGroup();
+
+  // إنشاء المنصات بمواقع مختلفة
+  const positions = [
+    {x: 300, y: 500}, 
+    {x: 200, y: 400}, 
+    {x: 400, y: 300}, 
+    {x: 250, y: 200}
+  ];
+  
+  positions.forEach(pos => platforms.create(pos.x, pos.y, 'platform').setScale(1.5,0.5).refreshBody());
+
+  // اللاعب
+  player = this.physics.add.sprite(300, 500 - 32, 'player').setScale(0.5);
+  player.setCollideWorldBounds(true);
+
+  this.physics.add.collider(player, platforms);
+
+  // حركة خفيفة للرأس/القطة لأعلى وأسفل باستمرار
+  this.tweens.add({
+    targets: player,
+    y: player.y - 5,
+    duration: 500,
+    yoyo: true,
+    repeat: -1
+  });
+
+  showQuestion();
+}
+
+// عرض السؤال
+function showQuestion() {
+  const q = questions[currentQuestion];
+  const box = document.getElementById("questionBox");
+  let html = `<h2>${q.q}</h2>`;
+  q.c.forEach((opt,i)=>{
+    html += `<div class="option" onclick="answer(${i})">${opt}</div>`;
+  });
+  box.innerHTML = html;
+}
+
+// التعامل مع الإجابة
+function answer(selected) {
+  const q = questions[currentQuestion];
+  if(selected === q.a){
+    player.setTint(0x00ff00); // أخضر للإجابة الصحيحة
+    currentPlatformIndex = Math.min(currentPlatformIndex+1, 3);
+    movePlayerToPlatform(currentPlatformIndex);
+    currentQuestion = Math.min(currentQuestion+1, questions.length-1);
+  } else {
+    player.setTint(0xff6666); // أحمر للإجابة الخطأ
+    if(currentPlatformIndex > 0) currentPlatformIndex--;
+    movePlayerToPlatform(currentPlatformIndex);
+  }
+  setTimeout(() => { player.clearTint(); showQuestion(); }, 500);
+}
+
+// تحريك اللاعب للمنصة المطلوبة
+function movePlayerToPlatform(index){
+  const plat = platforms.getChildren()[index];
+  player.x = plat.x;
+  player.y = plat.y - player.height/2;
+}
+
+function update() {
+  // لا حاجة لحركة يدوية، اللاعب يتحرك فقط عن طريق الإجابة
+}
+</script>
+</body>
+</html>
