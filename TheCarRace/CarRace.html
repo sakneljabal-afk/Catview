@@ -25,6 +25,7 @@ body {
     -webkit-user-select: none;
     width: 100vw;
     height: 100vh;
+    position: fixed;
 }
 
 #gameContainer {
@@ -384,11 +385,53 @@ body {
 .double-tap-zoom-prevention {
     touch-action: manipulation;
 }
+
+/* شاشة تحميل */
+#loadingScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #87CEEB, #2b6fb3);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1003;
+    text-align: center;
+    padding: 20px;
+}
+
+#loadingScreen h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #2b6fb3;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body class="double-tap-zoom-prevention">
+<div id="loadingScreen" class="hidden">
+    <h2>جاري تحميل اللعبة...</h2>
+    <div class="loader"></div>
+</div>
+
 <div id="startScreen">
     <h1>🚗 متسابق المعرفة 🧠</h1>
     <p>اختر سرعتك وأجب على الأسئلة لترتفع درجتك!<br>
@@ -518,26 +561,74 @@ class MainScene extends Phaser.Scene {
         this.scrollVelocity = 0; // سرعة تحريك العالم (بالبكسل/ثانية)
         this.isCarOnGround = false;
         
-        // الأصول الثنائية (بدائل لرسومات SVG)
+        // أسماء الصور التي تم رفعها
         this.carAssetName = 'car'; 
         this.boxAssetName = 'box';
-        this.repeatBoxAssetName = 'repeatBox';
+        this.repeatBoxAssetName = 'box'; // نستخدم نفس صندوق السؤال
+        this.groundAssetName = 'ground';
     }
 
     preload() {
-        // تحميل الأصول (Assets)
-        this.load.image(this.carAssetName, 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCA2MCAzMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjMwIiByeD0iNSIgZmlsbD0iI0ZGMDU3MjIiLz4KPHJlY3QgeD0iNSIgeT0iNSIgd2lkdGg9IjE1IiBoZWlnaHQ9IjgiIGZpbGw9IiMzMzMzMzMiLz4KPHJlY3QgeD0iMjUiIHk9IjUiIHdpZHRoPSIxNSIgaGVpZ2h0PSI4IiBmaWxsPSIjMzMzMzMzIi8+CjxjaXJjbGUgY3g9IjEwIiBjeT0iMjUiIHI9IjYiIGZpbGw9IiMzMzMzMzMiLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSIyNSIgcj0iNiIgZmlsbD0iIzMzMzMzMyIvPgo8Y2lyY2xlIGN4PSIxMCIgY3k9IjI1IiByPSIzIiBmaWxsPSIjNjY2NjY2Ii8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMjUiIHI9IjMiIGZpbGw9IiM2NjY2NjYiLz4KPC9zdmc+');
-        this.load.image(this.boxAssetName, 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiByeD0iNSIgZmlsbD0iI0ZGQzEwNyIvPgo8dGV4dCB4PSI1MCUiIHk9IjUwJSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtd2VpZ2h0PSJib2xkIj4/PC90ZXh0Pgo8L3N2Zz4=');
-        this.load.image(this.repeatBoxAssetName, 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAzNSAzNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjM1IiBoZWlnaHQ9IjM1IiByeD0iNiIgZmlsbD0iI0ZGQzEwNyIvPgo8dGV4dCB4PSI1MCUiIHk9IjUwJSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIj4/PC90ZXh0Pgo8L3N2Zz4=');
-        this.load.image('ground', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAyMCAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjODZDRjRGIi8+Cjwvc3ZnPg==');
+        // تحميل الأصول (Assets) من المسارات التي رفعت فيها الصور
+        // ملاحظة: تأكد من أن المسارات صحيحة بالنسبة لموقع ملف HTML
+        this.load.image(this.carAssetName, 'assets/car.png');
+        this.load.image(this.boxAssetName, 'assets/box.png');
+        
+        // إذا كان لديك صورة للأرض، استخدمها، وإلا أنشئ واحدة بسيطة
+        this.load.image(this.groundAssetName, 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAyMCAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjODZDRjRGIi8+Cjwvc3ZnPg==');
+        
+        // إضافة نص تحميل
+        const progressBar = this.add.graphics();
+        const progressBox = this.add.graphics();
+        progressBox.fillStyle(0x222222, 0.8);
+        progressBox.fillRect(this.cameras.main.width / 2 - 160, this.cameras.main.height / 2 - 25, 320, 50);
+        
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        const loadingText = this.make.text({
+            x: width / 2,
+            y: height / 2 - 50,
+            text: 'جاري التحميل...',
+            style: {
+                font: '20px Cairo',
+                fill: '#ffffff'
+            }
+        });
+        loadingText.setOrigin(0.5, 0.5);
+        
+        const percentText = this.make.text({
+            x: width / 2,
+            y: height / 2,
+            text: '0%',
+            style: {
+                font: '18px Cairo',
+                fill: '#ffffff'
+            }
+        });
+        percentText.setOrigin(0.5, 0.5);
+        
+        this.load.on('progress', function (value) {
+            progressBar.clear();
+            progressBar.fillStyle(0x2b6fb3, 1);
+            progressBar.fillRect(this.cameras.main.width / 2 - 150, this.cameras.main.height / 2 - 15, 300 * value, 30);
+            percentText.setText(parseInt(value * 100) + '%');
+        }, this);
+        
+        this.load.on('complete', function () {
+            progressBar.destroy();
+            progressBox.destroy();
+            loadingText.destroy();
+            percentText.destroy();
+        }, this);
     }
 
     create() {
+        console.log('تم إنشاء المشهد بنجاح');
         sceneRef = this; // تعيين مرجع المشهد للوصول إليه من دوال الـ UI العالمية
 
         // 1. إعداد الفيزياء والجاذبية
-        this.physics.world.gravity.y = 800;
-        this.physics.world.bounds.setTo(0, 0, 100000, this.game.config.height);
+        this.physics.world.gravity.y = 600; // تقليل الجاذبية قليلاً
+        this.physics.world.setBounds(0, 0, 100000, this.game.config.height);
         this.terrainGroup = this.physics.add.staticGroup();
         this.questionBoxes = this.physics.add.group();
 
@@ -545,29 +636,38 @@ class MainScene extends Phaser.Scene {
         this.createSky();
 
         // 3. إنشاء التضاريس والسيارة
-        this.terrainHeight = this.game.config.height * 0.7;
-        this.lastTerrainX = -20;
-        this.generateInitialTerrain(this.game.config.width * 2); 
-        this.createCar();
+        this.terrainHeight = this.game.config.height * 0.75;
+        this.lastTerrainX = 0;
+        this.generateInitialTerrain(this.game.config.width * 3); 
         
-        // 4. إنشاء صناديق الأسئلة
-        this.createQuestionBoxes(currentQuestions);
+        // تأخير إنشاء السيارة قليلاً
+        this.time.delayedCall(100, () => {
+            this.createCar();
+            
+            // 4. إنشاء صناديق الأسئلة
+            this.createQuestionBoxes(currentQuestions);
 
-        // 5. إعداد الاصطدامات
-        this.physics.add.collider(this.car, this.terrainGroup, this.onGroundCollide, null, this);
-        this.physics.add.overlap(this.car, this.questionBoxes, this.handleQuestionBoxOverlap, null, this);
+            // 5. إعداد الاصطدامات
+            this.physics.add.collider(this.car, this.terrainGroup, this.onGroundCollide, null, this);
+            this.physics.add.overlap(this.car, this.questionBoxes, this.handleQuestionBoxOverlap, null, this);
 
-        // 6. إعداد الكاميرا
-        this.cameras.main.startFollow(this.car, true, 0.05, 0.05, -this.game.config.width * 0.3);
+            // 6. إعداد الكاميرا
+            this.cameras.main.startFollow(this.car, true, 0.1, 0.1, -this.game.config.width * 0.4);
 
-        // 7. إعداد مفاتيح التحكم
-        this.cursors = this.input.keyboard.createCursorKeys();
+            // 7. إعداد مفاتيح التحكم
+            this.cursors = this.input.keyboard.createCursorKeys();
 
-        // 8. إعداد إدخال اللمس لـ Phaser نفسه
-        this.input.addPointer(2); // يدعم لمستين متزامنتين
+            // 8. إعداد إدخال اللمس لـ Phaser نفسه
+            this.input.addPointer(3);
 
-        // تحديث واجهة المستخدم
-        updateUI();
+            // إعادة تفعيل اللعبة
+            gamePaused = false;
+            
+            // تحديث واجهة المستخدم
+            updateUI();
+            
+            console.log('اللعبة جاهزة للعب');
+        }, [], this);
     }
     
     createSky() {
@@ -575,21 +675,30 @@ class MainScene extends Phaser.Scene {
         const sky = this.add.graphics();
         sky.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
         sky.fillRect(0, 0, this.game.config.width, this.game.config.height);
+        
+        // إضافة بعض السحب البسيطة
+        for (let i = 0; i < 5; i++) {
+            const cloud = this.add.graphics();
+            cloud.fillStyle(0xFFFFFF, 0.8);
+            cloud.fillCircle(100 + i * 200, 100, 30);
+            cloud.fillCircle(130 + i * 200, 80, 25);
+            cloud.fillCircle(160 + i * 200, 100, 30);
+            cloud.fillCircle(130 + i * 200, 120, 25);
+        }
     }
     
     // دالة لتوليد التضاريس بشكل تدريجي باستخدام Static Bodies
     generateInitialTerrain(length) {
-        let x = this.lastTerrainX + 50; // زيادة المسافة لتحسين الأداء
+        let x = 0;
         let y = this.terrainHeight;
         
-        for (; x < length; x += 80) { // زيادة المسافة بين الأجزاء
-            y += (Math.random() - 0.5) * 25;
+        for (; x < length; x += 100) { // زيادة المسافة بين الأجزاء
+            y += (Math.random() - 0.5) * 40;
             y = Phaser.Math.Clamp(y, this.game.config.height * 0.6, this.game.config.height * 0.85);
             
-            const segment = this.terrainGroup.create(x, y, 'ground');
+            const segment = this.terrainGroup.create(x, y, this.groundAssetName);
             segment.setOrigin(0, 0.5);
-            segment.body.checkCollision.down = false;
-            segment.body.setSize(30, 30);
+            segment.setDisplaySize(100, 40);
             segment.refreshBody();
             this.lastTerrainX = x;
             this.terrainHeight = y;
@@ -598,43 +707,51 @@ class MainScene extends Phaser.Scene {
 
     // دالة لتوليد المزيد من التضاريس (تُستدعى في دالة update)
     generateMoreTerrain(xOffset) {
-        let x = this.lastTerrainX + 80;
+        let x = this.lastTerrainX + 100;
         let y = this.terrainHeight;
         
-        // توليد تضاريس جديدة حتى 800 بكسل خارج مجال رؤية الكاميرا (بدلاً من 1000)
-        while (x < xOffset + this.game.config.width + 800) {
-            y += (Math.random() - 0.5) * 25;
+        // توليد تضاريس جديدة حتى 1000 بكسل خارج مجال رؤية الكاميرا
+        while (x < xOffset + this.game.config.width + 1000) {
+            y += (Math.random() - 0.5) * 40;
             y = Phaser.Math.Clamp(y, this.game.config.height * 0.6, this.game.config.height * 0.85);
             
-            const segment = this.terrainGroup.create(x, y, 'ground');
+            const segment = this.terrainGroup.create(x, y, this.groundAssetName);
             segment.setOrigin(0, 0.5);
-            segment.body.checkCollision.down = false;
-            segment.body.setSize(30, 30);
+            segment.setDisplaySize(100, 40);
             segment.refreshBody();
             
             this.lastTerrainX = x;
             this.terrainHeight = y;
-            x += 80; // زيادة المسافة لتحسين الأداء
+            x += 100;
         }
     }
     
     // دالة إنشاء السيارة
     createCar() {
-        const initialY = this.terrainHeight - 50;
-        this.car = this.physics.add.sprite(this.game.config.width * 0.15, initialY, this.carAssetName);
+        const initialY = this.terrainHeight - 60;
+        this.car = this.physics.add.sprite(this.game.config.width * 0.2, initialY, this.carAssetName);
         this.car.setOrigin(0.5, 0.5);
-        this.car.setScale(0.8);
+        this.car.setScale(0.6);
         this.car.setCollideWorldBounds(false);
-        this.car.setDragX(200);
-        this.car.setAngularDrag(50);
-        this.car.setMaxVelocity(400);
+        this.car.setDragX(150);
+        this.car.setAngularDrag(100);
+        this.car.setMaxVelocity(500);
         this.car.setDamping(true);
-        this.car.setDrag(0.98);
+        this.car.setDrag(0.95);
+        this.car.setBounce(0.2);
+        this.car.setFriction(1, 0);
+        
+        // ضبط حجم الجسم الفيزيائي للسيارة
+        this.car.body.setSize(this.car.width * 0.7, this.car.height * 0.7);
     }
 
     // دالة معالجة الاصطدام (لضبط حالة السيارة)
     onGroundCollide(carObj, groundObj) {
         this.isCarOnGround = true;
+        // إضافة قوة صغيرة للأمام لمساعدة السيارة
+        if (isAccelerating) {
+            carObj.setAccelerationX(baseSpeed * 80);
+        }
     }
     
     // دالة معالجة الاصطدام بصندوق السؤال
@@ -648,16 +765,16 @@ class MainScene extends Phaser.Scene {
 
     // دالة إنشاء صندوق سؤال مكرر (داخل المشهد)
     createRepeatQuestionBox(question) {
-        // وضع الصندوق أبعد بـ 1500 بكسل من السيارة
-        const repeatX = this.car.x + 1500;
-        const repeatY = this.game.config.height * 0.7 - 30;
+        // وضع الصندوق أبعد بـ 2000 بكسل من السيارة
+        const repeatX = this.car.x + 2000;
+        const repeatY = this.game.config.height * 0.7 - 50;
         
-        const repeatBox = this.questionBoxes.create(repeatX, repeatY, this.repeatBoxAssetName);
+        const repeatBox = this.questionBoxes.create(repeatX, repeatY, this.boxAssetName);
         repeatBox.setData('question', question);
         repeatBox.setData('answered', false);
         repeatBox.setData('isRepeat', true);
         repeatBox.setImmovable(true);
-        repeatBox.setScale(0.9);
+        repeatBox.setScale(0.8);
         repeatBox.setTint(0xFF5722);
         repeatBox.body.setAllowGravity(false);
         
@@ -668,60 +785,80 @@ class MainScene extends Phaser.Scene {
     // دالة لتصحيح الارتفاع (تُستخدم مرة واحدة عند الإنشاء)
     correctBoxVerticalPosition(box) {
         let nearestTerrainY = this.game.config.height * 0.8;
+        let found = false;
         
         this.terrainGroup.getChildren().forEach(segment => {
-            if (Phaser.Math.Distance.Between(box.x, 0, segment.x, 0) < 50) {
+            if (Math.abs(box.x - segment.x) < 100) {
                 if (segment.y < nearestTerrainY) {
                     nearestTerrainY = segment.y;
+                    found = true;
                 }
             }
         });
-        box.y = nearestTerrainY - 30;
+        
+        if (found) {
+            box.y = nearestTerrainY - 50;
+        }
     }
 
     // دالة إنشاء صناديق الأسئلة (النسخة الأولية)
     createQuestionBoxes(questions) {
-        const spacing = 700; 
+        const spacing = 1000; // زيادة المسافة بين الصناديق
         questions.forEach((question, index) => {
-            const boxX = this.game.config.width + index * spacing + 500;
-            const boxY = this.game.config.height * 0.7 - 30;
+            const boxX = this.game.config.width + index * spacing + 800;
+            const boxY = this.game.config.height * 0.7 - 50;
             
             const box = this.questionBoxes.create(boxX, boxY, this.boxAssetName);
             box.setData('question', question);
             box.setData('answered', false);
             box.setData('isRepeat', false);
             box.setImmovable(true);
-            box.setScale(0.8);
+            box.setScale(0.7);
             box.body.setAllowGravity(false);
+            
+            // إضافة نص استفهام على الصندوق
+            const text = this.add.text(boxX, boxY, '؟', {
+                fontFamily: 'Cairo',
+                fontSize: '24px',
+                color: '#FFFFFF',
+                fontWeight: 'bold'
+            });
+            text.setOrigin(0.5);
+            text.setDepth(1);
             
             // تصحيح الارتفاع فوراً
             this.correctBoxVerticalPosition(box);
         });
     }
 
-    update() {
+    update(time, delta) {
         if (gamePaused) return;
 
         // ** 1. التحكم في حركة السيارة والسرعة **
+        if (!this.car) return;
+        
         const carBody = this.car.body;
-        const maxSpeed = baseSpeed * 100;
+        const maxSpeed = baseSpeed * 120;
         
         // التسارع الأمامي
         if (isAccelerating) {
-            carBody.setAccelerationX(maxSpeed * 3);
+            carBody.setAccelerationX(maxSpeed * 2);
         } else {
             carBody.setAccelerationX(0);
         }
         
         // التحكم في الميل (التوازن) - التحكم الدوراني (Angular)
         if (keys['ArrowLeft']) {
-            carBody.setAngularVelocity(-150);
+            carBody.setAngularVelocity(-200);
         } else if (keys['ArrowRight']) {
-            carBody.setAngularVelocity(150);
+            carBody.setAngularVelocity(200);
         } else {
             // تقليل السرعة الدورانية تدريجياً
-            carBody.setAngularVelocity(0);
-            carBody.setAngle(Phaser.Math.Linear(this.car.angle, 0, 0.05));
+            carBody.setAngularVelocity(Phaser.Math.Linear(carBody.angularVelocity, 0, 0.1));
+            // محاولة إعادة السيارة إلى الوضع المستقيم
+            if (Math.abs(this.car.angle) > 1) {
+                this.car.setAngle(Phaser.Math.Linear(this.car.angle, 0, 0.05));
+            }
         }
 
         // ** 2. التنظيف وتوليد التضاريس **
@@ -729,7 +866,7 @@ class MainScene extends Phaser.Scene {
         
         // إزالة التضاريس القديمة
         this.terrainGroup.getChildren().forEach(segment => {
-            if (segment.x + 30 < cameraScrollX) {
+            if (segment.x + 100 < cameraScrollX) {
                 segment.destroy();
             }
         });
@@ -739,15 +876,15 @@ class MainScene extends Phaser.Scene {
         
         // إزالة صناديق الأسئلة القديمة
         this.questionBoxes.getChildren().forEach(box => {
-            if (box.x + box.width < cameraScrollX) {
-                 if (box.getData('answered')) {
-                     box.destroy();
-                 }
+            if (box.x + 100 < cameraScrollX) {
+                box.destroy();
             }
         });
 
-        // ** 3. تحديث واجهة المستخدم **
-        updateUI();
+        // ** 3. تحديث واجهة المستخدم كل 10 إطارات (لتقليل الحمل) **
+        if (time % 10 === 0) {
+            updateUI();
+        }
     }
 
     // دالة تُستدعى عند الإجابة لفك التوقف المؤقت
@@ -784,18 +921,21 @@ function setupControls() {
             e.preventDefault();
             updateState(true);
             elem.style.transform = 'scale(0.95)';
+            elem.style.backgroundColor = isAccel ? 'rgba(255, 87, 34, 1)' : 'rgba(43, 111, 179, 1)';
         });
         
         elem.addEventListener('pointerup', (e) => {
             e.preventDefault();
             updateState(false);
             elem.style.transform = 'scale(1)';
+            elem.style.backgroundColor = isAccel ? 'rgba(255, 87, 34, 0.95)' : 'rgba(43, 111, 179, 0.9)';
         });
         
         elem.addEventListener('pointerleave', (e) => {
             e.preventDefault();
             updateState(false);
             elem.style.transform = 'scale(1)';
+            elem.style.backgroundColor = isAccel ? 'rgba(255, 87, 34, 0.95)' : 'rgba(43, 111, 179, 0.9)';
         });
 
         // منع اللمس المتعدد السلبي
@@ -808,18 +948,21 @@ function setupControls() {
             e.preventDefault();
             updateState(true);
             elem.style.transform = 'scale(0.95)';
+            elem.style.backgroundColor = isAccel ? 'rgba(255, 87, 34, 1)' : 'rgba(43, 111, 179, 1)';
         }, { passive: false });
 
         elem.addEventListener('touchend', (e) => {
             e.preventDefault();
             updateState(false);
             elem.style.transform = 'scale(1)';
+            elem.style.backgroundColor = isAccel ? 'rgba(255, 87, 34, 0.95)' : 'rgba(43, 111, 179, 0.9)';
         }, { passive: false });
 
         elem.addEventListener('touchcancel', (e) => {
             e.preventDefault();
             updateState(false);
             elem.style.transform = 'scale(1)';
+            elem.style.backgroundColor = isAccel ? 'rgba(255, 87, 34, 0.95)' : 'rgba(43, 111, 179, 0.9)';
         }, { passive: false });
     });
 
@@ -832,6 +975,8 @@ function setupControls() {
         if (e.key === ' ') {
             isAccelerating = true;
             e.preventDefault();
+            accelerateBtn.style.transform = 'scale(0.95)';
+            accelerateBtn.style.backgroundColor = 'rgba(255, 87, 34, 1)';
         }
     });
 
@@ -843,6 +988,8 @@ function setupControls() {
         if (e.key === ' ') {
             isAccelerating = false;
             e.preventDefault();
+            accelerateBtn.style.transform = 'scale(1)';
+            accelerateBtn.style.backgroundColor = 'rgba(255, 87, 34, 0.95)';
         }
     });
 }
@@ -887,7 +1034,7 @@ function handleAnswer(selectedIndex, question, choiceElement) {
         choiceElement.classList.add('correct');
         
         // زيادة السرعة والنتيجة
-        baseSpeed = Math.min(4.5, baseSpeed + 0.3);
+        baseSpeed = Math.min(6.0, baseSpeed + 0.5);
         score += 10;
         
         answeredQuestions.add(question.q);
@@ -903,6 +1050,7 @@ function handleAnswer(selectedIndex, question, choiceElement) {
         if (currentQuestionBox && sceneRef) {
             currentQuestionBox.setData('answered', true);
             currentQuestionBox.setTint(0x4CAF50);
+            currentQuestionBox.setAlpha(0.5);
         }
         
         setTimeout(() => {
@@ -922,7 +1070,7 @@ function handleAnswer(selectedIndex, question, choiceElement) {
         choiceElement.classList.add('wrong');
         
         // تقليل السرعة
-        baseSpeed = Math.max(1.5, baseSpeed * 0.7);
+        baseSpeed = Math.max(1.0, baseSpeed * 0.6);
         
         // إنشاء صندوق سؤال مكرر
         if (sceneRef) {
@@ -955,9 +1103,19 @@ function updateUI() {
     document.getElementById("score").textContent = score;
     document.getElementById("questionsRemaining").textContent = currentQuestions.length;
     
-    // تحديث عداد السرعة (مقارنة بـ 4.5 كحد أقصى)
-    const speedPercent = (baseSpeed / 4.5) * 100;
-    document.getElementById("speedFill").style.width = `${speedPercent}%`;
+    // تحديث عداد السرعة (مقارنة بـ 6 كحد أقصى)
+    const speedPercent = (baseSpeed / 6.0) * 100;
+    document.getElementById("speedFill").style.width = `${Math.min(100, speedPercent)}%`;
+    
+    // تغيير لون عداد السرعة بناءً على السرعة
+    const speedFill = document.getElementById("speedFill");
+    if (baseSpeed < 2.5) {
+        speedFill.style.background = "linear-gradient(to right, #4CAF50, #FFC107)";
+    } else if (baseSpeed < 4.0) {
+        speedFill.style.background = "linear-gradient(to right, #FFC107, #FF9800)";
+    } else {
+        speedFill.style.background = "linear-gradient(to right, #FF9800, #FF5722)";
+    }
 }
 
 function endGame() {
@@ -972,7 +1130,7 @@ function endGame() {
 // ********** إدارة اللعبة **********
 function startGame() {
     document.getElementById("startScreen").classList.add("hidden");
-    document.getElementById("gameContainer").classList.remove("hidden");
+    document.getElementById("loadingScreen").classList.remove("hidden");
     
     // إعادة تعيين حالة اللعبة بالكامل
     baseSpeed = 2;
@@ -989,50 +1147,71 @@ function startGame() {
     
     setupControls();
     
-    if (!game) {
-        const headerHeight = document.getElementById('header').offsetHeight || 50;
-        const gameAreaHeight = window.innerHeight - headerHeight;
-        
-        const config = {
-            type: Phaser.CANVAS,
-            parent: 'gameArea',
-            width: window.innerWidth,
-            height: gameAreaHeight,
-            backgroundColor: '#87CEEB',
-            scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                width: '100%',
-                height: '100%'
-            },
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 800 },
-                    debug: false
+    // إعطاء وقت لتحميل الصور
+    setTimeout(() => {
+        if (!game) {
+            const headerHeight = document.getElementById('header').offsetHeight || 50;
+            const gameAreaHeight = window.innerHeight - headerHeight;
+            
+            const config = {
+                type: Phaser.AUTO,
+                parent: 'gameArea',
+                width: window.innerWidth,
+                height: gameAreaHeight,
+                backgroundColor: '#87CEEB',
+                scale: {
+                    mode: Phaser.Scale.FIT,
+                    autoCenter: Phaser.Scale.CENTER_BOTH,
+                    width: '100%',
+                    height: '100%'
+                },
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                        gravity: { y: 600 },
+                        debug: false,
+                        fps: 60,
+                        timeScale: 1
+                    }
+                },
+                input: {
+                    activePointers: 3,
+                    touch: {
+                        capture: true
+                    }
+                },
+                scene: MainScene,
+                fps: {
+                    target: 60,
+                    forceSetTimeOut: false
+                },
+                render: {
+                    pixelArt: false,
+                    antialias: true
                 }
-            },
-            input: {
-                activePointers: 3,
-                touch: {
-                    capture: true
-                }
-            },
-            scene: MainScene,
-            fps: {
-                target: 60,
-                forceSetTimeOut: true
-            }
-        };
-        
-        game = new Phaser.Game(config);
-    } else {
-        // إذا كانت اللعبة موجودة، أعد تشغيل المشهد
-        game.scene.stop('MainScene'); 
-        game.scene.start('MainScene');
-    }
-    
-    updateUI();
+            };
+            
+            game = new Phaser.Game(config);
+            
+            // إخفاء شاشة التحميل بعد ثانيتين
+            setTimeout(() => {
+                document.getElementById("loadingScreen").classList.add("hidden");
+                document.getElementById("gameContainer").classList.remove("hidden");
+                updateUI();
+            }, 2000);
+            
+        } else {
+            // إذا كانت اللعبة موجودة، أعد تشغيل المشهد
+            game.scene.stop('MainScene'); 
+            game.scene.start('MainScene');
+            
+            setTimeout(() => {
+                document.getElementById("loadingScreen").classList.add("hidden");
+                document.getElementById("gameContainer").classList.remove("hidden");
+                updateUI();
+            }, 1000);
+        }
+    }, 500);
 }
 
 function restartGame() {
@@ -1041,21 +1220,27 @@ function restartGame() {
 }
 
 // ********** تعديل حجم اللعبة عند تغيير حجم النافذة **********
+let resizeTimeout;
 window.addEventListener('resize', () => {
-    if (game) {
-        const headerHeight = document.getElementById('header').offsetHeight || 50;
-        const gameAreaHeight = window.innerHeight - headerHeight;
-        
-        game.scale.resize(window.innerWidth, gameAreaHeight);
-        
-        if (sceneRef && sceneRef.cameras) {
-            sceneRef.cameras.main.setViewport(0, 0, window.innerWidth, gameAreaHeight);
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        if (game) {
+            const headerHeight = document.getElementById('header').offsetHeight || 50;
+            const gameAreaHeight = window.innerHeight - headerHeight;
+            
+            game.scale.resize(window.innerWidth, gameAreaHeight);
+            
+            if (sceneRef && sceneRef.cameras) {
+                sceneRef.cameras.main.setViewport(0, 0, window.innerWidth, gameAreaHeight);
+            }
         }
-    }
+    }, 250);
 });
 
 // ********** تهيئة الصفحة لمنع السلوك غير المرغوب على الموبايل **********
 window.addEventListener('load', function() {
+    console.log('تم تحميل الصفحة');
+    
     // ضبط أبعاد الصفحة بشكل صحيح للجوال
     const vh = window.innerHeight * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -1079,6 +1264,25 @@ window.addEventListener('load', function() {
     
     // إضافة فئة لمنع التكبير على النقر المزدوج
     document.body.classList.add('double-tap-zoom-prevention');
+    
+    // اختبار تحميل الصور
+    const testImages = ['assets/car.png', 'assets/box.png'];
+    let imagesLoaded = 0;
+    
+    testImages.forEach(src => {
+        const img = new Image();
+        img.onload = function() {
+            imagesLoaded++;
+            console.log(`تم تحميل الصورة: ${src}`);
+            if (imagesLoaded === testImages.length) {
+                console.log('جميع الصور تم تحميلها بنجاح');
+            }
+        };
+        img.onerror = function() {
+            console.error(`فشل في تحميل الصورة: ${src}`);
+        };
+        img.src = src;
+    });
 });
 
 // إضافة استجابة للجوال عند فتح لوحة المفاتيح
@@ -1089,9 +1293,8 @@ window.addEventListener('orientationchange', function() {
             const gameAreaHeight = window.innerHeight - headerHeight;
             game.scale.resize(window.innerWidth, gameAreaHeight);
         }
-    }, 100);
+    }, 500);
 });
 </script>
 </body>
 </html>
-
