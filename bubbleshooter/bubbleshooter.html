@@ -1,412 +1,143 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة المدفع والفقاعات التعليمية</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <style>
-        /* 🎨 CSS التصميم */
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden; 
-            font-family: 'Arial', sans-serif;
-            direction: rtl; 
-            background-color: #add8e6; 
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة المدفع والفقاعات</title>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* مربع السؤال */
-        #questionBox {
-            position: fixed; 
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000; 
-            background-color: rgba(0, 0, 0, 0.8); 
-            color: white;
-            padding: 15px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-
-        #questionBox h3 {
-            margin: 0;
-            font-size: clamp(1.2em, 3vw, 1.5em); 
-        }
-
-        /* فيدباك خطأ (اللون الأحمر) */
-        #wrongFeedback {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(255, 0, 0, 0); 
-            z-index: 999; 
-            pointer-events: none;
-            transition: background-color 0.1s; 
-        }
-        
-        /* مؤشر الخطأ البصري (⛔) */
-        #errorIndicator {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 10em; 
-            color: white;
-            z-index: 1001; 
-            opacity: 0; 
-            pointer-events: none;
-            text-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-            transition: opacity 0.1s;
-        }
-    </style>
+<style>
+body { margin:0; background:#add8e6; overflow:hidden; }
+#game-container { width:100vw; height:100vh; }
+#questionBox {
+    position:fixed; top:0; width:100%;
+    background:rgba(0,0,0,.8);
+    color:white; text-align:center; padding:15px; z-index:10;
+}
+#wrongFeedback {
+    position:fixed; inset:0;
+    background:rgba(255,0,0,0);
+    pointer-events:none;
+}
+#errorIndicator {
+    position:fixed; inset:0;
+    display:flex; justify-content:center; align-items:center;
+    font-size:8em; opacity:0; pointer-events:none;
+}
+</style>
 </head>
-<body>
 
-    <div id="wrongFeedback"></div>
-    <div id="errorIndicator">⛔</div>
-    <div id="questionBox"></div>
-    <div id="game-container"></div>
+<body>
+<div id="wrongFeedback"></div>
+<div id="errorIndicator">⛔</div>
+<div id="questionBox"></div>
+<div id="game-container"></div>
 
 <script>
-    // 💾 مصفوفة الأسئلة
-    const QUESTIONS = [
-        {question:"ما هو الكوكب الذي يسمى 'الكوكب الأحمر'؟", options:["الزهرة","المريخ","المشتري"], correctAnswer:"المريخ"},
-        {question:"كم عدد أرجل القطط؟", options:["اثنين","أربعة","ستة"], correctAnswer:"أربعة"},
-        {question:"ما هو أكبر محيط في العالم؟", options:["الأطلسي","الهندي","الهادئ"], correctAnswer:"الهادئ"},
-        {question:"ما هو الشكل الهندسي الذي يحتوي على ثلاثة أضلاع؟", options:["المربع","المثلث","الدائرة"], correctAnswer:"المثلث"}
-    ];
+const QUESTIONS = [
+ {question:"الكوكب الأحمر؟", options:["الزهرة","المريخ","المشتري"], correctAnswer:"المريخ"},
+ {question:"عدد أرجل القط؟", options:["٢","٤","٦"], correctAnswer:"٤"}
+];
 
-    // 🖼️ إعدادات اللعبة
-    const config = {
-        type: Phaser.AUTO,
-        width: 800, 
-        height: 1200, 
-        parent: 'game-container',
-        scale: { 
-            mode: Phaser.Scale.FIT, 
-            autoCenter: Phaser.Scale.CENTER_BOTH,
-            parent: 'game-container',
-            width: 800,
-            height: 1200
-        },
-        physics: { 
-            default:'arcade', 
-            arcade:{ 
-                gravity:{y:0}, 
-                // يمكنك تغيير هذا إلى true لرؤية مربعات التصادم وتصحيح الأخطاء
-                debug: false 
-            } 
-        },
-        scene: { preload, create, update }
-    };
+const config = {
+ type: Phaser.AUTO,
+ parent:'game-container',
+ width:800,
+ height:1200,
+ physics:{
+   default:'arcade',
+   arcade:{ gravity:{y:0}, debug:false }
+ },
+ scene:{ preload, create }
+};
 
-    let game = new Phaser.Game(config);
+new Phaser.Game(config);
 
-    // متغيرات المشهد العامة
-    let cannon, projectileGroup, bubblesGroup;
-    let questionBox, wrongFeedbackDiv, errorIndicator;
-    let correctSound, wrongSound;
-    let currentQuestionIndex = 0;
-    let questionToRepeat = null; 
-    let originalQuestionIndexBeforeError = 0; 
+let cannon, bubblesGroup;
+let questionIndex = 0;
 
-    const BUBBLE_TYPES = ['bubble1', 'bubble2', 'bubble3'];
-    
-    // ⬇️ التعديل الثاني: تصغير حجم الفقاعات
-    const BUBBLE_SCALE = 0.15; 
-    
-    let FIRE_DELAY = 200; 
-    let lastFired = 0;
+function preload(){
+ this.load.image('cannon','assets/cannon.png');
+ this.load.image('shoot','assets/shoot.png');
+ this.load.image('bubble','assets/bubble1.png');
+}
 
-    function preload() {
-        this.load.image('cannon', 'assets/cannon.png');
-        this.load.image('shoot', 'assets/shoot.png');
-        this.load.image('bubble1', 'assets/bubble1.png');
-        this.load.image('bubble2', 'assets/bubble2.png');
-        this.load.image('bubble3', 'assets/bubble3.png');
-        
-        this.load.audio('correct','assets/correct.mp3'); 
-        this.load.audio('wrong','assets/wrong.mp3');
-        this.load.audio('fire','assets/fire.mp3'); 
-    }
+function create(){
+ const {width,height} = this.scale;
 
-    function create() {
-        const { width, height } = this.scale;
-        
-        // 1. إعداد عناصر HTML
-        questionBox = document.getElementById('questionBox');
-        wrongFeedbackDiv = document.getElementById('wrongFeedback');
-        errorIndicator = document.getElementById('errorIndicator');
+ cannon = this.add.sprite(width/2, height*0.9,'cannon').setScale(0.4);
 
-        // 2. إعداد الأصوات
-        correctSound = this.sound.add('correct');
-        wrongSound = this.sound.add('wrong');
-        this.fireSound = this.sound.add('fire');
-        
-        this.input.once('pointerdown', () => {
-            if (this.sound.context.state !== 'running') {
-                this.sound.context.resume();
-            }
-        });
+ bubblesGroup = this.physics.add.group();
 
-        // 3. إعداد المدفع (Cannon)
-        // ⬇️ التعديل الأول: تصغير حجم المدفع (0.4) ووضعه في مكان مناسب
-        cannon = this.add.sprite(width / 2, height * 0.90, 'cannon').setScale(0.4); 
-        cannon.setDepth(10);
-        
-        // 4. مجموعات الفيزياء (Physics Groups)
-        projectileGroup = this.physics.add.group({
-            defaultKey: 'shoot',
-            maxSize: 10,
-            runChildUpdate: true
-        });
+ this.physics.add.overlap(
+   bubblesGroup,
+   this.physics.add.group(),
+   ()=>{},
+   null,
+   this
+ );
 
-        bubblesGroup = this.physics.add.group({
-            key: BUBBLE_TYPES,
-            immovable: false,
-            runChildUpdate: true
-        });
+ this.input.on('pointermove', p=>{
+   cannon.x = Phaser.Math.Clamp(p.x,50,width-50);
+ });
 
-        // 5. تفاعلات الاصطدام
-        this.physics.add.overlap(projectileGroup, bubblesGroup, hitBubble, null, this);
+ this.input.on('pointerdown', ()=>{
+   fire(this);
+ });
 
-        // 6. التحكم بالإدخال
-        this.input.on('pointermove', pointer => {
-            cannon.x = Phaser.Math.Clamp(pointer.x, width * 0.1, width * 0.9);
-        });
+ showQuestion(this);
+}
 
-        // 7. إطلاق القذيفة
-        this.input.on('pointerdown', pointer => {
-            if(this.input.enabled) { 
-                fireProjectile(this);
-            }
-        });
+function fire(scene){
+ // ✅ إنشاء القذيفة فعليًا
+ const shot = scene.physics.add.sprite(
+   cannon.x,
+   cannon.y - 60,
+   'shoot'
+ );
 
-        // 8. بدء اللعبة
-        showQuestion(currentQuestionIndex);
-    }
+ shot.setScale(0.25);
+ shot.setVelocityY(-900);
 
-    function update(time, delta) {}
+ // ✅ جسم تصادم مظبوط
+ const r = shot.displayWidth/2;
+ shot.body.setCircle(r);
+ shot.body.setOffset(
+   shot.width/2 - r,
+   shot.height/2 - r
+ );
 
-    // --- منطق المدفع والقذائف ---
+ // ✅ تصادم مع الفقاعات
+ scene.physics.add.overlap(shot, bubblesGroup, (s,b)=>{
+   s.destroy();
+   b.destroy();
+ }, null, scene);
 
-    function fireProjectile(scene) {
-        if (scene.time.now > lastFired + FIRE_DELAY) {
-            this.fireSound.play();
-            
-            const projectile = projectileGroup.get(cannon.x, cannon.y - 50);
-            
-            if (projectile) {
-                // ⬇️ التعديل الثالث (الهام): تفعيل الجسم الفيزيائي وإعادة ضبطه
-                projectile.enableBody(true, cannon.x, cannon.y - 50, true, true);
-                
-                // تصغير حجم القذيفة لتناسب الفقاعات الصغيرة
-                projectile.setScale(0.15); 
-                
-                // ضبط دائرة التصادم للقذيفة
-                projectile.body.setCircle(projectile.width * 0.5);
+ // حذف القذيفة خارج الشاشة
+ scene.time.delayedCall(1500, ()=>shot.destroy());
+}
 
-                projectile.setVelocityY(-1000); 
-                
-                lastFired = scene.time.now; 
+function showQuestion(scene){
+ document.getElementById('questionBox').innerHTML =
+ `<h3>${QUESTIONS[questionIndex].question}</h3>`;
 
-                // إزالة القذيفة عند خروجها
-                scene.time.delayedCall(1500, () => {
-                    if (projectile.active) {
-                        projectile.setActive(false).setVisible(false);
-                        projectile.disableBody(true, true); // تعطيل الجسم الفيزيائي عند الإخفاء
-                    }
-                });
-            }
-        }
-    }
+ bubblesGroup.clear(true,true);
 
-    function hitBubble(projectile, bubble) {
-        // إخفاء القذيفة فوراً وتعطيل جسمها الفيزيائي
-        projectile.setActive(false).setVisible(false);
-        projectile.disableBody(true, true);
+ QUESTIONS[questionIndex].options.forEach((opt,i)=>{
+   const b = bubblesGroup.create(
+     150 + i*250,
+     300,
+     'bubble'
+   ).setScale(0.2);
 
-        const bubbleData = bubble.getData('data');
-
-        if (!bubbleData) {
-            bubble.destroy();
-            return;
-        }
-
-        checkAnswer(bubble, bubbleData.answer);
-    }
-
-    // --- منطق الفقاعات والأسئلة ---
-
-    function createBubbles(scene, questionData) {
-        bubblesGroup.children.each((bubble) => {
-            if (bubble && bubble.active) {
-                bubble.destroy(); // استخدام destroy لإزالة النصوص المرتبطة
-            }
-        });
-        bubblesGroup.clear(true, true); 
-
-        const { width, height } = scene.scale;
-        const options = questionData.options;
-
-        const startY = height * 0.15;
-        const endY = height * 0.55;
-
-        Phaser.Utils.Array.Shuffle(options); 
-        
-        options.forEach((opt, index) => {
-            const bubbleType = BUBBLE_TYPES[index % BUBBLE_TYPES.length];
-            
-            const x = Phaser.Math.Between(width * 0.1, width * 0.9);
-            const y = Phaser.Math.Between(startY, endY);
-            
-            // استخدام الحجم الجديد
-            const bubble = bubblesGroup.create(x, y, bubbleType).setScale(BUBBLE_SCALE);
-            
-            // ضبط دائرة التصادم للفقاعة
-            bubble.body.setCircle(bubble.width * 0.45); 
-
-            bubble.setData('data', {
-                answer: opt,
-                index: index + 1
-            });
-
-            // تصغير الخط قليلاً ليناسب الفقاعة الصغيرة
-            const answerText = scene.add.text(x, y, opt, { 
-                fontFamily: 'Arial',
-                fontSize: '16px', // ⬇️ خط أصغر
-                color: '#000',
-                backgroundColor: '#ffffffcc', 
-                padding: { x: 5, y: 3 },
-                align: 'center',
-                wordWrap: { width: bubble.displayWidth, useSoftWrap: true }
-            }).setOrigin(0.5);
-
-            bubble.setDepth(2);
-            answerText.setDepth(3);
-            
-            bubble.on('destroy', () => { answerText.destroy(); });
-            bubble.on('postupdate', () => { 
-                answerText.x = bubble.x;
-                answerText.y = bubble.y; 
-            });
-            
-            const speed = 150; 
-            bubble.setVelocity(
-                Phaser.Math.Between(-speed, speed),
-                Phaser.Math.Between(-speed, speed)
-            );
-            
-            bubble.setBounce(1);
-            bubble.setCollideWorldBounds(true);
-        });
-        
-    }
-
-    // دالة عرض السؤال (لم تتغير)
-    function showQuestion(index){
-        const isReviewing = questionToRepeat !== null;
-        const q = isReviewing ? questionToRepeat : QUESTIONS[index];
-        const scene = game.scene.getScene('default');
-
-        if(!q){
-            questionBox.innerHTML='<h3>أحسنت! لقد أنهيت اللعبة بنجاح!</h3>';
-            bubblesGroup.clear(true, true); 
-            return;
-        }
-
-        questionBox.innerHTML = `<h3>السؤال ${isReviewing ? "(مراجعة)" : index + 1}: ${q.question}</h3>`;
-
-        createBubbles(scene, q);
-    }
-
-    // دالة التحقق من الإجابة (لم تتغير)
-    function checkAnswer(bubble, selectedAnswer){
-        const scene = game.scene.getScene('default');
-        
-        const isReviewing = questionToRepeat !== null;
-        const currentQ = isReviewing ? questionToRepeat : QUESTIONS[currentQuestionIndex];
-
-        scene.input.enabled = false;
-
-        if(selectedAnswer === currentQ.correctAnswer){
-            correctSound.play();
-            
-            bubble.destroy(); 
-
-            scene.time.delayedCall(500, ()=>{
-                scene.input.enabled = true; 
-                
-                let nextIndex = currentQuestionIndex + 1; 
-                
-                if(isReviewing){
-                    if (nextIndex === originalQuestionIndexBeforeError) {
-                        questionToRepeat = null; 
-                        currentQuestionIndex = nextIndex; 
-                        showQuestion(currentQuestionIndex);
-                    } else if (nextIndex < QUESTIONS.length) {
-                        currentQuestionIndex = nextIndex;
-                        showQuestion(currentQuestionIndex);
-                    } else {
-                        showQuestion(QUESTIONS.length);
-                    }
-                    
-                } else {
-                    if(nextIndex < QUESTIONS.length){
-                        currentQuestionIndex = nextIndex;
-                        showQuestion(currentQuestionIndex);
-                    } else { 
-                        showQuestion(nextIndex); 
-                    }
-                }
-            });
-
-        } else {
-            wrongSound.play();
-            
-            wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0.5)';
-            errorIndicator.style.opacity = 1;
-
-            scene.time.delayedCall(400, ()=>{
-                wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0)';
-                errorIndicator.style.opacity = 0;
-            });
-            
-            if(currentQuestionIndex > 0){
-                
-                if(!isReviewing) {
-                   questionToRepeat = currentQ;
-                   originalQuestionIndexBeforeError = currentQuestionIndex + 1; 
-                }
-
-                let prevIndex = currentQuestionIndex - 1;
-                currentQuestionIndex = prevIndex;
-                
-                scene.time.delayedCall(1500, ()=>{
-                    scene.input.enabled = true; 
-                    showQuestion(currentQuestionIndex); 
-                });
-                
-            } else {
-                scene.time.delayedCall(500, ()=>{
-                    scene.input.enabled = true; 
-                    showQuestion(currentQuestionIndex); 
-                });
-            }
-        }
-    }
+   b.setVelocity(
+     Phaser.Math.Between(-100,100),
+     Phaser.Math.Between(50,150)
+   );
+   b.setBounce(1);
+   b.setCollideWorldBounds(true);
+ });
+}
 </script>
 </body>
 </html>
