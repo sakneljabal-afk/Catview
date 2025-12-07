@@ -32,12 +32,13 @@ const questions = [
 
 let currentQuestion=0, currentPlatformIndex=0;
 
-const PLATFORM_SCALE_X = 0.2; // أقصر طولًا
-const PLATFORM_SCALE_Y = 0.08; 
+const PLATFORM_SCALE_X = 0.2;
+const PLATFORM_SCALE_Y = 0.05;
+
 const config = {
   type: Phaser.CANVAS,
   width:600, height:600,
-  physics:{ default:'arcade', arcade:{ gravity:{y:600}, debug:false } },
+  physics:{ default:'arcade', arcade:{ gravity:{y:0}, debug:false } }, // جاذبية صفر
   scene:{ preload, create, update }
 };
 
@@ -51,22 +52,23 @@ function preload() {
 
 function create() {
   sceneRef = this;
-  platforms = this.physics.add.staticGroup();
+  platforms = this.add.group();
 
   const positions = [
     {x:300, y:500}, {x:200, y:400}, {x:400, y:300}, {x:250, y:200}
   ];
 
   positions.forEach(pos=>{
-    platforms.create(pos.x,pos.y,'platform').setScale(PLATFORM_SCALE_X, PLATFORM_SCALE_Y).refreshBody();
+    const plat = this.add.image(pos.x,pos.y,'platform');
+    plat.setScale(PLATFORM_SCALE_X, PLATFORM_SCALE_Y);
+    platforms.add(plat);
   });
 
+  // وضع القطة على أول منصة
   const firstPlatform = platforms.getChildren()[0];
-  player = this.physics.add.sprite(firstPlatform.x, firstPlatform.y-20,'player').setScale(0.2);
-  player.setCollideWorldBounds(true);
-  this.physics.add.collider(player, platforms);
+  player = this.add.sprite(firstPlatform.x, firstPlatform.y - firstPlatform.displayHeight/2 - 20,'player').setScale(0.2);
 
-  // حركة خفيفة للقطة
+  // حركة رأس القطة خفيفة
   this.tweens.add({
     targets:player,
     y:player.y-5,
@@ -75,9 +77,9 @@ function create() {
     repeat:-1
   });
 
-  // إضافة overlay أحمر للفيدباك عند الخطأ
+  // overlay أحمر للفيدباك
   redOverlay = this.add.rectangle(300,300,600,600,0xff0000,0);
-  redOverlay.setDepth(500);
+  redOverlay.setDepth(1000);
 
   showQuestion();
 }
@@ -100,22 +102,20 @@ function answer(selected){
   if(currentQuestion>=questions.length) return;
   const q = questions[currentQuestion];
   if(selected===q.a){
-    player.setTint(0x00ff00);
     currentPlatformIndex = Math.min(currentPlatformIndex+1, platforms.getChildren().length-1);
     currentQuestion++;
   } else {
-    player.setTint(0xff6666);
     if(currentPlatformIndex>0) currentPlatformIndex--;
-    // عرض الشاشة الحمراء عند الخطأ
+    // فيدباك أحمر عند الخطأ
+    redOverlay.alpha = 0.5;
     sceneRef.tweens.add({
       targets:redOverlay,
-      alpha:0.5,
-      duration:100,
-      yoyo:true
+      alpha:0,
+      duration:300
     });
   }
   movePlayerToPlatform(currentPlatformIndex);
-  setTimeout(()=>{player.clearTint(); showQuestion();},500);
+  setTimeout(showQuestion,400);
 }
 
 function movePlayerToPlatform(index){
@@ -123,19 +123,12 @@ function movePlayerToPlatform(index){
   const targetX = target.x;
   const targetY = target.y - target.displayHeight/2 - player.displayHeight/2;
 
-  player.body.allowGravity = false;
-  player.body.enable = false;
-
   sceneRef.tweens.add({
     targets:player,
     x:targetX,
     y:targetY,
     duration:400,
-    ease:'Power1',
-    onComplete:()=>{
-      player.body.enable=true;
-      player.body.allowGravity=true;
-    }
+    ease:'Power1'
   });
 }
 
