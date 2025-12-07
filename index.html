@@ -5,10 +5,10 @@
 <title>لعبة تعليمية - Phaser</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
 <style>
-body { margin:0; background:#ccf2ff; overflow:hidden; }
+body { margin:0; background:#ccf2ff; overflow:hidden; font-family:'Arial',sans-serif; }
 #questionBox { 
     position:absolute; top:10px; width:100%; text-align:center; 
-    font-family:'Arial',sans-serif; font-size:20px; color:#000; 
+    font-size:20px; color:#000; 
     background: rgba(255,255,255,0.9); padding:15px 0; z-index:1000; 
     border-radius: 10px;
 }
@@ -24,9 +24,6 @@ body { margin:0; background:#ccf2ff; overflow:hidden; }
 <div id="questionBox"></div>
 
 <script>
-// =====================
-// أسئلة مؤقتة للتجربة
-// =====================
 let questions = [
   { q: "ما لون السماء؟", c: ["أزرق","أخضر","أصفر"], a: 0 },
   { q: "كم عدد أرجل القط؟", c: ["2","4","6"], a: 1 },
@@ -45,7 +42,7 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-let player, platforms, sceneRef, redOverlay;
+let player, platforms, sceneRef, redOverlay, correctSound, wrongSound;
 
 function preload() {
   this.load.image('player','assets/cat.png'); 
@@ -75,12 +72,11 @@ function create() {
   redOverlay = this.add.rectangle(300,300,600,600,0xff0000,0);
   redOverlay.setDepth(1000);
 
-  // أصوات
   correctSound = this.sound.add('correct');
   wrongSound = this.sound.add('wrong');
 
-  // عرض السؤال الأول
-  showQuestion(); 
+  // عرض السؤال الأول بعد التأكد من تحميل الأصوات
+  this.time.delayedCall(100, showQuestion);
 }
 
 function showQuestion(){
