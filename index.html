@@ -32,17 +32,17 @@ const questions = [
 
 let currentQuestion=0, currentPlatformIndex=0;
 
-const PLATFORM_SCALE_X = 0.3; // مناسب لحجم القطة
-const PLATFORM_SCALE_Y = 0.05; 
+const PLATFORM_SCALE_X = 0.2; // أقصر طولًا
+const PLATFORM_SCALE_Y = 0.08; 
 const config = {
   type: Phaser.CANVAS,
   width:600, height:600,
-  physics:{ default:'arcade', arcade:{ gravity:{y:600} } },
+  physics:{ default:'arcade', arcade:{ gravity:{y:600}, debug:false } },
   scene:{ preload, create, update }
 };
 
 const game = new Phaser.Game(config);
-let player, platforms, sceneRef;
+let player, platforms, sceneRef, redOverlay;
 
 function preload() {
   this.load.image('player','assets/cat.png'); 
@@ -62,11 +62,11 @@ function create() {
   });
 
   const firstPlatform = platforms.getChildren()[0];
-  player = this.physics.add.sprite(firstPlatform.x, firstPlatform.y-30,'player').setScale(0.2);
+  player = this.physics.add.sprite(firstPlatform.x, firstPlatform.y-20,'player').setScale(0.2);
   player.setCollideWorldBounds(true);
   this.physics.add.collider(player, platforms);
 
-  // حركة رأس القطة خفيفة لأعلى وأسفل
+  // حركة خفيفة للقطة
   this.tweens.add({
     targets:player,
     y:player.y-5,
@@ -74,6 +74,10 @@ function create() {
     yoyo:true,
     repeat:-1
   });
+
+  // إضافة overlay أحمر للفيدباك عند الخطأ
+  redOverlay = this.add.rectangle(300,300,600,600,0xff0000,0);
+  redOverlay.setDepth(500);
 
   showQuestion();
 }
@@ -102,6 +106,13 @@ function answer(selected){
   } else {
     player.setTint(0xff6666);
     if(currentPlatformIndex>0) currentPlatformIndex--;
+    // عرض الشاشة الحمراء عند الخطأ
+    sceneRef.tweens.add({
+      targets:redOverlay,
+      alpha:0.5,
+      duration:100,
+      yoyo:true
+    });
   }
   movePlayerToPlatform(currentPlatformIndex);
   setTimeout(()=>{player.clearTint(); showQuestion();},500);
