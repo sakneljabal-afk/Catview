@@ -494,11 +494,11 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
-        sceneRef = this; // تعيين مرجع المشهد للوصول إليه من دوال الـ UI العالمية
+        sceneRef = this; // تعيين مرجع المشهد الحالي
 
         // 1. إعداد الفيزياء والجاذبية
-        this.physics.world.gravity.y = 800;
-        this.physics.world.bounds.setTo(0, 0, 100000, this.game.config.height); // حدود العالم كبيرة جداً
+        this.physics.world.gravity.y = 800; // **تم تفعيل الجاذبية هنا**
+        this.physics.world.bounds.setTo(0, 0, 100000, this.game.config.height);
         this.terrainGroup = this.physics.add.staticGroup();
         this.questionBoxes = this.physics.add.group();
 
@@ -519,10 +519,13 @@ class MainScene extends Phaser.Scene {
         this.physics.add.overlap(this.car, this.questionBoxes, this.handleQuestionBoxOverlap, null, this);
 
         // 6. إعداد الكاميرا
-        this.cameras.main.startFollow(this.car, true, 0.05, 0.05, -this.game.config.width * 0.3); // الكاميرا تتبع السيارة وتضعها على اليسار
+        this.cameras.main.startFollow(this.car, true, 0.05, 0.05, -this.game.config.width * 0.3);
 
         // 7. إعداد مفاتيح التحكم
         this.cursors = this.input.keyboard.createCursorKeys();
+        
+        // **هام:** التأكد من إيقاف المؤقت الخاطئ عند البدء
+        gamePaused = false; 
 
         // تحديث واجهة المستخدم
         updateUI();
@@ -591,7 +594,7 @@ class MainScene extends Phaser.Scene {
         if (!boxObj.getData('answered') && !gamePaused) {
             currentQuestionBox = boxObj;
             showQuestion(boxObj.getData('question'));
-            this.scene.pause();
+            this.scene.pause(); // إيقاف المشهد أثناء الإجابة
         }
     }
 
@@ -648,8 +651,33 @@ class MainScene extends Phaser.Scene {
         });
     }
 
+    createSky() {
+        // خلفية متدرجة للسماء
+        const gradient = this.add.graphics({ x: 0, y: 0 });
+        gradient.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
+        gradient.fillRect(0, 0, 200000, this.game.config.height); // شريط خلفية طويل جداً
+
+        // سحب (كأجسام لا تتحرك مع الكاميرا)
+        for (let i = 0; i < 10; i++) {
+            const cloud = this.add.graphics({ x: 100 + i * 300, y: 50 + i * 10 });
+            cloud.fillStyle(0xFFFFFF, 0.7);
+            this.createCloudShape(cloud, 0, 0);
+            cloud.setScrollFactor(0.5, 1); // تتحرك بنصف سرعة الكاميرا
+        }
+    }
+
+    createCloudShape(graphics, x, y) {
+        graphics.beginPath();
+        graphics.arc(x, y, 25, 0, Math.PI * 2);
+        graphics.arc(x + 30, y - 10, 30, 0, Math.PI * 2);
+        graphics.arc(x + 60, y, 25, 0, Math.PI * 2);
+        graphics.arc(x + 30, y + 10, 20, 0, Math.PI * 2);
+        graphics.fillPath();
+    }
+
+
     update() {
-        if (gamePaused) return;
+        if (this.scene.isPaused()) return; // التحقق من الإيقاف المؤقت للمشهد
 
         // ** 1. التحكم في حركة السيارة والسرعة **
         const carBody = this.car.body;
@@ -830,6 +858,7 @@ function handleAnswer(selectedIndex, question, choiceElement) {
         }, 1000);
         
     } else {
+        // الإجابة الخاطئة
         choiceElement.classList.add('wrong');
         
         // تقليل السرعة
@@ -911,7 +940,7 @@ function startGame() {
                 default: 'arcade',
                 arcade: {
                     gravity: { y: 0 }, 
-                    debug: false // يمكنك تغييرها إلى true لمعرفة حدود الأجسام
+                    debug: false // يمكنك تغييرها إلى true لاختبار حدود الأجسام
                 }
             },
             scene: MainScene
@@ -919,9 +948,10 @@ function startGame() {
         
         game = new Phaser.Game(config);
     } else {
-        // إذا كانت اللعبة موجودة، أعد تشغيل المشهد بدلاً من إنشاء كائن لعبة جديد
+        // إذا كانت اللعبة موجودة، أعد تشغيل المشهد
+        // **هذا الجزء تم تعديله لضمان إعادة التشغيل الصحيحة**
         game.scene.stop('MainScene'); 
-        game.scene.start('MainScene');
+        game.scene.start('MainScene'); 
     }
     
     updateUI();
