@@ -13,8 +13,7 @@
             overflow: hidden; 
             font-family: 'Arial', sans-serif;
             direction: rtl; 
-            /* خلفية بسيطة للعبة - يمكن تغييرها لاحقًا */
-            background-color: #add8e6; /* لون سماوي فاتح */
+            background-color: #add8e6; 
         }
 
         #game-container {
@@ -31,31 +30,31 @@
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 1000; /* أعلى z-index ليبقى فوق اللعبة */
-            background-color: rgba(0, 0, 0, 0.8); /* خلفية شفافة وداكنة */
+            z-index: 1000; 
+            background-color: rgba(0, 0, 0, 0.8); 
             color: white;
             padding: 15px;
             box-sizing: border-box;
             text-align: center;
-            display: none; /* إخفاؤه في البداية */
+            display: none; 
         }
 
         #questionBox h3 {
             margin-top: 0;
             margin-bottom: 15px;
-            font-size: clamp(1.2em, 3vw, 1.5em); /* حجم خط متكيف */
+            font-size: clamp(1.2em, 3vw, 1.5em); 
             line-height: 1.4;
         }
 
         .options-container {
             display: flex;
             justify-content: center;
-            flex-wrap: wrap; /* لكسر الأزرار إلى سطر جديد في الموبايل */
+            flex-wrap: wrap; 
             gap: 10px;
         }
 
         .option-button {
-            background-color: #3f88c5; /* لون أزرق جذاب */
+            background-color: #3f88c5; 
             color: white;
             border: 3px solid #285f8f;
             border-radius: 10px;
@@ -83,10 +82,10 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(255, 0, 0, 0); /* يبدأ شفافًا */
+            background-color: rgba(255, 0, 0, 0); 
             z-index: 999; 
             pointer-events: none;
-            transition: background-color 0.1s; /* للانتقال السريع */
+            transition: background-color 0.1s; 
         }
     </style>
 </head>
@@ -127,8 +126,8 @@
         // 🖼️ 4. إعدادات اللعبة
         const config = {
             type: Phaser.AUTO,
-            width: 800, // قاعدة العرض
-            height: 600, // قاعدة الارتفاع
+            width: 800, 
+            height: 600, 
             parent: 'game-container',
             scale: {
                 mode: Phaser.Scale.FIT,
@@ -137,8 +136,8 @@
             physics: {
                 default: 'arcade',
                 arcade: {
-                    gravity: { y: 0 }, // جاذبية صفرية لـ (4)
-                    debug: false // لتعطيل إظهار الحدود الفيزيائية
+                    gravity: { y: 0 }, 
+                    debug: false 
                 }
             },
             scene: {
@@ -155,19 +154,19 @@
         let platforms;
         let platformPositions;
         let currentPlatformIndex = 0;
-        let isMoving = false; // لمنع حركة القطة أثناء الانتقال
+        let isMoving = false; 
         let questionBox;
         let wrongFeedbackDiv;
         let correctSound;
         let wrongSound;
+        let catBreathingTween; // المتغير الجديد للتحكم في حركة التنفس
 
         // 📦 تحميل الأصول (Preload)
         function preload() {
-            // (1) صور اللاعب والمنصات
             this.load.image('cat', 'assets/cat.png'); 
             this.load.image('platform', 'assets/platform.png');
-            // (5) الأصوات
-            this.load.audio('correct', 'assets/correct.mp3');
+            // تأكد أن هذه الملفات موجودة في assets/
+            this.load.audio('correct', 'assets/correct.mp3'); 
             this.load.audio('wrong', 'assets/wrong.mp3');
         }
 
@@ -177,15 +176,12 @@
             questionBox = document.getElementById('questionBox');
             wrongFeedbackDiv = document.getElementById('wrongFeedback');
 
-            // تهيئة الأصوات (5)
             correctSound = this.sound.add('correct');
             wrongSound = this.sound.add('wrong');
             
-            // 2. المنصات
             platforms = this.physics.add.staticGroup();
 
             // تحديد مواقع المنصات (x, y)
-            // هذه الإحداثيات تتكيف مع حجم الشاشة (width, height)
             platformPositions = [
                 { x: width * 0.2, y: height * 0.8 },
                 { x: width * 0.8, y: height * 0.65 },
@@ -195,54 +191,54 @@
 
             platformPositions.forEach(pos => {
                 let platform = platforms.create(pos.x, pos.y, 'platform');
-                // 2. مقياس المنصات
                 platform.setScale(0.2, 0.05).refreshBody(); 
                 platform.setImmovable(true);
             });
 
-            // 1. شخصية اللعبة (القطة)
             const startPlatform = platforms.getChildren()[0];
-            cat = this.physics.add.sprite(startPlatform.x, startPlatform.y - startPlatform.displayHeight / 2, 'cat');
-            cat.setScale(0.15); // مقياس مناسب للقطة
-            cat.body.allowGravity = false; // (4) جاذبية صفرية
-            cat.setDepth(1); // لتبقى القطة فوق المنصة
+            
+            cat = this.physics.add.sprite(startPlatform.x, startPlatform.y, 'cat');
+            cat.setScale(0.15); 
+            cat.body.allowGravity = false; 
+            cat.setDepth(1); 
+            
+            // تحديد الموقع الأولي الدقيق للقطة فوق المنصة الأولى
+            const startPlatformTopY = startPlatform.y - startPlatform.displayHeight / 2;
+            const initialCatY = startPlatformTopY - cat.displayHeight / 2;
+            cat.y = initialCatY;
 
-            // تثبيت القطة على المنصة الأولى (4)
             this.physics.add.collider(cat, platforms, () => {
                 cat.setVelocity(0);
                 isMoving = false;
             });
 
-            // (1) حركة رأس القطة الخفيفة (Tween)
-            this.tweens.add({
+            // تخزين حركة التنفس في المتغير الجديد (catBreathingTween)
+            catBreathingTween = this.tweens.add({ 
                 targets: cat,
-                y: cat.y - 5, // تتحرك 5 بكسل للأعلى
+                y: initialCatY - 5, // تتحرك 5 بكسل للأعلى من موقعها الأولي
                 duration: 1000,
-                yoyo: true, // ترجع للأسفل
-                repeat: -1, // تكرار مستمر
+                yoyo: true, 
+                repeat: -1, 
                 ease: 'Sine.easeInOut'
             });
 
-            // ابدأ اللعبة بالمنصة الأولى
             showQuestion(this, 0);
         }
 
         // 🔄 تحديث المشهد (Update)
         function update() {
-            // (1) القطة لا تسقط عن المنصات نهائياً (مضمون باستخدام جاذبية صفرية و colliders)
+            // لا حاجة لمنطق خاص هنا
         }
 
         // 3. دالة إظهار السؤال في مربع HTML
         function showQuestion(scene, index) {
             const currentQ = QUESTIONS[index];
             if (!currentQ) {
-                // انتهت الأسئلة
                 questionBox.innerHTML = '<h3>أحسنت! لقد أنهيت اللعبة بنجاح!</h3>';
                 questionBox.style.display = 'block';
                 return;
             }
 
-            // إظهار مربع السؤال
             questionBox.style.display = 'block';
 
             let html = `<h3>${currentQ.question}</h3><div class="options-container">`;
@@ -258,101 +254,106 @@
         // 3. دالة التحقق من الإجابة
         window.checkAnswer = function(button, selectedAnswer, questionIndex) {
             const currentQ = QUESTIONS[questionIndex];
-            const scene = game.scene.getScene('default'); // الحصول على مشهد Phaser
+            const scene = game.scene.getScene('default'); 
 
-            // تعطيل جميع الأزرار لمنع النقر المزدوج
             document.querySelectorAll('.option-button').forEach(btn => btn.disabled = true);
 
             if (selectedAnswer === currentQ.correctAnswer) {
-                // 3. الإجابة الصحيحة
-                correctSound.play(); // تشغيل صوت الإحسنت
-                questionBox.style.display = 'none'; // إخفاء السؤال
+                // الإجابة الصحيحة
+                correctSound.play(); 
+                questionBox.style.display = 'none'; 
                 
-                // الانتقال إلى المنصة التالية
                 let nextIndex = questionIndex + 1;
                 if (nextIndex < platformPositions.length) {
                     currentPlatformIndex = nextIndex;
-                    moveCat(scene, nextIndex, true); // true للإجابة الصحيحة
+                    moveCat(scene, nextIndex, true); 
                 } else {
-                    // انتهت الأسئلة
                     showQuestion(scene, nextIndex); 
                 }
 
             } else {
-                // 3. الإجابة الخاطئة
-                wrongSound.play(); // تشغيل صوت الخطأ
+                // الإجابة الخاطئة
+                wrongSound.play(); 
                 
-                // 3. فيدباك بصري باللون الأحمر
+                // فيدباك بصري باللون الأحمر
                 wrongFeedbackDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
                 scene.time.delayedCall(200, () => {
                     wrongFeedbackDiv.style.backgroundColor = 'rgba(255, 0, 0, 0)';
-                    // إعادة تمكين الأزرار بعد الفيدباك
                     document.querySelectorAll('.option-button').forEach(btn => btn.disabled = false);
                 });
 
-                // 3. القطة تتحرك إلى المنصة السابقة إذا لم تكن الأولى
+                // الرجوع إلى المنصة السابقة
                 if (questionIndex > 0) {
                     let prevIndex = questionIndex - 1;
                     currentPlatformIndex = prevIndex;
-                    moveCat(scene, prevIndex, false); // false للإجابة الخاطئة
+                    moveCat(scene, prevIndex, false); 
                     
-                    // إظهار السؤال السابق (الموجود الآن في المنصة السابقة)
                     scene.time.delayedCall(1500, () => {
                         showQuestion(scene, prevIndex);
                     });
                 } else {
-                     // إعادة تمكين الأزرار في حالة عدم التحرك
                     document.querySelectorAll('.option-button').forEach(btn => btn.disabled = false);
                 }
             }
         }
 
-        // 4. دالة حركة القطة بين المنصات
-      // 4. دالة حركة القطة بين المنصات - الكود المعدل
+        // 4. دالة حركة القطة بين المنصات (الكود المُحسَّن)
         function moveCat(scene, targetIndex, isCorrect) {
             if (isMoving) return;
             isMoving = true;
 
+            // 🛑 إيقاف حركة التنفس لتجنب التداخل
+            if (catBreathingTween) {
+                catBreathingTween.pause();
+            }
+
             const targetPlatform = platforms.getChildren()[targetIndex];
+            const startX = cat.x;
             const startY = cat.y;
-            // الموقع الدقيق لقمة المنصة الجديدة
-            const targetY = targetPlatform.y - targetPlatform.displayHeight / 2;
+            
+            // حساب الموقع الدقيق: (قمة المنصة) - (نصف ارتفاع القطة)
+            const catHeight = cat.displayHeight;
+            const platformTopY = targetPlatform.y - targetPlatform.displayHeight / 2;
+            const targetY = platformTopY - catHeight / 2; 
             const targetX = targetPlatform.x;
             
-            // حساب المسافة ومدة الحركة (كما كان)
-            const distance = Phaser.Math.Distance.Between(cat.x, cat.y, targetX, targetY);
+            const distance = Phaser.Math.Distance.Between(startX, startY, targetX, targetY);
             const duration = distance * 2.5; 
             
-            // ارتفاع القفزة (أعلى نقطة ستصل إليها القطة)
-            const jumpHeight = 60 + Math.abs(startY - targetY) * 0.3;
-            
-            // تحديد النقاط التي ستمر بها القطة في Y لتحقيق القفزة الواقعية:
-            // 1. ارتفاع (قفز)
-            // 2. هبوط (على المنصة الجديدة)
-            
-            const jumpYPoint = Math.min(startY, targetY) - jumpHeight; // أدنى ارتفاع مشترك - ارتفاع القفزة
+            const jumpHeight = 70; 
+            const apexY = Math.min(startY, targetY) - jumpHeight;
 
             scene.tweens.add({
                 targets: cat,
-                x: targetX,
-                // نستخدم مصفوفة قيم للـ Y لتحقيق حركة القفز الطبيعية (Parabolic Jump)
-                y: [jumpYPoint, targetY], // ستتحرك Y أولاً إلى jumpYPoint ثم إلى targetY
-                
                 duration: duration,
-                ease: 'Sine.easeOut', // إبطاء الحركة الرأسية عند الصعود
-                
-                yoyo: false,
-                repeat: 0,
+                ease: 'Linear', 
+                x: targetX,
+
+                onUpdate: (tween, target) => {
+                    const progress = tween.progress;
+                    const parabolicFactor = 1 - Math.pow(2 * progress - 1, 2); 
+                    
+                    const linearY = Phaser.Math.Interpolation.Linear([startY, targetY], progress);
+                    
+                    // تطبيق المسار القوسي
+                    target.y = linearY - (startY - apexY) * parabolicFactor;
+                },
 
                 onComplete: () => {
-                    // **الخطوة الحاسمة:** تثبيت القطة على الموقع النهائي لضمان عدم وجود "شفافية"
+                    // ✅ التثبيت اليدوي للموقع النهائي لضمان الوقوف فوق المنصة
                     cat.x = targetX;
                     cat.y = targetY; 
                     
                     isMoving = false;
                     cat.setVelocity(0); 
 
-                    // باقي منطق اللعبة
+                    // ✅ إعادة تشغيل حركة التنفس من الموقع الجديد
+                    if (catBreathingTween) {
+                         // إعادة ضبط موقع التنفس ليبدأ من الموقع الجديد
+                        catBreathingTween.updateTo({ y: targetY - 5 }, true);
+                        catBreathingTween.resume(); 
+                    }
+                    
                     if (isCorrect) {
                         showQuestion(scene, currentPlatformIndex);
                     }
@@ -361,8 +362,7 @@
                     }
                 }
             });
-        } 
+        }
     </script>
 </body>
 </html>
-
