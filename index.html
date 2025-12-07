@@ -22,7 +22,6 @@ body {
     align-items: center;
 }
 
-/* مربع السؤال */
 #questionBox {
     position: fixed;
     top: 0;
@@ -72,7 +71,6 @@ body {
     transform: scale(0.98);
 }
 
-/* فيدباك خطأ */
 #wrongFeedback {
     position: fixed;
     top: 0;
@@ -100,22 +98,27 @@ const QUESTIONS = [
     {question:"ما هو الشكل الهندسي الذي يحتوي على ثلاثة أضلاع؟", options:["المربع","المثلث","الدائرة"], correctAnswer:"المثلث"}
 ];
 
-const config = {
-    type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    parent: 'game-container',
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-    physics: { default:'arcade', arcade:{gravity:{y:0}, debug:false} },
-    scene: { preload, create, update }
-};
-
-let game = new Phaser.Game(config);
-
+let config;
+let game;
 let cat, platforms, platformPositions, currentPlatformIndex=0, isMoving=false;
 let questionBox, wrongFeedbackDiv;
 let correctSound, wrongSound;
 let catBreathingTween;
+
+function initGame() {
+    config = {
+        type: Phaser.AUTO,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        parent: 'game-container',
+        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+        physics: { default:'arcade', arcade:{gravity:{y:0}, debug:false} },
+        scene: { preload, create, update }
+    };
+    game = new Phaser.Game(config);
+}
+
+initGame();
 
 function preload() {
     this.load.image('cat','assets/cat.png');
@@ -134,6 +137,11 @@ function create() {
     platforms = this.physics.add.staticGroup();
     const { width, height } = this.scale;
 
+    // تحديد حجم ديناميكي للقطة والمنصات حسب الشاشة
+    const catScale = Phaser.Math.Clamp(width/800*0.15,0.1,0.25);
+    const platformScaleX = Phaser.Math.Clamp(width/800*0.2,0.15,0.25);
+    const platformScaleY = Phaser.Math.Clamp(height/600*0.05,0.03,0.07);
+
     platformPositions = [
         { x: width*0.2, y: height*0.8 },
         { x: width*0.8, y: height*0.65 },
@@ -143,16 +151,17 @@ function create() {
 
     platformPositions.forEach(pos=>{
         let p = platforms.create(pos.x,pos.y,'platform');
-        p.setScale(0.2,0.05).refreshBody();
+        p.setScale(platformScaleX,platformScaleY).refreshBody();
         p.setImmovable(true);
     });
 
     const startPlatform = platforms.getChildren()[0];
     cat = this.physics.add.sprite(startPlatform.x, startPlatform.y,'cat');
-    cat.setScale(0.15);
+    cat.setScale(catScale);
     cat.body.allowGravity=false;
     cat.setDepth(1);
 
+    // ضبط القطة لتقف على المنصة بدقة
     const startY = startPlatform.y - startPlatform.displayHeight/2 - cat.displayHeight/2;
     cat.y = startY;
 
@@ -181,7 +190,6 @@ function showQuestion(index){
     html+=`</div>`;
     questionBox.innerHTML = html;
 
-    // ربط الأحداث
     document.querySelectorAll('.option-button').forEach(btn=>{
         btn.onclick = ()=>checkAnswer(btn, btn.textContent, index);
     });
@@ -234,7 +242,6 @@ function moveCat(scene,targetIndex,isCorrect){
 
     const distance = Phaser.Math.Distance.Between(startX,startY,targetX,targetY);
     const duration = distance*3;
-
     const apexY = Math.min(startY,targetY)-70;
 
     scene.tweens.add({
@@ -254,6 +261,7 @@ function moveCat(scene,targetIndex,isCorrect){
             isMoving=false;
             cat.setVelocity(0);
 
+            // إعادة تنفس القطة
             if(catBreathingTween){
                 catBreathingTween.remove();
                 catBreathingTween = scene.tweens.add({targets:cat,y:targetY-5,duration:1000,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
@@ -264,6 +272,11 @@ function moveCat(scene,targetIndex,isCorrect){
         }
     });
 }
+
+// إعادة ضبط اللعبة عند تغيير حجم الشاشة
+window.addEventListener('resize',()=>{
+    game.scale.resize(window.innerWidth, window.innerHeight);
+});
 </script>
 </body>
 </html>
