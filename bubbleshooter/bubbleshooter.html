@@ -2,60 +2,68 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>لعبة المدفع والفقاعات التعليمية</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+
 <style>
-body {
+body{
   margin:0;
   background:#add8e6;
   font-family:Arial;
+  touch-action: none; /* لمنع التكبير بالسحب */
 }
-header {
+header{
   background:#000;
   color:#fff;
   text-align:center;
-  padding:1em;
+  padding:0.5em;
+  height: 10vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-header h3 {
+header h3{
   margin:0;
-  font-size:clamp(1.5rem,5vw,2rem);
+  font-size:clamp(1.2rem, 4vw, 1.8rem);
 }
-.answers {
+.answers{
   display:flex;
   justify-content:center;
-  gap:1.2em;
-  margin-top:.5em;
-  font-size:clamp(1.1rem,4.5vw,1.5rem);
+  gap:1em;
+  margin-top:.2em;
+  font-size:clamp(1rem, 3.5vw, 1.4rem);
 }
-main {
+main{
   display:flex;
   justify-content:center;
-  padding:1em 0;
+  align-items: center;
+  height: 90vh; /* باقي الشاشة */
+  background: #add8e6;
 }
-#game-frame {
-  width:95vw;
-  max-width:520px;
-  aspect-ratio:3/5;
+#game-frame{
+  width:98vw;
+  height: 88vh; /* ملء الشاشة تقريباً */
+  max-width:600px;
   background:#e9f7ff;
-  border:6px solid #333;
-  border-radius:16px;
+  border:4px solid #333;
+  border-radius:12px;
   overflow:hidden;
-  position:relative;
+  position: relative;
 }
-#game-container {
-  width:100%;
-  height:100%;
-}
-#wrongFlash {
+#game-container{width:100%;height:100%}
+#wrongFlash{
   position:fixed;
   inset:0;
   background:rgba(255,0,0,0);
   pointer-events:none;
   transition:.2s;
+  z-index: 999;
 }
 </style>
 </head>
+
 <body>
 
 <header id="questionHeader"></header>
@@ -69,30 +77,58 @@ main {
 <div id="wrongFlash"></div>
 
 <script>
+/* ======================
+   البيانات
+====================== */
 const QUESTIONS = [
  { q:"ما هو الكوكب الأحمر؟", o:["الزهرة","المريخ","المشتري"], a:1 },
- { q:"كم عدد أرجل القط؟", o:["2","4","6"], a:1 }
+ { q:"كم عدد أرجل القط؟", o:["2","4","6"], a:1 },
+ { q:"ناتج 5 + 5؟", o:["9","10","11"], a:1 },
+ { q:"عاصمة مصر؟", o:["القاهرة","الاسكندرية","أسوان"], a:0 }
 ];
 
-const config = {
- type: Phaser.AUTO,
+/* ======================
+   إعدادات Phaser
+====================== */
+const config={
+ type:Phaser.AUTO,
  parent:'game-container',
- width:600,
- height:900,
- scale:{mode:Phaser.Scale.RESIZE},
- physics:{default:'arcade', arcade:{gravity:{y:0}}},
- scene:{preload,create}
+ width:window.innerWidth,  // ملء الإطار
+ height:window.innerHeight,
+ scale:{
+   mode:Phaser.Scale.RESIZE,
+   autoCenter: Phaser.Scale.CENTER_BOTH
+ },
+ physics:{
+   default:'arcade',
+   arcade:{
+     gravity:{y:0}, // لا توجد جاذبية لتسمح بالطفو
+     debug: false   // اجعلها true لرؤية حدود التصادم
+   }
+ },
+ scene:{preload,create,update}
 };
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
 
-let cannon, bubbles, arrow;
+/* ======================
+   المتغيرات
+====================== */
+let cannon, bubbles, arrow, invisibleWall;
 let currentQ=0;
 let canShoot=true;
 let isAiming=false;
 let missedShots=0;
-const cooldown=900;
 
+// متغيرات الأحجام
+let bubbleScaleRatio = 1;
+let shotScaleRatio = 1;
+let cannonScaleRatio = 1;
+
+/* ======================
+   Preload
+====================== */
 function preload(){
+ // استخدم صورك هنا. نفترض أن حجم الفقاعة الأصلي 300x300
  this.load.image('cannon','assets/cannon.png');
  this.load.image('shoot','assets/shoot.png');
  this.load.image('bubble1','assets/bubble1.png');
@@ -102,49 +138,80 @@ function preload(){
  this.load.audio('wrong','assets/wrong.mp3');
 }
 
+/* ======================
+   Create
+====================== */
 function create(){
- const {width,height}=this.scale;
+ const width = this.scale.width;
+ const height = this.scale.height;
 
+ // === 1. حساب الأحجام الديناميكية ===
+ // نريد الفقاعة تأخذ حوالي 22% من عرض الشاشة
+ const targetBubbleWidth = width * 0.22; 
+ // المصدر 300 بكسل، لذا المعامل هو:
+ bubbleScaleRatio = targetBubbleWidth / 300;
+
+ // القذيفة أصغر قليلاً من الفقاعة (مثلاً 15% من الشاشة)
+ const targetShotWidth = width * 0.15;
+ shotScaleRatio = targetShotWidth / 300; // بافتراض صورة القذيفة مربعة أيضاً
+
+ // المدفع
+ cannonScaleRatio = (height * 0.15) / 300; // نسبة تقريبية للمدفع
+
+ // === 2. الأصوات والحدود ===
  this.correctSound=this.sound.add('correct');
  this.wrongSound=this.sound.add('wrong');
-
- // ضبط حدود العالم داخل الإطار فقط
  this.physics.world.setBounds(0,0,width,height);
 
- // أحجام ديناميكية
- this.cannonScale = width*0.14; // أكبر قليلاً
- this.bubbleScale = width*0.18; 
- this.shotScale = width*0.08; 
+ // === 3. إنشاء الجدار غير المرئي (لحصر الفقاعات في الأعلى) ===
+ // نضعه عند 55% من ارتفاع الشاشة
+ invisibleWall = this.add.rectangle(width/2, height * 0.55, width, 20, 0x000000, 0); 
+ this.physics.add.existing(invisibleWall, true); // true تعني static (ثابت لا يتحرك)
 
-// المدفع
- cannon=this.add.sprite(width/2,height*0.92,'cannon')
-   .setScale(this.cannonScale);
+ // === 4. الكائنات ===
+ cannon=this.add.sprite(width/2, height*0.90, 'cannon')
+   .setScale(cannonScaleRatio);
 
-// مجموعة الفقاعات
+ // مجموعة الفقاعات
  bubbles=this.physics.add.group({
-   collideWorldBounds:true,
-   bounce:1
-});
+   collideWorldBounds: true,
+   bounceX: 1,
+   bounceY: 1
+ });
 
-// سهم صغير يوضح اتجاه الضرب
- arrow=this.add.text(cannon.x,cannon.y-cannon.displayHeight-10,'⬆️',{fontSize:'28px'})
+ // إضافة التصادم بين الفقاعات والجدار غير المرئي
+ this.physics.add.collider(bubbles, invisibleWall);
+
+ // السهم
+ arrow=this.add.text(cannon.x, cannon.y - (cannon.displayHeight/1.2), '⬆️', {fontSize:'30px'})
    .setOrigin(0.5);
 
-// حركة المدفع مع إصبع المستخدم أو الماوس
- this.input.on('pointermove',p=>{
-   cannon.x=Phaser.Math.Clamp(p.x,width*0.12,width*0.88);
+ // === 5. التحكم ===
+ this.input.on('pointermove', p=>{
+   // تقييد حركة المدفع
+   cannon.x=Phaser.Math.Clamp(p.x, width*0.1, width*0.9);
    arrow.x=cannon.x;
-});
+ });
 
-// منطق إطلاق القذيفة
- this.input.on('pointerdown',()=>{
+ this.input.on('pointerdown', ()=>{
    if(!isAiming){isAiming=true;return;}
    if(canShoot) fire(this);
-});
+ });
 
-showQuestion(this);
+ // عرض أول سؤال
+ showQuestion(this);
 }
 
+function update() {
+  // يمكن إضافة دوران بسيط للفقاعات لإضفاء حيوية
+  bubbles.children.iterate((b) => {
+    if(b) b.rotation += 0.01;
+  });
+}
+
+/* ======================
+   إطلاق القذيفة
+====================== */
 function fire(scene){
  canShoot=false;
  isAiming=false;
@@ -152,100 +219,118 @@ function fire(scene){
 
  const shot=scene.physics.add.sprite(
    cannon.x,
-   cannon.y-cannon.displayHeight/1.2,
+   cannon.y - cannon.displayHeight/2,
    'shoot'
- ).setScale(scene.shotScale);
+ ).setScale(shotScaleRatio); // استخدام الحجم الديناميكي الكبير
 
- shot.setVelocityY(-scene.scale.height*0.7);
+ // سرعة القذيفة
+ shot.setVelocityY(-scene.scale.height * 0.9); 
 
- scene.physics.add.overlap(shot,bubbles,(s,b)=>{
+ // التصادم مع الفقاعات
+ scene.physics.add.overlap(shot, bubbles, (s,b)=>{
    s.destroy();
    missedShots=0;
    bubbleHit(scene,b);
-});
+ });
 
-shot.setCollideWorldBounds(true);
-shot.body.onWorldBounds=true;
+ shot.setCollideWorldBounds(true);
+ shot.body.onWorldBounds=true;
 
-// إذا ضربت القذيفة في الفراغ
-shot.body.world.on('worldbounds',body=>{
+ // القذيفة تخطئ وتصطدم بالسقف
+ shot.body.world.on('worldbounds', body=>{
    if(body.gameObject===shot){
      shot.destroy();
      missedShots++;
-     if(missedShots>=2){
+     if(missedShots>=2){ // محاولتين فاشلتين = إعادة ترتيب
        missedShots=0;
-       showQuestion(scene); // إعادة الفقاعات بدون صوت خطأ
+       showQuestion(scene);
      }
    }
-});
+ });
 
-scene.time.delayedCall(1200,()=>shot.destroy());
-scene.time.delayedCall(cooldown,()=>{canShoot=true; arrow.setVisible(true);});
+ // تنظيف
+ scene.time.delayedCall(1500, ()=> { if(shot.active) shot.destroy(); });
+ scene.time.delayedCall(800, ()=>{
+   canShoot=true;
+   arrow.setVisible(true);
+ });
 }
 
-function bubbleHit(scene,bubble){
- const correct=bubble.getData('correct');
+/* ======================
+   إصابة الفقاعة
+====================== */
+function bubbleHit(scene, bubble){
+ const correct = bubble.getData('correct');
+ 
+ // تأثير بصري عند الانفجار (اختياري)
  bubble.destroy();
 
  if(correct){
    scene.correctSound.play();
-   scene.time.delayedCall(500,()=>{currentQ++;showQuestion(scene);});
+   // انتظر قليلاً ثم السؤال التالي
+   scene.time.delayedCall(500, ()=>{
+     currentQ++;
+     showQuestion(scene);
+   });
  }else{
    scene.wrongSound.play();
-   document.getElementById('wrongFlash').style.background='rgba(255,0,0,.4)';
-   setTimeout(()=>document.getElementById('wrongFlash').style.background='rgba(255,0,0,0)',250);
-   scene.time.delayedCall(700,()=>showQuestion(scene));
+   document.getElementById('wrongFlash').style.background='rgba(255,0,0,0.5)';
+   setTimeout(()=>document.getElementById('wrongFlash').style.background='rgba(255,0,0,0)', 300);
+   
+   // إعادة ترتيب الفقاعات كعقاب بسيط
+   scene.time.delayedCall(600, ()=> showQuestion(scene));
  }
 }
 
+/* ======================
+   عرض السؤال والفقاعات
+====================== */
 function showQuestion(scene){
- const q=QUESTIONS[currentQ];
+ const q = QUESTIONS[currentQ];
  if(!q){
-   document.getElementById('questionHeader').innerHTML='<h3>أحسنت ✅</h3>';
+   document.getElementById('questionHeader').innerHTML='<h3>🎉 أحسنت! أنهيت اللعبة</h3>';
    bubbles.clear(true,true);
    return;
  }
 
- document.getElementById('questionHeader').innerHTML=`
+ document.getElementById('questionHeader').innerHTML= `
    <h3>${q.q}</h3>
    <div class="answers">
-     <span>1️⃣ ${q.o[0]}</span>
-     <span>2️⃣ ${q.o[1]}</span>
-     <span>3️⃣ ${q.o[2]}</span>
+     <span>1: ${q.o[0]}</span> | 
+     <span>2: ${q.o[1]}</span> | 
+     <span>3: ${q.o[2]}</span>
    </div>
  `;
 
-// إزالة الفقاعات القديمة
  bubbles.clear(true,true);
+ 
+ const width = scene.scale.width;
+ const startPositions = [0.2, 0.5, 0.8]; // أماكن مبدئية
 
- const xs=[0.25,0.5,0.75];
- for(let i=0;i<3;i++){
-   const b=bubbles.create(
-     scene.scale.width*xs[i],
-     scene.scale.height*0.22,
+ for(let i=0; i<3; i++){
+   // إنشاء الفقاعة
+   const b = bubbles.create(
+     width * startPositions[i],
+     scene.scale.height * 0.25, // تبدأ من الربع العلوي
      'bubble'+(i+1)
-   ).setScale(scene.bubbleScale);
+   ).setScale(bubbleScaleRatio); // الحجم الكبير الديناميكي
 
-   b.setData('correct',i===q.a);
-
-   // حركة الفقاعات الطافية
+   // تخزين الإجابة
+   b.setCircle(140); // ضبط حدود التصادم للدائرة (بناءً على صورة 300 تقريباً)
+   b.setData('correct', i === q.a);
+   
+   // === حركة الطفو ===
+   // سرعة عشوائية في X و Y لتبدو كأنها تسبح
    b.setVelocity(
-     Phaser.Math.Between(-15,15), // أبطأ
-     Phaser.Math.Between(-10,10)   // طافية
+     Phaser.Math.Between(-60, 60), 
+     Phaser.Math.Between(-40, 40)
    );
-   b.setBounce(1);
-   b.body.setCollideWorldBounds(true);
-
-   // حصر الحركة في نصف اللعبة العلوي
-   b.body.setBoundsRectangle(new Phaser.Geom.Rectangle(
-     0,
-     scene.scale.height*0.12,
-     scene.scale.width,
-     scene.scale.height*0.45
-   ));
-}
+   
+   b.setBounce(1); // ارتداد كامل
+   b.setCollideWorldBounds(true);
+   // ملاحظة: التصادم مع invisibleWall تم تعريفه في create
+ }
 }
 </script>
-
 </body>
 </html>
