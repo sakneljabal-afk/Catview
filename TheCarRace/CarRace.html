@@ -61,18 +61,6 @@
             background-color: #0d1117;
         }
 
-        .speed-display {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 1rem;
-            border: 2px solid #4cc9f0;
-            z-index: 10;
-        }
-
         #errorOverlay {
             position: absolute;
             top: 0;
@@ -93,6 +81,18 @@
             opacity: 0;
             transition: opacity 0.2s;
             text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+        
+        .speed-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            border: 2px solid #4cc9f0;
+            z-index: 10;
         }
 
         .instructions {
@@ -183,6 +183,43 @@
             color: #f72585;
             font-weight: bold;
         }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 50;
+        }
+
+        .control-btn {
+            background: rgba(76, 201, 240, 0.7);
+            color: #1a1a2e;
+            border: 2px solid #fff;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+            flex-grow: 1;
+            margin: 0 5px;
+            text-align: center;
+        }
+        
+        .control-btn:active {
+            background: #4cc9f0;
+            transform: scale(0.98);
+        }
+        
+        @media (min-width: 769px) {
+            .controls {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -198,13 +235,19 @@
 
         <div class="speed-display">السرعة: <span id="speedValue">200</span></div>
         <div id="gameCanvas"></div>
+
+        <div class="controls">
+            <button class="control-btn" id="upBtn">⬆️</button>
+            <button class="control-btn" id="downBtn">⬇️</button>
+        </div>
     </div>
     
     <div class="instructions">
         <h2>📋 كيفية اللعب:</h2>
         <ul>
-            <li>تسير السيارة تلقائياً على المسار مع حركة عشوائية رأسيًا</li>
-            <li><span class="highlight">لا يمكنك تحريك السيارة</span> - الاصطدام بالصناديق إجباري</li>
+            <li>تسير السيارة تلقائياً على المسار</li>
+            <li><span class="highlight">الصناديق تغطي عرض الطريق بالكامل</span> - لا يمكن تفاديها</li>
+            <li>استخدم أزرار <span class="highlight">⬆️</span> و <span class="highlight">⬇️</span> للمساعدة في الحركة فقط (الاصطدام إجباري)</li>
             <li>عند الاصطدام <span class="highlight">بصندوق الأسئلة</span>، تظهر لك سؤال</li>
             <li>الإجابة الصحيحة تزيد سرعة سيارتك <span class="highlight">+20</span></li>
             <li>الإجابة الخاطئة تقلل سرعة سيارتك <span class="highlight">40%</span> وتظهر شاشة حمراء <span class="highlight">❌</span></li>
@@ -251,8 +294,6 @@
         let scoreText;
         let wrongQuestions = [];
         let remainingQuestions = [...allQuestionsData];
-        let playerMoveDirection = 1; // 1 للأسفل، -1 للأعلى
-        let playerMoveSpeed = 2;
 
         // عناصر DOM الإضافية لتأثير الخطأ
         const errorOverlay = document.getElementById('errorOverlay');
@@ -262,12 +303,14 @@
         class GameScene extends Phaser.Scene {
             constructor() {
                 super({ key: 'GameScene' });
+                this.isMovingUp = false;
+                this.isMovingDown = false;
                 this.backgroundObjects = null;
             }
             
             preload() {
                 this.createCarTexture();
-                this.createQuestionBoxTexture();
+                this.createWideQuestionBoxTexture(); // نسيج للصندوق العريض
                 this.createBackgroundObjectTextures();
             }
 
@@ -287,25 +330,30 @@
                 carGraphics.destroy();
             }
 
-            // دالة لتوليد نسيج صندوق الأسئلة
-            createQuestionBoxTexture() {
+            // دالة لتوليد نسيج صندوق أسئلة عريض يغطي المسار
+            createWideQuestionBoxTexture() {
                 const boxGraphics = this.add.graphics({ add: false });
+                
+                // صندوق عريض يغطي عرض الطريق (تقريباً 200 عرض، 100 ارتفاع)
                 boxGraphics.fillStyle(0xf72585, 1);
-                boxGraphics.fillRoundedRect(0, 0, 50, 50, 5);
+                boxGraphics.fillRect(0, 0, 200, 100);
+                
+                // علامة استفهام في المنتصف
                 boxGraphics.fillStyle(0xffffff, 1);
-                boxGraphics.fillRoundedRect(5, 5, 40, 40, 3);
+                boxGraphics.fillCircle(100, 50, 30);
+                
                 boxGraphics.fillStyle(0x000000, 1);
-                boxGraphics.fillCircle(25, 25, 10);
-                boxGraphics.fillStyle(0xffffff, 1);
-                boxGraphics.fillCircle(25, 22, 3);
-                boxGraphics.fillRect(24, 28, 2, 5);
-                boxGraphics.generateTexture('questionBoxTexture', 50, 50);
+                boxGraphics.fillCircle(100, 40, 10);
+                boxGraphics.fillRect(98, 60, 4, 20);
+                
+                boxGraphics.generateTexture('wideQuestionBoxTexture', 200, 100);
                 boxGraphics.destroy();
             }
 
             // دالة لتوليد نسيج عناصر الخلفية
             createBackgroundObjectTextures() {
                 const graphics = this.add.graphics({ add: false });
+
                 graphics.fillStyle(0x000000, 0.7);
                 graphics.fillRect(0, 15, 30, 15);
                 graphics.fillStyle(0x0a0a0a, 0.9);
@@ -333,8 +381,7 @@
                 this.createRoad();
                 this.backgroundObjects = this.add.group();
 
-                // إضافة السيارة في موضع عشوائي في البداية
-                player = this.physics.add.sprite(this.sys.game.config.width * 0.25, Phaser.Math.Between(420, 560), 'carTexture'); 
+                player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
                 player.setCollideWorldBounds(true);
                 player.setScale(0.8);
                 
@@ -354,10 +401,10 @@
                     fontStyle: 'bold'
                 }).setScrollFactor(0).setDepth(100);
 
-                // مؤقت لتوليد صناديق الأسئلة (بفاصل كبير لكنها تغطي المسار بالكامل)
+                // مؤقت لتوليد صناديق الأسئلة
                 this.time.addEvent({
-                    delay: 3000, 
-                    callback: this.generateQuestionBoxRow,
+                    delay: 4000, 
+                    callback: this.generateQuestionBox,
                     callbackScope: this,
                     loop: true
                 });
@@ -370,8 +417,7 @@
                     loop: true
                 });
                 
-                // توليد أول صف من الصناديق
-                this.generateQuestionBoxRow();
+                this.generateQuestionBox();
                 scrollSpeed = baseSpeed;
                 
                 // إعداد واجهة الأسئلة في DOM
@@ -379,8 +425,50 @@
                 document.getElementById('closeQuestion').addEventListener('click', () => {
                     this.resumeGame();
                 });
+                
+                // إعداد مدخلات لوحة المفاتيح
+                this.cursors = this.input.keyboard.createCursorKeys();
+
+                // إعداد مدخلات اللمس (للموبايل)
+                this.setupMobileControls();
             }
 
+            // دالة إعداد التحكم باللمس
+            setupMobileControls() {
+                const upBtn = document.getElementById('upBtn');
+                const downBtn = document.getElementById('downBtn');
+
+                const startMove = (direction) => {
+                    if (scrollSpeed > 0) {
+                        if (direction === 'up') {
+                            this.isMovingUp = true;
+                        } else if (direction === 'down') {
+                            this.isMovingDown = true;
+                        }
+                    }
+                };
+
+                const stopMove = (direction) => {
+                    if (direction === 'up') {
+                        this.isMovingUp = false;
+                    } else if (direction === 'down') {
+                        this.isMovingDown = false;
+                    }
+                };
+
+                // للأعلى
+                upBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startMove('up'); });
+                upBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopMove('up'); });
+                upBtn.addEventListener('mousedown', (e) => { startMove('up'); });
+                upBtn.addEventListener('mouseup', (e) => { stopMove('up'); });
+
+                // للأسفل
+                downBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startMove('down'); });
+                downBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopMove('down'); });
+                downBtn.addEventListener('mousedown', (e) => { startMove('down'); });
+                downBtn.addEventListener('mouseup', (e) => { stopMove('down'); });
+            }
+            
             createBackground() {
                 const graphics = this.add.graphics();
                 graphics.fillGradientStyle(0x0a0a20, 0x0e1332, 0x0a0a20, 0x0e1332);
@@ -455,7 +543,7 @@
                 if (questionBoxGroup) {
                     questionBoxGroup.getChildren().forEach(box => {
                         box.x -= scrollSpeed / 60;
-                        if (box.x < -50) {
+                        if (box.x < -200) { // -200 لأن الصندوق عريض
                             box.destroy();
                         }
                     });
@@ -465,37 +553,24 @@
                 document.getElementById('speedValue').textContent = Math.round(baseSpeed);
                 this.scoreText.setText(`النقاط: ${score}`);
 
-                // حركة السيارة العشوائية التلقائية (لا تحكم من اللاعب)
+                // التحكم في حركة السيارة
+                const moveAmount = 15;
                 if (scrollSpeed > 0) {
-                    // حركة السيارة بشكل عشوائي مع تغيير الاتجاه بشكل دوري
-                    if (Math.random() < 0.02) { // 2% فرصة لتغيير الاتجاه في كل إطار
-                        playerMoveDirection *= -1;
-                        playerMoveSpeed = Phaser.Math.Between(1, 3);
+                    if (this.cursors.up.isDown || this.isMovingUp) {
+                        player.y -= moveAmount;
+                    } else if (this.cursors.down.isDown || this.isMovingDown) {
+                        player.y += moveAmount;
                     }
-                    
-                    // تحريك السيارة
-                    player.y += playerMoveSpeed * playerMoveDirection;
-                    
-                    // ضمان بقاء السيارة ضمن حدود الطريق
-                    if (player.y < 420) {
-                        player.y = 420;
-                        playerMoveDirection = 1; // تغيير الاتجاه للأسفل
-                    } else if (player.y > 560) {
-                        player.y = 560;
-                        playerMoveDirection = -1; // تغيير الاتجاه للأعلى
-                    }
+                    player.y = Phaser.Math.Clamp(player.y, 420, 560);
                 }
             }
             
-            // توليد صف كامل من الصناديق يغطي المسار
-            generateQuestionBoxRow() {
-                if (questionBoxGroup.getLength() > 10) {
+            generateQuestionBox(questionData = null) {
+                if (questionBoxGroup.getLength() > 0) {
                     return;
                 }
                 
-                let questionData = null;
-                
-                // اختيار سؤال (خاطئ أولاً، ثم جديد)
+                // اختيار سؤال
                 if (wrongQuestions.length > 0) { 
                     questionData = wrongQuestions.shift();
                 } else if (remainingQuestions.length > 0) {
@@ -509,23 +584,30 @@
                 
                 if (!questionData) return;
                 
-                // توليد عدة صناديق في صف واحد يغطي المسار
-                const numBoxes = Phaser.Math.Between(3, 5); // 3-5 صناديق في الصف
-                const startY = 430;
-                const endY = 550;
-                const step = (endY - startY) / (numBoxes - 1);
+                // إنشاء صندوق عريض يغطي المسار
+                // الصندوق سيظهر في منتصف المسار رأسيًا (y=500)
+                // وسيكون عريضًا بما يكفي لتغطية المسار أفقيًا
+                const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture'); 
                 
-                for (let i = 0; i < numBoxes; i++) {
-                    const yPos = startY + (step * i);
-                    const box = this.physics.add.sprite(850, yPos, 'questionBoxTexture'); 
-                    box.setScale(0.8);
-                    questionBoxGroup.add(box);
-                    
-                    // نسخ بيانات السؤال لكل صندوق
-                    const questionCopy = JSON.parse(JSON.stringify(questionData));
-                    box.setData('question', questionCopy);
-                    box.setData('used', false);
-                }
+                // جعل الصندوق عريضًا وطويلًا لتغطية المسار
+                box.setDisplaySize(250, 150); // جعل الصندوق أكبر
+                
+                // جعل الجسم الفيزيائي يغطي مساحة كبيرة
+                box.body.setSize(250, 150);
+                
+                questionBoxGroup.add(box);
+                box.setData('question', questionData);
+                box.setData('used', false);
+                
+                // إضافة حركة خفيفة للصندوق لجذب الانتباه
+                this.tweens.add({
+                    targets: box,
+                    y: 480,
+                    duration: 1000,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
             }
             
             hitQuestionBox(player, box) {
@@ -534,6 +616,9 @@
                 box.setData('used', true);
                 scrollSpeed = 0;
                 this.physics.pause();
+                
+                // إيقاف حركة الصندوق
+                this.tweens.killTweensOf(box);
                 
                 activeQuestion = box.getData('question');
                 this.showQuestion(activeQuestion);
@@ -610,6 +695,8 @@
                                 targets: box,
                                 y: box.y - 50,
                                 alpha: 0,
+                                scaleX: 0.5,
+                                scaleY: 0.5,
                                 duration: 500,
                                 onComplete: () => {
                                     box.destroy();
