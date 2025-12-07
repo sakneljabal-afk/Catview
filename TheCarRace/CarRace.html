@@ -6,100 +6,129 @@
 <title>متسابق المعرفة - علوم رابعة</title>
 <style>
 body { 
-    background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
-    font-family: Tahoma, Arial, sans-serif;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    height: 100vh;
+    background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+    font-family: 'Cairo', Tahoma, Arial, sans-serif;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #gameContainer {
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     position: relative;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
 }
 
-#gameCanvas {
-    border: 4px solid #2b6fb3;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+#header {
+    width: 100%;
+    padding: 10px 5px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    color: #2b6fb3;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+#gameArea {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 #sidebar-left {
     position: absolute;
-    left: 20px;
-    top: 20px;
-    width: 250px;
-    max-height: 90vh;
+    right: 5px;
+    top: 60px;
+    width: 180px;
+    max-height: calc(100vh - 120px);
     overflow-y: auto;
-    background: rgba(240, 248, 255, 0.9);
-    padding: 15px;
+    background: rgba(240, 248, 255, 0.95);
+    padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     backdrop-filter: blur(5px);
+    font-size: 12px;
 }
 
 #sidebar-left h4 {
     text-align: center;
-    margin-top: 0;
+    margin: 0 0 10px 0;
     color: #2b6fb3;
     border-bottom: 2px solid #2b6fb3;
-    padding-bottom: 8px;
+    padding-bottom: 5px;
+    font-size: 13px;
 }
 
 .answered {
-    margin-bottom: 8px;
-    padding: 8px;
+    margin-bottom: 6px;
+    padding: 6px;
     background: #d1ffd1;
-    border-radius: 6px;
-    border-right: 4px solid #4CAF50;
-    font-size: 14px;
-    line-height: 1.4;
+    border-radius: 5px;
+    border-right: 3px solid #4CAF50;
+    font-size: 11px;
+    line-height: 1.3;
 }
 
 #sidebar-right {
     position: absolute;
-    right: 20px;
-    top: 20px;
-    width: 200px;
-    background: rgba(255, 240, 245, 0.9);
-    padding: 15px;
+    left: 5px;
+    top: 60px;
+    width: 150px;
+    background: rgba(255, 240, 245, 0.95);
+    padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     backdrop-filter: blur(5px);
-    text-align: center;
+    font-size: 12px;
 }
 
 #sidebar-right h4 {
-    margin-top: 0;
+    text-align: center;
+    margin: 0 0 10px 0;
     color: #2b6fb3;
     border-bottom: 2px solid #2b6fb3;
-    padding-bottom: 8px;
+    padding-bottom: 5px;
+    font-size: 13px;
 }
 
 .game-info {
-    margin: 10px 0;
-    padding: 8px;
-    background: white;
-    border-radius: 6px;
+    margin: 8px 0;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
     font-weight: bold;
+    text-align: center;
+    font-size: 11px;
 }
 
-#header {
-    position: absolute;
-    top: 20px;
-    width: 100%;
-    text-align: center;
-    font-weight: bold;
-    font-size: 18px;
-    color: #2b6fb3;
-    text-shadow: 1px 1px 2px white;
-    z-index: 10;
+#speedMeter {
+    height: 15px;
+    background: #ddd;
+    border-radius: 8px;
+    margin: 8px 0;
+    overflow: hidden;
+    border: 1px solid #aaa;
+}
+
+#speedFill {
+    height: 100%;
+    width: 50%;
+    background: linear-gradient(to right, #4CAF50, #FFC107, #FF5722);
+    border-radius: 8px;
+    transition: width 0.5s;
 }
 
 #questionBox {
@@ -108,36 +137,39 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     background: white;
-    padding: 25px;
+    padding: 20px;
     border-radius: 12px;
     box-shadow: 0 0 25px rgba(0,0,0,0.4);
-    width: 400px;
+    width: 90%;
+    max-width: 400px;
     display: none;
     z-index: 1000;
     border: 3px solid #2b6fb3;
 }
 
 #questionBox h3 {
-    font-size: 18px;
+    font-size: 16px;
     margin-bottom: 15px;
     color: #2b6fb3;
     line-height: 1.5;
+    text-align: center;
 }
 
 .choice {
-    background: #e8e8e8;
+    background: #f0f0f0;
     padding: 12px;
-    margin: 10px 0;
+    margin: 8px 0;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 14px;
     transition: all 0.2s;
     border: 2px solid transparent;
+    text-align: center;
 }
 
-.choice:hover {
+.choice:hover, .choice:active {
     background: #d0d0d0;
-    transform: translateX(-5px);
+    transform: translateX(-3px);
     border-color: #2b6fb3;
 }
 
@@ -159,7 +191,7 @@ body {
     height: 100%;
     background: rgba(0, 200, 0, 0.95);
     color: white;
-    font-size: 36px;
+    font-size: 28px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -167,12 +199,13 @@ body {
     display: none;
     z-index: 1001;
     text-align: center;
+    padding: 20px;
 }
 
 #winScreen button {
     margin-top: 20px;
-    padding: 15px 30px;
-    font-size: 20px;
+    padding: 12px 24px;
+    font-size: 18px;
     background: white;
     color: #2b6fb3;
     border: none;
@@ -181,67 +214,7 @@ body {
     font-weight: bold;
 }
 
-#speedMeter {
-    height: 20px;
-    background: #ddd;
-    border-radius: 10px;
-    margin: 10px 0;
-    overflow: hidden;
-}
-
-#speedFill {
-    height: 100%;
-    width: 50%;
-    background: linear-gradient(to right, #4CAF50, #FFC107, #FF5722);
-    border-radius: 10px;
-    transition: width 0.3s;
-}
-
-/* تنسيق الموبايل */
-@media only screen and (max-width: 768px) {
-    #sidebar-left, #sidebar-right {
-        position: relative;
-        width: 90%;
-        margin: 10px auto;
-        max-height: 120px;
-        order: 1;
-        left: auto;
-        right: auto;
-        top: auto;
-    }
-    
-    #header {
-        font-size: 14px;
-        padding: 5px;
-        margin-bottom: 5px;
-    }
-    
-    #questionBox {
-        width: 90%;
-        padding: 15px;
-    }
-    
-    #questionBox h3 {
-        font-size: 16px;
-    }
-    
-    .choice {
-        padding: 12px;
-        font-size: 14px;
-    }
-    
-    #winScreen {
-        font-size: 24px;
-        padding: 20px;
-    }
-    
-    #winScreen button {
-        padding: 12px 24px;
-        font-size: 18px;
-    }
-}
-
-/* عناصر التحكم */
+/* عناصر التحكم للجوال */
 #controls {
     position: absolute;
     bottom: 20px;
@@ -249,56 +222,170 @@ body {
     right: 0;
     display: flex;
     justify-content: center;
-    gap: 20px;
-    display: none; /* مخفي على الكمبيوتر */
+    gap: 15px;
 }
 
 .control-btn {
     width: 70px;
     height: 70px;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(43, 111, 179, 0.8);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
+    font-size: 28px;
     color: white;
     cursor: pointer;
     user-select: none;
-    border: 3px solid white;
+    border: 4px solid white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: all 0.1s;
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+    background: rgba(43, 111, 179, 1);
+}
+
+#accelerateBtn {
+    position: absolute;
+    bottom: 100px;
+    left: 20px;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 87, 34, 0.9);
+    font-size: 34px;
 }
 
 @media only screen and (max-width: 768px) {
+    #sidebar-left, #sidebar-right {
+        width: 140px;
+        font-size: 11px;
+    }
+    
+    #sidebar-left {
+        right: 5px;
+        top: 50px;
+    }
+    
+    #sidebar-right {
+        left: 5px;
+        top: 50px;
+    }
+    
+    .game-info {
+        font-size: 10px;
+        padding: 5px;
+    }
+    
     #controls {
-        display: flex;
+        gap: 10px;
+    }
+    
+    .control-btn {
+        width: 65px;
+        height: 65px;
+        font-size: 26px;
+    }
+    
+    #accelerateBtn {
+        width: 75px;
+        height: 75px;
+        font-size: 32px;
+        bottom: 90px;
+        left: 15px;
     }
 }
+
+/* شاشة البداية */
+#startScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #87CEEB, #2b6fb3);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1002;
+    text-align: center;
+    padding: 20px;
+}
+
+#startScreen h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+#startScreen p {
+    font-size: 18px;
+    margin-bottom: 30px;
+    max-width: 600px;
+    line-height: 1.6;
+}
+
+#startScreen button {
+    padding: 15px 40px;
+    font-size: 20px;
+    background: white;
+    color: #2b6fb3;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.hidden {
+    display: none !important;
+}
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<div id="header">
-    متسابق المعرفة - المادة: علوم الصف الرابع الابتدائي
+<div id="startScreen">
+    <h1>🚗 متسابق المعرفة 🧠</h1>
+    <p>اختر سرعتك وأجب على الأسئلة لترتفع درجتك!<br>
+    استخدم زر 🚀 لتسريع السيارة<br>
+    استخدم الأسهم لضبط توازن السيارة<br>
+    كل إجابة صحيحة تزيد سرعتك!<br>
+    <strong>المادة: علوم الصف الرابع الابتدائي</strong></p>
+    <button onclick="startGame()">ابدأ اللعب</button>
 </div>
 
-<div id="gameContainer">
-    <canvas id="gameCanvas"></canvas>
-</div>
-
-<div id="sidebar-left">
-    <h4>الإجابات الصحيحة</h4>
-    <div id="answeredList"></div>
-</div>
-
-<div id="sidebar-right">
-    <h4>معلومات اللعبة</h4>
-    <div class="game-info">السرعة: <span id="currentSpeed">50</span> كم/س</div>
-    <div class="game-info">النتيجة: <span id="score">0</span></div>
-    <div class="game-info">الأسئلة المتبقية: <span id="questionsRemaining">0</span></div>
-    <div id="speedMeter">
-        <div id="speedFill"></div>
+<div id="gameContainer" class="hidden">
+    <div id="header">
+        متسابق المعرفة - علوم الصف الرابع الابتدائي
     </div>
-    <div class="game-info" style="font-size: 12px; margin-top: 10px;">
-        استخدم ↑↓ لتسريع/كبح أو ←→ لضبط التوازن
+    
+    <div id="gameArea">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="sidebar-left">
+            <h4>الإجابات الصحيحة</h4>
+            <div id="answeredList"></div>
+        </div>
+        
+        <div id="sidebar-right">
+            <h4>معلومات اللعبة</h4>
+            <div class="game-info">السرعة: <span id="currentSpeed">2</span></div>
+            <div class="game-info">النتيجة: <span id="score">0</span></div>
+            <div class="game-info">المتبقي: <span id="questionsRemaining">0</span></div>
+            <div id="speedMeter">
+                <div id="speedFill"></div>
+            </div>
+        </div>
+        
+        <div id="accelerateBtn" class="control-btn">🚀</div>
+        
+        <div id="controls">
+            <div class="control-btn" id="leftBtn">←</div>
+            <div class="control-btn" id="rightBtn">→</div>
+        </div>
     </div>
 </div>
 
@@ -307,16 +394,10 @@ body {
     <div id="choices"></div>
 </div>
 
-<div id="winScreen">
+<div id="winScreen" class="hidden">
     🎉 مبروك! أكملت جميع الأسئلة! 🎉
+    <div style="font-size: 20px; margin-top: 20px;">نتيجتك النهائية: <span id="finalScore">0</span></div>
     <button onclick="restartGame()">لعب مرة أخرى</button>
-</div>
-
-<div id="controls">
-    <div class="control-btn" id="leftBtn">←</div>
-    <div class="control-btn" id="upBtn">↑</div>
-    <div class="control-btn" id="rightBtn">→</div>
-    <div class="control-btn" id="downBtn">↓</div>
 </div>
 
 <script>
@@ -331,8 +412,6 @@ const allQuestions = [
         ],
         "a": 2
     },
-    // ... (كل الأسئلة من الكود الأصلي موجودة هنا)
-    // لأغراض العرض، سأضع بعض الأسئلة فقط
     {
         "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟",
         "c": [
@@ -377,59 +456,179 @@ const ctx = canvas.getContext('2d');
 
 // ضبط حجم اللوحة
 function resizeCanvas() {
-    const container = document.getElementById('gameContainer');
-    canvas.width = Math.min(800, container.clientWidth - 300);
-    canvas.height = Math.min(600, container.clientHeight - 100);
+    const gameArea = document.getElementById('gameArea');
+    canvas.width = gameArea.clientWidth;
+    canvas.height = gameArea.clientHeight;
 }
+
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 // ********** متغيرات اللعبة **********
-let gameState = 'playing'; // 'playing' أو 'paused' أو 'gameOver'
-let car = {
-    x: 100,
-    y: canvas.height / 2,
-    width: 60,
-    height: 30,
-    speed: 2,
-    maxSpeed: 10,
-    minSpeed: 0.5,
-    acceleration: 0.1,
-    deceleration: 0.05,
-    tilt: 0,
-    maxTilt: 30,
-    color: '#FF5722',
-    wheels: [
-        { x: 10, y: 25, radius: 8 },
-        { x: 50, y: 25, radius: 8 }
-    ]
-};
-
+let gameState = 'playing';
+let scrollSpeed = 2; // سرعة التمرير الأساسية (أبطأ)
+let baseSpeed = 2;
 let terrain = [];
 let questionBoxes = [];
 let answeredQuestions = new Set();
 let currentQuestions = [...allQuestions];
 let score = 0;
-let baseSpeed = 2;
 let currentQuestionBox = null;
+let isAccelerating = false;
 
-// ********** توليد التضاريس **********
+// السيارة ثابتة في منتصف الشاشة
+const car = {
+    x: canvas.width * 0.15, // السيارة ثابتة على اليسار
+    y: canvas.height / 2,
+    width: 50,
+    height: 25,
+    tilt: 0,
+    maxTilt: 25,
+    color: '#FF5722',
+    wheels: [
+        { x: 8, y: 20, radius: 6 },
+        { x: 42, y: 20, radius: 6 }
+    ]
+};
+
+// ********** توليد تضاريس متنوعة **********
 function generateTerrain() {
     terrain = [];
-    let y = canvas.height / 2;
-    let amplitude = 80;
-    let frequency = 0.02;
+    let currentY = canvas.height * 0.6;
+    let terrainType = 'flat';
+    let segmentLength = 0;
     
-    for (let x = 0; x < canvas.width * 2; x += 10) {
-        // إنشاء تضاريس موجية
-        y = canvas.height / 2 + Math.sin(x * frequency) * amplitude;
-        
-        // إضافة بعض التلال العشوائية
-        if (Math.random() < 0.01) {
-            amplitude = Math.random() * 60 + 40;
+    for (let x = 0; x < canvas.width * 3; x += 20) {
+        // تغيير نوع التضاريس بشكل عشوائي
+        if (segmentLength <= 0) {
+            const types = ['flat', 'hill', 'mountain', 'valley'];
+            terrainType = types[Math.floor(Math.random() * types.length)];
+            segmentLength = 50 + Math.random() * 100;
         }
         
-        terrain.push({ x, y });
+        // حساب Y بناءً على نوع التضاريس
+        switch(terrainType) {
+            case 'flat':
+                currentY += (Math.random() - 0.5) * 3;
+                break;
+            case 'hill':
+                currentY = canvas.height * 0.5 + Math.sin(x * 0.02) * 30;
+                break;
+            case 'mountain':
+                currentY = canvas.height * 0.4 + Math.sin(x * 0.015) * 60;
+                break;
+            case 'valley':
+                currentY = canvas.height * 0.7 + Math.sin(x * 0.025) * 40;
+                break;
+        }
+        
+        // التأكد من بقاء Y ضمن الحدود
+        currentY = Math.max(canvas.height * 0.4, Math.min(canvas.height * 0.8, currentY));
+        
+        terrain.push({ x, y: currentY });
+        segmentLength--;
+    }
+}
+
+// ********** رسم الخلفية **********
+function drawBackground() {
+    // السماء
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGradient.addColorStop(0, '#87CEEB');
+    skyGradient.addColorStop(1, '#E0F6FF');
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // سحب بعيدة
+    drawClouds();
+    
+    // جبال بعيدة
+    drawDistantMountains();
+}
+
+function drawClouds() {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    const time = Date.now() * 0.0001;
+    
+    for (let i = 0; i < 3; i++) {
+        const x = (canvas.width + (car.x * 0.1) + i * 200 + time * 20) % (canvas.width + 400) - 200;
+        const y = 30 + i * 40;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 25, 0, Math.PI * 2);
+        ctx.arc(x + 30, y - 10, 30, 0, Math.PI * 2);
+        ctx.arc(x + 60, y, 25, 0, Math.PI * 2);
+        ctx.arc(x + 30, y + 10, 20, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawDistantMountains() {
+    ctx.fillStyle = 'rgba(100, 100, 150, 0.3)';
+    
+    for (let i = 0; i < 5; i++) {
+        const xStart = (car.x * 0.05 + i * 300) % (canvas.width + 400) - 200;
+        const height = 100 + Math.sin(i) * 30;
+        
+        ctx.beginPath();
+        ctx.moveTo(xStart, canvas.height * 0.6);
+        for (let j = 0; j < 10; j++) {
+            const x = xStart + j * 40;
+            const y = canvas.height * 0.6 - height * Math.sin(j * 0.3) * (1 - j * 0.1);
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(xStart + 400, canvas.height * 0.6);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
+// ********** رسم التضاريس **********
+function drawTerrain() {
+    if (terrain.length < 2) return;
+    
+    // التضاريس الرئيسية
+    ctx.beginPath();
+    ctx.moveTo(terrain[0].x, terrain[0].y);
+    
+    for (let i = 1; i < terrain.length; i++) {
+        ctx.lineTo(terrain[i].x, terrain[i].y);
+    }
+    
+    // إكمال الشكل
+    ctx.lineTo(terrain[terrain.length-1].x, canvas.height);
+    ctx.lineTo(terrain[0].x, canvas.height);
+    ctx.closePath();
+    
+    // تدرج لوني للتضاريس
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#8BC34A');
+    gradient.addColorStop(0.8, '#689F38');
+    gradient.addColorStop(1, '#558B2F');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // تفاصيل التضاريس
+    ctx.strokeStyle = '#558B2F';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // عشب على السطح
+    drawGrass();
+}
+
+function drawGrass() {
+    ctx.strokeStyle = '#7CB342';
+    ctx.lineWidth = 1;
+    
+    for (let i = 0; i < terrain.length; i += 5) {
+        if (terrain[i].x > -20 && terrain[i].x < canvas.width + 20) {
+            const height = 5 + Math.sin(terrain[i].x * 0.1) * 3;
+            ctx.beginPath();
+            ctx.moveTo(terrain[i].x, terrain[i].y);
+            ctx.lineTo(terrain[i].x, terrain[i].y - height);
+            ctx.stroke();
+        }
     }
 }
 
@@ -445,10 +644,14 @@ function drawCar() {
     ctx.fillStyle = car.color;
     ctx.fillRect(-car.width/2, -car.height/2, car.width, car.height);
     
-    // نوافذ السيارة
-    ctx.fillStyle = '#87CEEB';
-    ctx.fillRect(-car.width/2 + 5, -car.height/2 + 5, 20, 15);
-    ctx.fillRect(-car.width/2 + 30, -car.height/2 + 5, 20, 15);
+    // تفاصيل السيارة
+    ctx.fillStyle = '#333';
+    ctx.fillRect(-car.width/2 + 5, -car.height/2 + 3, 15, 8); // نافذة أمامية
+    ctx.fillRect(-car.width/2 + 25, -car.height/2 + 3, 15, 8); // نافذة خلفية
+    
+    // أضواء
+    ctx.fillStyle = '#FFEB3B';
+    ctx.fillRect(-car.width/2 - 2, -car.height/2 + 8, 4, 6); // ضوء أمامي
     
     // العجلات
     ctx.fillStyle = '#333';
@@ -468,35 +671,6 @@ function drawCar() {
     ctx.restore();
 }
 
-// ********** رسم التضاريس **********
-function drawTerrain() {
-    if (terrain.length < 2) return;
-    
-    ctx.beginPath();
-    ctx.moveTo(terrain[0].x, terrain[0].y);
-    
-    for (let i = 1; i < terrain.length; i++) {
-        ctx.lineTo(terrain[i].x, terrain[i].y);
-    }
-    
-    // إكمال الشكل لإغلاق التضاريس
-    ctx.lineTo(terrain[terrain.length-1].x, canvas.height);
-    ctx.lineTo(terrain[0].x, canvas.height);
-    ctx.closePath();
-    
-    // تدرج لوني للتضاريس
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#8BC34A');
-    gradient.addColorStop(1, '#689F38');
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    
-    // حدود التضاريس
-    ctx.strokeStyle = '#558B2F';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-}
-
 // ********** رسم صناديق الأسئلة **********
 function drawQuestionBoxes() {
     questionBoxes.forEach(box => {
@@ -511,18 +685,18 @@ function drawQuestionBoxes() {
         
         // علامة استفهام
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 20px Arial';
+        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('?', box.x + box.width/2, box.y + box.height/2);
         
-        // مؤشر الوهج للسؤال الجديد بعد الخطأ
+        // تأثير لصندوق السؤال المكرر
         if (box.isRepeat) {
             ctx.shadowColor = '#FF5722';
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 10;
             ctx.strokeStyle = '#FF5722';
             ctx.lineWidth = 3;
-            ctx.strokeRect(box.x, box.y, box.width, box.height);
+            ctx.strokeRect(box.x - 2, box.y - 2, box.width + 4, box.height + 4);
             ctx.shadowBlur = 0;
         }
     });
@@ -532,18 +706,19 @@ function drawQuestionBoxes() {
 function generateQuestionBoxes() {
     questionBoxes = [];
     
-    // وضع صناديق الأسئلة على التضاريس
-    for (let i = 0; i < currentQuestions.length; i++) {
-        const question = currentQuestions[i];
+    currentQuestions.forEach((question, index) => {
+        // وضع صناديق على مسافات منتظمة
+        const spacing = canvas.width * 1.5 / currentQuestions.length;
+        const baseX = canvas.width + index * spacing;
         
-        // البحث عن موقع على التضاريس لوضع الصندوق
+        // البحث عن موقع على التضاريس
         for (let j = 0; j < terrain.length - 1; j++) {
-            if (terrain[j].x > 300 + i * 400 && Math.random() < 0.1) {
+            if (terrain[j].x >= baseX && terrain[j].x < baseX + 100) {
                 const box = {
                     x: terrain[j].x,
-                    y: terrain[j].y - 40,
-                    width: 30,
-                    height: 30,
+                    y: terrain[j].y - 35,
+                    width: 25,
+                    height: 25,
                     question: question,
                     answered: false,
                     isRepeat: false
@@ -552,77 +727,116 @@ function generateQuestionBoxes() {
                 break;
             }
         }
-    }
+    });
 }
 
-// ********** التحكم في السيارة **********
+// ********** التحكم في اللعبة **********
 const keys = {};
 
-window.addEventListener('keydown', (e) => {
-    keys[e.key] = true;
-});
-
-window.addEventListener('keyup', (e) => {
-    keys[e.key] = false;
-});
-
 // التحكم باللمس للجوال
-document.getElementById('upBtn').addEventListener('touchstart', () => keys['ArrowUp'] = true);
-document.getElementById('upBtn').addEventListener('touchend', () => keys['ArrowUp'] = false);
-document.getElementById('downBtn').addEventListener('touchstart', () => keys['ArrowDown'] = true);
-document.getElementById('downBtn').addEventListener('touchend', () => keys['ArrowDown'] = false);
-document.getElementById('leftBtn').addEventListener('touchstart', () => keys['ArrowLeft'] = true);
-document.getElementById('leftBtn').addEventListener('touchend', () => keys['ArrowLeft'] = false);
-document.getElementById('rightBtn').addEventListener('touchstart', () => keys['ArrowRight'] = true);
-document.getElementById('rightBtn').addEventListener('touchend', () => keys['ArrowRight'] = false);
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+const accelerateBtn = document.getElementById('accelerateBtn');
 
-// ********** تحديث حالة السيارة **********
-function updateCar() {
+leftBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    keys['ArrowLeft'] = true;
+});
+
+leftBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    keys['ArrowLeft'] = false;
+});
+
+rightBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    keys['ArrowRight'] = true;
+});
+
+rightBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    keys['ArrowRight'] = false;
+});
+
+accelerateBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    isAccelerating = true;
+});
+
+accelerateBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    isAccelerating = false;
+});
+
+// ********** تحديث اللعبة **********
+function updateGame() {
     if (gameState !== 'playing') return;
     
-    // التسارع والكبح
-    if (keys['ArrowUp']) {
-        car.speed += car.acceleration;
-    } else if (keys['ArrowDown']) {
-        car.speed -= car.deceleration;
-    }
-    
-    // ضبط التوازن (الميل)
+    // التحكم في ميل السيارة
     if (keys['ArrowLeft']) {
         car.tilt = Math.max(car.tilt - 2, -car.maxTilt);
     } else if (keys['ArrowRight']) {
         car.tilt = Math.min(car.tilt + 2, car.maxTilt);
     } else {
         // العودة التدريجية للتوازن
-        if (car.tilt > 0) car.tilt -= 1;
-        else if (car.tilt < 0) car.tilt += 1;
+        if (car.tilt > 0) car.tilt = Math.max(0, car.tilt - 1);
+        else if (car.tilt < 0) car.tilt = Math.min(0, car.tilt + 1);
     }
     
-    // حدود السرعة
-    car.speed = Math.max(car.minSpeed, Math.min(car.speed, car.maxSpeed));
+    // التحكم في السرعة
+    if (isAccelerating) {
+        scrollSpeed = Math.min(baseSpeed + 1, 5); // سرعة محدودة
+    } else {
+        scrollSpeed = Math.max(baseSpeed, 1);
+    }
     
-    // تحديث موقف السيارة
-    car.x += car.speed;
+    // تحريك التضاريس وصناديق الأسئلة
+    terrain.forEach(point => {
+        point.x -= scrollSpeed * 0.8; // سرعة أبطأ للخلفية
+    });
     
-    // جعل السيارة تتبع التضاريس
+    questionBoxes.forEach(box => {
+        box.x -= scrollSpeed * 0.8;
+    });
+    
+    // إزالة العناصر التي خرجت من الشاشة
+    terrain = terrain.filter(point => point.x > -100);
+    questionBoxes = questionBoxes.filter(box => box.x > -100);
+    
+    // إضافة تضاريس جديدة
+    while (terrain[terrain.length - 1].x < canvas.width * 3) {
+        const lastPoint = terrain[terrain.length - 1];
+        const newX = lastPoint.x + 20;
+        
+        // توليد تضاريس متنوعة
+        let newY = lastPoint.y + (Math.random() - 0.5) * 8;
+        newY = Math.max(canvas.height * 0.4, Math.min(canvas.height * 0.8, newY));
+        
+        terrain.push({ x: newX, y: newY });
+    }
+    
+    // تحديث موضع السيارة على التضاريس
+    updateCarPosition();
+    
+    // التحقق من الاصطدام
+    checkCollisions();
+    
+    updateUI();
+}
+
+function updateCarPosition() {
+    // البحث عن التضاريس تحت السيارة
     for (let i = 0; i < terrain.length - 1; i++) {
         if (terrain[i].x <= car.x && terrain[i+1].x >= car.x) {
             const progress = (car.x - terrain[i].x) / (terrain[i+1].x - terrain[i].x);
             const groundY = terrain[i].y + (terrain[i+1].y - terrain[i].y) * progress;
-            car.y = groundY - car.height/2;
+            car.y = groundY - car.height/2 - 5;
             break;
         }
     }
-    
-    // التحقق من الاصطدام بصناديق الأسئلة
-    checkQuestionBoxCollision();
-    
-    // تحديث السرعة في واجهة المستخدم
-    updateUI();
 }
 
-// ********** التحقق من الاصطدام **********
-function checkQuestionBoxCollision() {
+function checkCollisions() {
     for (let i = 0; i < questionBoxes.length; i++) {
         const box = questionBoxes[i];
         
@@ -649,11 +863,20 @@ function showQuestion(question) {
     const choicesDiv = document.getElementById("choices");
     choicesDiv.innerHTML = "";
     
-    question.c.forEach((choice, index) => {
+    // خلط الخيارات
+    const choices = [...question.c];
+    const shuffled = [];
+    while (choices.length) {
+        const idx = Math.floor(Math.random() * choices.length);
+        shuffled.push(choices.splice(idx, 1)[0]);
+    }
+    
+    shuffled.forEach((choice, index) => {
+        const originalIndex = question.c.indexOf(choice);
         const choiceDiv = document.createElement("div");
         choiceDiv.className = "choice";
         choiceDiv.textContent = choice;
-        choiceDiv.onclick = () => handleAnswer(index, question, choiceDiv);
+        choiceDiv.onclick = () => handleAnswer(originalIndex, question, choiceDiv);
         choicesDiv.appendChild(choiceDiv);
     });
     
@@ -669,8 +892,7 @@ function handleAnswer(selectedIndex, question, choiceElement) {
         choiceElement.classList.add('correct');
         
         // زيادة السرعة
-        car.speed = Math.min(car.maxSpeed, car.speed + 0.5);
-        baseSpeed = car.speed;
+        baseSpeed = Math.min(4, baseSpeed + 0.3);
         
         // زيادة النتيجة
         score += 10;
@@ -690,13 +912,11 @@ function handleAnswer(selectedIndex, question, choiceElement) {
             currentQuestionBox.answered = true;
         }
         
-        // إخفاء صندوق السؤال بعد تأخير قصير
         setTimeout(() => {
             document.getElementById("questionBox").style.display = "none";
             gameState = 'playing';
             currentQuestionBox = null;
             
-            // التحقق إذا انتهت الأسئلة
             if (currentQuestions.length === 0) {
                 endGame();
             }
@@ -707,13 +927,11 @@ function handleAnswer(selectedIndex, question, choiceElement) {
         choiceElement.classList.add('wrong');
         
         // تقليل السرعة بشكل كبير
-        car.speed = Math.max(car.minSpeed, car.speed * 0.6);
-        baseSpeed = car.speed;
+        baseSpeed = Math.max(1, baseSpeed * 0.6);
         
-        // إنشاء صندوق سؤال جديد لنفس السؤال في نهاية المشهد
+        // إنشاء صندوق سؤال جديد في نهاية المشهد
         createRepeatQuestionBox(question);
         
-        // إخفاء صندوق السؤال بعد تأخير
         setTimeout(() => {
             document.getElementById("questionBox").style.display = "none";
             gameState = 'playing';
@@ -724,16 +942,24 @@ function handleAnswer(selectedIndex, question, choiceElement) {
     updateUI();
 }
 
-// ********** إنشاء صندوق سؤال مكرر بعد الخطأ **********
 function createRepeatQuestionBox(question) {
-    // البحث عن آخر نقطة في التضاريس
-    const lastTerrainPoint = terrain[terrain.length - 1];
+    // وضع الصندوق في نهاية المشهد المرئي
+    const lastVisibleX = canvas.width + 200;
+    
+    // البحث عن موقع على التضاريس
+    let terrainY = canvas.height * 0.6;
+    for (let i = 0; i < terrain.length; i++) {
+        if (terrain[i].x >= lastVisibleX) {
+            terrainY = terrain[i].y;
+            break;
+        }
+    }
     
     const repeatBox = {
-        x: lastTerrainPoint.x - 100,
-        y: lastTerrainPoint.y - 40,
-        width: 30,
-        height: 30,
+        x: lastVisibleX,
+        y: terrainY - 35,
+        width: 25,
+        height: 25,
         question: question,
         answered: false,
         isRepeat: true
@@ -742,67 +968,34 @@ function createRepeatQuestionBox(question) {
     questionBoxes.push(repeatBox);
 }
 
-// ********** إضافة السؤال إلى قائمة الإجابات **********
 function addToAnsweredList(question) {
     const answeredList = document.getElementById("answeredList");
     const div = document.createElement("div");
     div.className = "answered";
-    div.textContent = `${question.q} - الإجابة الصحيحة: ${question.c[question.a]}`;
+    div.textContent = question.q;
     answeredList.appendChild(div);
+    answeredList.scrollTop = answeredList.scrollHeight;
 }
 
 // ********** تحديث واجهة المستخدم **********
 function updateUI() {
-    document.getElementById("currentSpeed").textContent = car.speed.toFixed(1);
+    document.getElementById("currentSpeed").textContent = baseSpeed.toFixed(1);
     document.getElementById("score").textContent = score;
     document.getElementById("questionsRemaining").textContent = currentQuestions.length;
     
     // تحديث عداد السرعة
-    const speedPercent = (car.speed / car.maxSpeed) * 100;
+    const speedPercent = (baseSpeed / 4) * 100;
     document.getElementById("speedFill").style.width = `${speedPercent}%`;
 }
 
 // ********** نهاية اللعبة **********
 function endGame() {
     gameState = 'gameOver';
-    document.getElementById("winScreen").style.display = "flex";
+    document.getElementById("finalScore").textContent = score;
+    document.getElementById("winScreen").classList.remove("hidden");
 }
 
-// ********** إعادة تشغيل اللعبة **********
-function restartGame() {
-    gameState = 'playing';
-    car = {
-        x: 100,
-        y: canvas.height / 2,
-        width: 60,
-        height: 30,
-        speed: 2,
-        maxSpeed: 10,
-        minSpeed: 0.5,
-        acceleration: 0.1,
-        deceleration: 0.05,
-        tilt: 0,
-        maxTilt: 30,
-        color: '#FF5722',
-        wheels: [
-            { x: 10, y: 25, radius: 8 },
-            { x: 50, y: 25, radius: 8 }
-        ]
-    };
-    
-    currentQuestions = [...allQuestions];
-    answeredQuestions.clear();
-    score = 0;
-    
-    document.getElementById("answeredList").innerHTML = "";
-    document.getElementById("winScreen").style.display = "none";
-    
-    generateTerrain();
-    generateQuestionBoxes();
-    updateUI();
-}
-
-// ********** الرسم الرئيسي **********
+// ********** الرسم **********
 function draw() {
     // مسح الشاشة
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -818,120 +1011,46 @@ function draw() {
     
     // رسم السيارة
     drawCar();
-    
-    // رسم واجهة داخلية بسيطة
-    drawHUD();
 }
 
-// ********** رسم الخلفية **********
-function drawBackground() {
-    // السماء
-    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    skyGradient.addColorStop(0, '#87CEEB');
-    skyGradient.addColorStop(1, '#E0F6FF');
-    ctx.fillStyle = skyGradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // سحب
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    for (let i = 0; i < 5; i++) {
-        const x = (car.x * 0.1 + i * 100) % (canvas.width + 200) - 100;
-        const y = 50 + i * 30;
-        drawCloud(x, y);
-    }
-    
-    // شمس
-    ctx.fillStyle = '#FFEB3B';
-    ctx.beginPath();
-    ctx.arc(canvas.width - 50, 50, 30, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // أشعة الشمس
-    ctx.strokeStyle = 'rgba(255, 235, 59, 0.3)';
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 12; i++) {
-        const angle = (i / 12) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(
-            canvas.width - 50 + Math.cos(angle) * 30,
-            50 + Math.sin(angle) * 30
-        );
-        ctx.lineTo(
-            canvas.width - 50 + Math.cos(angle) * 45,
-            50 + Math.sin(angle) * 45
-        );
-        ctx.stroke();
-    }
-}
-
-// ********** رسم سحابة **********
-function drawCloud(x, y) {
-    ctx.beginPath();
-    ctx.arc(x, y, 20, 0, Math.PI * 2);
-    ctx.arc(x + 25, y - 10, 25, 0, Math.PI * 2);
-    ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
-    ctx.arc(x + 25, y + 10, 15, 0, Math.PI * 2);
-    ctx.fill();
-}
-
-// ********** رسم واجهة داخلية **********
-function drawHUD() {
-    // سرعة السيارة
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(10, 10, 150, 40);
-    
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(`السرعة: ${car.speed.toFixed(1)} كم/س`, 20, 35);
-}
-
-// ********** حلقة اللعبة الرئيسية **********
+// ********** حلقة اللعبة **********
 function gameLoop() {
-    if (gameState === 'playing') {
-        updateCar();
-        
-        // تحريك التضاريس لخلق وهم الحركة
-        if (car.speed > 0) {
-            terrain.forEach(point => {
-                point.x -= car.speed * 0.5;
-            });
-            
-            // تحريك صناديق الأسئلة
-            questionBoxes.forEach(box => {
-                box.x -= car.speed * 0.5;
-            });
-            
-            // إزالة النقاط التي خرجت من الشاشة
-            terrain = terrain.filter(point => point.x > -100);
-            questionBoxes = questionBoxes.filter(box => box.x > -100);
-            
-            // إضافة نقاط جديدة
-            if (terrain[terrain.length - 1].x < canvas.width * 1.5) {
-                const lastPoint = terrain[terrain.length - 1];
-                const newY = lastPoint.y + (Math.random() - 0.5) * 20;
-                terrain.push({
-                    x: lastPoint.x + 10,
-                    y: newY
-                });
-            }
-        }
-    }
-    
+    updateGame();
     draw();
     requestAnimationFrame(gameLoop);
 }
 
-// ********** تهيئة اللعبة **********
-function initGame() {
+// ********** بدء اللعبة **********
+function startGame() {
+    document.getElementById("startScreen").classList.add("hidden");
+    document.getElementById("gameContainer").classList.remove("hidden");
+    
+    // إعادة تعيين اللعبة
+    gameState = 'playing';
+    baseSpeed = 2;
+    score = 0;
+    currentQuestions = [...allQuestions];
+    answeredQuestions.clear();
+    
+    document.getElementById("answeredList").innerHTML = "";
+    document.getElementById("winScreen").classList.add("hidden");
+    
     generateTerrain();
     generateQuestionBoxes();
     updateUI();
+    
     gameLoop();
 }
 
+function restartGame() {
+    document.getElementById("winScreen").classList.add("hidden");
+    startGame();
+}
+
 // بدء اللعبة عند تحميل الصفحة
-window.addEventListener('load', initGame);
+window.addEventListener('load', () => {
+    // لا نبدأ اللعبة تلقائياً، ننتظر الضغط على زر البداية
+});
 </script>
 </body>
 </html>
