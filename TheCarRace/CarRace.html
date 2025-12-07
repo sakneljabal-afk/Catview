@@ -1,41 +1,205 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سيارة المسار السريع - لعبة تعليمية</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body {
-            background: linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
-            color:#fff; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .header { text-align:center; margin-bottom:20px; width:100%; max-width:800px; }
-        h1 { color:#4cc9f0; font-size:2.5rem; margin-bottom:10px; text-shadow:0 0 10px rgba(76,201,240,.5); }
-        .subtitle { color:#b8b8d1; font-size:1.2rem; margin-bottom:20px; }
-        .game-container { width:100%; max-width:800px; border-radius:15px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.5); position:relative; }
-        #gameCanvas { display:block; background-color:#0d1117; }
-        .instructions { background:rgba(22,33,62,.8); border-radius:10px; padding:20px; margin-top:20px; width:100%; max-width:800px; border-left:5px solid #4cc9f0; }
-        .instructions h2 { color:#4cc9f0; margin-bottom:10px; }
-        .instructions ul { padding-right:20px; line-height:1.6; }
-        .highlight { color:#f72585; font-weight:bold; }
-        .speed-display { position:absolute; top:15px; left:15px; background:rgba(0,0,0,.7); padding:10px 15px; border-radius:10px; font-size:1.2rem; border:2px solid #4cc9f0; z-index:10; }
-        .question-box { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:600px; background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%); border-radius:15px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,.7); border:3px solid #4cc9f0; z-index:100; display:none; }
-        .question-text { font-size:1.4rem; margin-bottom:25px; color:#fff; line-height:1.5; }
-        .options-container { display:flex; flex-direction:column; gap:12px; }
-        .option { background:rgba(255,255,255,.1); border:2px solid #4361ee; border-radius:10px; padding:15px; font-size:1.1rem; cursor:pointer; transition:all .3s ease; text-align:right; }
-        .option:hover { background:rgba(67,97,238,.3); transform:translateX(-5px); }
-        .correct { background:rgba(72,187,120,.3); border-color:#48bb78; }
-        .incorrect { background:rgba(245,101,101,.3); border-color:#f56565; }
-        .question-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; color:#4cc9f0; font-size:1.2rem; }
-        .close-btn { background:#f72585; color:white; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-        .footer { margin-top:20px; text-align:center; color:#b8b8d1; font-size:.9rem; }
-        @media (max-width:768px) {
-            h1 { font-size:2rem; }
-            .game-container { max-width:95%; }
-            .question-text { font-size:1.2rem; }
-            .option { padding:12px; font-size:1rem; }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        h1 {
+            color: #4cc9f0;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+        }
+        
+        .subtitle {
+            color: #b8b8d1;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background-color: #0d1117;
+        }
+        
+        .instructions {
+            background: rgba(22, 33, 62, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            border-left: 5px solid #4cc9f0;
+        }
+        
+        .instructions h2 {
+            color: #4cc9f0;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            padding-right: 20px;
+            line-height: 1.6;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .highlight {
+            color: #f72585;
+            font-weight: bold;
+        }
+        
+        .speed-display {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            border: 2px solid #4cc9f0;
+            z-index: 10;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #b8b8d1;
+            font-size: 0.9rem;
+        }
+        
+        .question-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border: 3px solid #4cc9f0;
+            z-index: 100;
+            display: none;
+        }
+        
+        .question-text {
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            color: #fff;
+            line-height: 1.5;
+        }
+        
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #4361ee;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: right;
+        }
+        
+        .option:hover {
+            background: rgba(67, 97, 238, 0.3);
+            transform: translateX(-5px);
+        }
+        
+        .correct {
+            background: rgba(72, 187, 120, 0.3);
+            border-color: #48bb78;
+        }
+        
+        .incorrect {
+            background: rgba(245, 101, 101, 0.3);
+            border-color: #f56565;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #4cc9f0;
+            font-size: 1.2rem;
+        }
+        
+        .close-btn {
+            background: #f72585;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .game-container {
+                max-width: 95%;
+            }
+            
+            .question-text {
+                font-size: 1.2rem;
+            }
+            
+            .option {
+                padding: 12px;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -44,12 +208,12 @@
         <h1>🚗 سيارة المسار السريع</h1>
         <p class="subtitle">لعبة تعليمية - أجب على الأسئلة لزيادة سرعة سيارتك</p>
     </div>
-
+    
     <div class="game-container">
         <div class="speed-display">السرعة: <span id="speedValue">200</span></div>
         <div id="gameCanvas"></div>
     </div>
-
+    
     <div class="instructions">
         <h2>📋 كيفية اللعب:</h2>
         <ul>
@@ -61,7 +225,7 @@
             <li>هدفك: الإجابة على أكبر عدد من الأسئلة لزيادة سرعتك لأقصى حد!</li>
         </ul>
     </div>
-
+    
     <div class="question-box" id="questionBox">
         <div class="question-header">
             <div>❓ سؤال تعليمي</div>
@@ -70,264 +234,459 @@
         <div class="question-text" id="questionText"></div>
         <div class="options-container" id="optionsContainer"></div>
     </div>
-
+    
     <div class="footer">
         <p>لعبة تعليمية باستخدام Phaser 3 - تركز على نبات المانجروف وتكيفاته مع البيئة</p>
     </div>
 
     <script>
+        // بيانات الأسئلة
         const allQuestions = [
-            {"q":"تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:","c":["أوراق عريضة تطفو على الماء","جذور قصيرة ضعيفة","جذور طويلة وقوية لمقاومة الأمواج"],"a":2},
-            {"q":"ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟","c":["تخزين كميات كبيرة من الماء","امتصاص الضوء من سطح الماء","الصمود أمام الأمواج القوية"],"a":2},
-            {"q":"كيف تتخلص شجرة المانجروف من الملح الزائد؟","c":["عن طريق الجذور التي تفرز الملح","عن طريق الأوراق التي تفرز الملح","عن طريق الساق التي تخزن الملح"],"a":1},
-            {"q":"أين توجد أشجار المانجروف عادة؟","c":["في الصحارى الحارة","على قمم الجبال","في مناطق المد والجزر على السواحل"],"a":2},
-            {"q":"ما أهمية أشجار المانجروف للبيئة البحرية؟","c":["تزيد ملوحة المياه","توفر بيئة آمنة لتكاثر الأسماك والكائنات البحرية","تقلل من كمية الأكسجين في الماء"],"a":1},
-            {"q":"كيف تساعد جذور المانجروف الهوائية الشجرة على التنفس؟","c":["تمتص الماء المالح فقط","تسمح بتبادل الغازات في التربة الفقيرة بالأكسجين","تخزن الغذاء لفترات الجفاف"],"a":1},
-            {"q":"ما هو التهديد الرئيسي لأشجار المانجروف؟","c":["الحيوانات البرية","التلوث والقطع الجائر والتنمية الساحلية","زيادة هطول الأمطار"],"a":1}
+            {
+                "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:",
+                "c": [
+                    "أوراق عريضة تطفو على الماء",
+                    "جذور قصيرة ضعيفة",
+                    "جذور طويلة وقوية لمقاومة الأمواج"
+                ],
+                "a": 2 // 0-indexed: الخيار الثالث
+            },
+            {
+                "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟",
+                "c": [
+                    "تخزين كميات كبيرة من الماء",
+                    "امتصاص الضوء من سطح الماء",
+                    "الصمود أمام الأمواج القوية"
+                ],
+                "a": 2
+            },
+            {
+                "q": "كيف تتخلص شجرة المانجروف من الملح الزائد؟",
+                "c": [
+                    "عن طريق الجذور التي تفرز الملح",
+                    "عن طريق الأوراق التي تفرز الملح",
+                    "عن طريق الساق التي تخزن الملح"
+                ],
+                "a": 1
+            },
+            {
+                "q": "أين توجد أشجار المانجروف عادة؟",
+                "c": [
+                    "في الصحاري الحارة",
+                    "على قمم الجبال",
+                    "في مناطق المد والجزر على السواحل"
+                ],
+                "a": 2
+            },
+            {
+                "q": "ما أهمية أشجار المانجروف للبيئة البحرية؟",
+                "c": [
+                    "تزيد ملوحة المياه",
+                    "توفر بيئة آمنة لتكاثر الأسماك والكائنات البحرية",
+                    "تقلل من كمية الأكسجين في الماء"
+                ],
+                "a": 1
+            },
+            {
+                "q": "كيف تساعد جذور المانجروف الهوائية الشجرة على التنفس؟",
+                "c": [
+                    "تمتص الماء المالح فقط",
+                    "تسمح بتبادل الغازات في التربة الفقيرة بالأكسجين",
+                    "تخزن الغذاء لفترات الجفاف"
+                ],
+                "a": 1
+            },
+            {
+                "q": "ما هو التهديد الرئيسي لأشجار المانجروف؟",
+                "c": [
+                    "الحيوانات البرية",
+                    "التلوث والقطع الجائر والتنمية الساحلية",
+                    "زيادة هطول الأمطار"
+                ],
+                "a": 1
+            }
         ];
 
+        // متغيرات اللعبة
         let game;
         let baseSpeed = 200;
         let scrollSpeed = 200;
         let player;
-        let questionBoxGroup;
+        let road;
         let score = 0;
+        let questionBoxGroup;
         let activeQuestion = null;
         let questionUI;
         let speedText;
+        let scoreText; // تم تعريفها هنا لتكون متاحة للجميع
         let wrongQuestions = [];
         let questionTimer = null;
-        let stars = [];
-
+        
+        // المشهد الرئيسي للعبة
         class GameScene extends Phaser.Scene {
-            constructor(){ super({ key: 'GameScene' }); }
-
-            preload(){
-                // لا موارد خارجية مطلوبة
+            constructor() {
+                super({ key: 'GameScene' });
+            }
+            
+            // ** المرحلة 1: التحميل المسبق (Preload) - لتوليد الأنسجة **
+            preload() {
+                // توليد نسيج السيارة
+                this.createCarTexture();
+                // توليد نسيج صندوق الأسئلة
+                this.createQuestionBoxTexture();
             }
 
-            create(){
-                // خلفية باللون (بسيطة) ونجوم كدائرة objects محفوظة في مصفوفة
-                this.cameras.main.setBackgroundColor(0x0e1332);
-                for (let i=0;i<100;i++){
-                    const x = Phaser.Math.Between(0,800);
-                    const y = Phaser.Math.Between(0,300);
-                    const r = Phaser.Math.Between(1,3);
-                    const c = this.add.circle(x,y,r,0xffffff, Phaser.Math.FloatBetween(0.15,0.9));
-                    stars.push(c);
-                }
+            // دالة لتوليد نسيج السيارة
+            createCarTexture() {
+                const carGraphics = this.add.graphics({ add: false }); // مهم: عدم الإضافة للمشهد
+                
+                // جسم السيارة الرئيسي (أزرق)
+                carGraphics.fillStyle(0x4285f4, 1);
+                carGraphics.fillRoundedRect(0, 0, 80, 40, 5);
+                
+                // نافذة السيارة
+                carGraphics.fillStyle(0x3677ff, 1);
+                carGraphics.fillRoundedRect(5, 5, 70, 30, 3);
+                
+                // إطارات السيارة
+                carGraphics.fillStyle(0x222222, 1);
+                carGraphics.fillCircle(15, 35, 6);
+                carGraphics.fillCircle(65, 35, 6);
+                
+                // الزجاج الأمامي
+                carGraphics.fillStyle(0xffffff, 0.6);
+                carGraphics.fillRect(25, 10, 30, 15);
+                
+                // تحويل الرسومات إلى نسيج بمفتاح 'carTexture'
+                carGraphics.generateTexture('carTexture', 80, 40); 
+                carGraphics.destroy();
+            }
 
-                // رسم الطريق (Graphics فقط)
-                const roadGraphics = this.add.graphics();
-                roadGraphics.fillStyle(0x333333,1);
-                roadGraphics.fillRect(0,500,800,100);
-                roadGraphics.fillStyle(0xffffff,1);
-                roadGraphics.fillRect(0,540,800,6);
-                roadGraphics.fillStyle(0xf72585,1);
-                roadGraphics.fillRect(0,500,800,6);
-                roadGraphics.fillRect(0,594,800,6);
-
-                // إنشاء السيارة (نمط توليد نسيج)
-                const carG = this.make.graphics({});
-                carG.fillStyle(0x4285f4,1);
-                carG.fillRoundedRect(0,0,80,40,6);
-                carG.fillStyle(0x3677ff,1);
-                carG.fillRoundedRect(5,5,70,30,3);
-                carG.fillStyle(0x222222,1);
-                carG.fillCircle(15,35,6); carG.fillCircle(65,35,6);
-                carG.fillStyle(0xffffff,0.6);
-                carG.fillRect(25,10,30,15);
-                carG.generateTexture('car',80,40);
-                carG.destroy();
-
-                player = this.physics.add.sprite(200,450,'car');
+            // دالة لتوليد نسيج صندوق الأسئلة
+            createQuestionBoxTexture() {
+                const boxGraphics = this.add.graphics({ add: false }); // مهم: عدم الإضافة للمشهد
+                
+                // صندوق أحمر
+                boxGraphics.fillStyle(0xf72585, 1);
+                boxGraphics.fillRoundedRect(0, 0, 50, 50, 5);
+                
+                // داخل الصندوق الأبيض
+                boxGraphics.fillStyle(0xffffff, 1);
+                boxGraphics.fillRoundedRect(5, 5, 40, 40, 3);
+                
+                // علامة استفهام
+                boxGraphics.fillStyle(0x000000, 1);
+                boxGraphics.fillCircle(25, 25, 10);
+                boxGraphics.fillStyle(0xffffff, 1);
+                boxGraphics.fillCircle(25, 22, 3);
+                boxGraphics.fillRect(24, 28, 2, 5);
+                
+                // تحويل الرسومات إلى نسيج بمفتاح 'questionBoxTexture'
+                boxGraphics.generateTexture('questionBoxTexture', 50, 50);
+                boxGraphics.destroy();
+            }
+            
+            // ** المرحلة 2: الإنشاء (Create) - لوضع الكائنات في المشهد **
+            create() {
+                // إعداد الخلفية
+                this.createBackground();
+                
+                // إعداد المسار
+                this.createRoad();
+                
+                // إعداد السيارة (باستخدام النسيج المُحمّل)
+                player = this.physics.add.sprite(200, 450, 'carTexture'); // <--- **استخدام النسيج المُحمّل**
                 player.setCollideWorldBounds(true);
-                player.setImmovable(true);
-                player.body.setAllowGravity(false);
-
-                // مجموعة صناديق الأسئلة كجسم فيزيائي (arcade group)
+                player.setScale(0.8);
+                
+                // إعداد مجموعة صناديق الأسئلة
                 questionBoxGroup = this.physics.add.group();
-                questionBoxGroup.defaults = { immovable: true, allowGravity: false };
-
-                // overlap بين السيارة ومجموعة صناديق الأسئلة
+                
+                // إعداد الاصطدام بين السيارة وصناديق الأسئلة
                 this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
-
-                // نص السرعة والنقاط (داخل كانفاس)
-                speedText = this.add.text(20,20,`السرعة: ${baseSpeed}`, { fontSize:'24px', fill:'#4cc9f0' });
-                this.scoreText = this.add.text(20,60,`النقاط: ${score}`, { fontSize:'24px', fill:'#f72585' });
-
-                // حدث دوري لتوليد صناديق الأسئلة
-                this.time.addEvent({ delay:3000, callback:this.generateQuestionBox, callbackScope:this, loop:true });
+                
+                // إعداد النص لعرض السرعة
+                speedText = this.add.text(20, 20, `السرعة: ${baseSpeed}`, {
+                    fontSize: '24px',
+                    fill: '#4cc9f0',
+                    fontStyle: 'bold'
+                }).setScrollFactor(0).setDepth(100); // الثبات في مكانه
+                
+                // إعداد نص النقاط
+                this.scoreText = this.add.text(20, 60, `النقاط: ${score}`, {
+                    fontSize: '24px',
+                    fill: '#f72585',
+                    fontStyle: 'bold'
+                }).setScrollFactor(0).setDepth(100);
+                
+                // إعداد مؤقت لتوليد صناديق الأسئلة
+                this.time.addEvent({
+                    delay: 3000,
+                    callback: this.generateQuestionBox,
+                    callbackScope: this,
+                    loop: true
+                });
+                
+                // توليد أول صندوق سؤال
                 this.generateQuestionBox();
-
+                
+                // تحديث سرعة التمرير
                 scrollSpeed = baseSpeed;
-
-                // ربط واجهة السؤال في DOM
+                
+                // إعداد واجهة الأسئلة في DOM
                 questionUI = document.getElementById('questionBox');
-                document.getElementById('closeQuestion').addEventListener('click', ()=> { this.resumeGame(); });
-            }
-
-            update(time,delta){
-                // تحريك النجوم بخفة
-                const move = (scrollSpeed/500) * (delta/16.66);
-                stars.forEach(s => {
-                    s.x -= move;
-                    if (s.x < -10) { s.x = 810; s.y = Phaser.Math.Between(0,300); }
+                document.getElementById('closeQuestion').addEventListener('click', () => {
+                    this.resumeGame();
                 });
-
-                // تحريك صناديق الأسئلة يمين -> يسار
-                if (questionBoxGroup) {
-                    questionBoxGroup.getChildren().forEach(box => {
-                        box.x -= (scrollSpeed/60) * (delta/16.66);
-                        box.body && box.body.reset && box.body.reset(box.x, box.y); // sync body if needed
-                        if (box.x < -50) box.destroy();
-                    });
-                }
-
-                // تحديث نص السرعة والنقاط
-                speedText && speedText.setText(`السرعة: ${Math.round(baseSpeed)}`);
-                document.getElementById('speedValue').textContent = Math.round(baseSpeed);
-                this.scoreText && this.scoreText.setText(`النقاط: ${score}`);
             }
-
-            createQuestionBoxSprite(x,y,questionData){
-                // نولد قماش (graphics) ونحوله لنسيج مرة واحدة إذا لم يكن موجوداً
-                if (!this.textures.exists('questionBox')) {
-                    const g = this.make.graphics({});
-                    g.fillStyle(0xf72585,1); g.fillRoundedRect(0,0,50,50,6);
-                    g.fillStyle(0xffffff,1); g.fillRoundedRect(5,5,40,40,3);
-                    // علامة استفهام بسيطة
-                    g.fillStyle(0x000000,1); g.fillCircle(25,18,6);
-                    g.fillStyle(0xffffff,1); g.fillRect(24,27,2,6);
-                    g.generateTexture('questionBox',50,50);
-                    g.destroy();
-                }
-
-                const box = this.physics.add.sprite(x,y,'questionBox');
-                box.setScale(0.9);
-                box.body.setAllowGravity(false);
-                box.body.immovable = true;
-                box.setData('question', questionData);
-                box.setData('used', false);
-                return box;
-            }
-
-            generateQuestionBox(){
-                let questionData;
-                if (wrongQuestions.length > 0 && Math.random() < 0.4) {
-                    questionData = wrongQuestions.shift();
-                } else {
-                    const idx = Phaser.Math.Between(0, allQuestions.length - 1);
-                    questionData = allQuestions[idx];
-                }
-
-                const box = this.createQuestionBoxSprite(850, 520, questionData);
-                questionBoxGroup.add(box);
-            }
-
-            hitQuestionBox(playerObj, box){
-                if (box.getData('used')) return;
-                box.setData('used', true);
-
-                // إيقاف الحركة وتجمد الفيزياء
-                scrollSpeed = 0;
-                this.physics.world.pause();
-
-                activeQuestion = box.getData('question');
-                this.showQuestion(activeQuestion);
-            }
-
-            showQuestion(questionData){
-                document.getElementById('questionText').textContent = questionData.q;
-                const optionsContainer = document.getElementById('optionsContainer');
-                optionsContainer.innerHTML = '';
-
-                questionData.c.forEach((opt, idx) => {
-                    const el = document.createElement('div');
-                    el.className = 'option';
-                    el.textContent = `${idx+1}. ${opt}`;
-                    el.dataset.index = idx;
-                    el.addEventListener('click', () => {
-                        this.checkAnswer(parseInt(el.dataset.index), questionData.a);
-                        // تعطيل التفاعل وتلوين
-                        const all = optionsContainer.querySelectorAll('.option');
-                        all.forEach(o=>{ o.classList.remove('correct','incorrect'); o.style.pointerEvents='none'; });
-                        if (parseInt(el.dataset.index) === questionData.a) el.classList.add('correct');
-                        else { el.classList.add('incorrect'); all[questionData.a].classList.add('correct'); }
-                    });
-                    optionsContainer.appendChild(el);
-                });
-
-                questionUI.style.display = 'block';
-            }
-
-            checkAnswer(selectedIndex, correctIndex){
-                if (selectedIndex === correctIndex){
-                    baseSpeed += 20;
-                    score += 10;
-                    this.removeUsedBoxes();
-                    setTimeout(()=> this.resumeGame(), 1200);
-                } else {
-                    baseSpeed *= 0.6;
-                    wrongQuestions.push(activeQuestion);
-                    this.removeUsedBoxes();
-                    setTimeout(()=> {
-                        this.resumeGame();
-                        if (questionTimer) clearTimeout(questionTimer);
-                        questionTimer = setTimeout(()=> { this.generateWrongAppearance(activeQuestion); }, 5000);
-                    }, 1800);
+            
+            createBackground() {
+                // خلفية متدرجة
+                const graphics = this.add.graphics();
+                // تم تعديل طريقة إنشاء التدرج لجعله أكثر ثباتاً
+                graphics.fillGradientStyle(0x0a0a20, 0x0e1332, 0x0a0a20, 0x0e1332);
+                graphics.fillRect(0, 0, 800, 600);
+                
+                // إضافة نجوم
+                for (let i = 0; i < 100; i++) {
+                    const x = Phaser.Math.Between(0, 800);
+                    const y = Phaser.Math.Between(0, 300);
+                    const size = Phaser.Math.FloatBetween(0.5, 2);
+                    const alpha = Phaser.Math.FloatBetween(0.2, 0.8);
+                    
+                    this.add.circle(x, y, size, 0xffffff, alpha);
                 }
             }
-
-            removeUsedBoxes(){
-                questionBoxGroup.getChildren().forEach(box=>{
-                    if (box.getData('used')){
-                        this.tweens.add({
-                            targets: box,
-                            y: box.y - 40,
-                            alpha: 0,
-                            duration: 400,
-                            onComplete: ()=> box.destroy()
-                        });
+            
+            createRoad() {
+                // إنشاء المسار باستخدام رسومات
+                const roadGraphics = this.add.graphics();
+                
+                // الطريق الرئيسي (رمادي غامق)
+                roadGraphics.fillStyle(0x333333, 1);
+                roadGraphics.fillRect(0, 500, 800, 100);
+                
+                // خطوط الطريق البيضاء (تلاشي)
+                roadGraphics.fillStyle(0xffffff, 1);
+                
+                // حواف الطريق الحمراء
+                roadGraphics.fillStyle(0xf72585, 1);
+                roadGraphics.fillRect(0, 500, 800, 10);
+                roadGraphics.fillRect(0, 590, 800, 10);
+                
+                // تم تبسيط الطريق ليصبح كائن ثابت بصرياً، وسنعتمد على منطقة الاصطدام فقط
+            }
+            
+            // تم إزالة دالة createCar() الأصلية 
+            // تم إزالة دالة createQuestionBox(x,y) الأصلية 
+            
+            update() {
+                // تحريك الخلفية (النجوم) بشكل بسيط
+                this.children.list.forEach(child => {
+                    if (child.type === 'Circle' && child.fillColor === 0xffffff) {
+                        child.x -= scrollSpeed / 500;
+                        if (child.x < -10) {
+                            child.x = 810;
+                            child.y = Phaser.Math.Between(0, 300);
+                        }
                     }
                 });
+                
+                // تحريك صناديق الأسئلة
+                if (questionBoxGroup) {
+                    questionBoxGroup.getChildren().forEach(box => {
+                        box.x -= scrollSpeed / 60;
+                        
+                        // إزالة الصناديق التي خرجت من الشاشة
+                        if (box.x < -50) {
+                            box.destroy();
+                        }
+                    });
+                }
+                
+                // تحديث نص السرعة
+                if (speedText) {
+                    document.getElementById('speedValue').textContent = Math.round(baseSpeed);
+                }
+                
+                // تحديث نص النقاط
+                if (this.scoreText) {
+                    this.scoreText.setText(`النقاط: ${score}`);
+                }
             }
-
-            generateWrongAppearance(questionData){
-                const b = this.createQuestionBoxSprite(850, 520, questionData);
-                questionBoxGroup.add(b);
-                this.tweens.add({ targets: b, alpha: 0.4, yoyo:true, repeat:3, duration:400 });
+            
+            generateQuestionBox() {
+                // تحديد إذا كنا سنولد سؤالاً خاطئاً (معاد) أم سؤالاً جديداً
+                let questionData;
+                
+                if (wrongQuestions.length > 0 && Math.random() < 0.4) {
+                    // توليد سؤال كان إجابته خاطئة سابقاً
+                    questionData = wrongQuestions.shift();
+                } else {
+                    // توليد سؤال عشوائي جديد
+                    const randomIndex = Math.floor(Math.random() * allQuestions.length);
+                    questionData = allQuestions[randomIndex];
+                }
+                
+                // إنشاء صندوق السؤال (باستخدام النسيج المُحمّل)
+                const box = this.physics.add.sprite(850, 450, 'questionBoxTexture'); // <--- **استخدام النسيج المُحمّل**
+                box.setScale(0.8);
+                questionBoxGroup.add(box);
+                box.setData('question', questionData);
+                box.setData('used', false);
             }
-
-            resumeGame(){
+            
+            hitQuestionBox(player, box) {
+                if (box.getData('used')) return;
+                
+                // تعطيل الصندوق لمنع الاصطدام المتكرر
+                box.setData('used', true);
+                
+                // إيقاف اللعبة
+                scrollSpeed = 0;
+                this.physics.pause();
+                
+                // حفظ السؤال النشط
+                activeQuestion = box.getData('question');
+                
+                // عرض واجهة السؤال
+                this.showQuestion(activeQuestion);
+            }
+            
+            showQuestion(questionData) {
+                document.getElementById('questionText').textContent = questionData.q;
+                
+                const optionsContainer = document.getElementById('optionsContainer');
+                optionsContainer.innerHTML = '';
+                
+                questionData.c.forEach((option, index) => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.textContent = `${index + 1}. ${option}`;
+                    optionElement.dataset.index = index;
+                    
+                    // منع تكرار المستمعين في كل مرة يتم عرض السؤال
+                    optionElement.onclick = () => {
+                        this.checkAnswer(parseInt(optionElement.dataset.index), questionData.a, optionElement, optionsContainer);
+                    };
+                    
+                    optionsContainer.appendChild(optionElement);
+                });
+                
+                questionUI.style.display = 'block';
+            }
+            
+            checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer) {
+                // تعطيل النقر على جميع الخيارات
+                const allOptions = optionsContainer.querySelectorAll('.option');
+                allOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                });
+                
+                // تلوين الخيارات
+                if (selectedIndex === correctIndex) {
+                    // إجابة صحيحة
+                    selectedOptionElement.classList.add('correct');
+                    baseSpeed += 20;
+                    score += 10;
+                    
+                    // إزالة صندوق السؤال
+                    this.findAndRemoveQuestionBox();
+                    
+                    // استئناف اللعبة بعد تأخير
+                    setTimeout(() => {
+                        this.resumeGame();
+                    }, 1500);
+                } else {
+                    // إجابة خاطئة
+                    selectedOptionElement.classList.add('incorrect');
+                    // تلوين الإجابة الصحيحة أيضًا
+                    allOptions[correctIndex].classList.add('correct');
+                    
+                    baseSpeed *= 0.6;
+                    baseSpeed = Math.max(50, baseSpeed); // حد أدنى للسرعة
+                    
+                    // إضافة السؤال إلى قائمة الأسئلة الخاطئة
+                    if (!wrongQuestions.includes(activeQuestion)) {
+                         wrongQuestions.push(activeQuestion);
+                    }
+                    
+                    // إزالة صندوق السؤال
+                    this.findAndRemoveQuestionBox();
+                    
+                    // استئناف اللعبة بعد تأخير
+                    setTimeout(() => {
+                        this.resumeGame();
+                    }, 2000);
+                }
+            }
+            
+            findAndRemoveQuestionBox() {
+                if (questionBoxGroup) {
+                    questionBoxGroup.getChildren().forEach(box => {
+                        if (box.getData('used')) {
+                            // تحريك الصندوق لأعلى وتلاشيه
+                            this.tweens.add({
+                                targets: box,
+                                y: box.y - 50,
+                                alpha: 0,
+                                duration: 500,
+                                onComplete: () => {
+                                    box.destroy();
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+            
+            resumeGame() {
+                // إخفاء واجهة السؤال
                 questionUI.style.display = 'none';
-                // استئناف فيزياء اللعبة
-                this.physics.world.resume();
+                
+                // استئناف اللعبة
                 scrollSpeed = baseSpeed;
-                // إعادة تمكين خيارات DOM
+                this.physics.resume();
+                
+                // إعادة تعيين جميع الخيارات
                 const options = document.querySelectorAll('.option');
-                options.forEach(o => { o.classList.remove('correct','incorrect'); o.style.pointerEvents='auto'; });
+                options.forEach(option => {
+                    option.classList.remove('correct', 'incorrect');
+                    option.style.pointerEvents = 'auto';
+                });
             }
         }
 
+        // إعداد تكوين اللعبة
         const config = {
             type: Phaser.CANVAS,
             width: 800,
             height: 600,
             parent: 'gameCanvas',
-            physics: { default:'arcade', arcade:{ gravity:{ y:0 }, debug:false } },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
             scene: GameScene
         };
 
+        // إنشاء اللعبة
         game = new Phaser.Game(config);
 
-        // تحكم بسيط بالكيبورد لنقل السيارة عمودياً (يعمل حتى لو كانت الفيزياء مشغلة)
+        // إضافة تحكم باللوحة المفاتيح للعبة
         document.addEventListener('keydown', (e) => {
-            if (!player) return;
-            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-                player.y = Math.max(420, player.y - 20);
-            } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-                player.y = Math.min(520, player.y + 20);
+            if (player && player.body && scrollSpeed > 0) { // التأكد من أن اللعبة مستمرة
+                const moveAmount = 15;
+                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                    player.y -= moveAmount;
+                } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                    player.y += moveAmount;
+                }
+                // ضمان بقاء السيارة ضمن حدود الطريق
+                player.y = Phaser.Math.Clamp(player.y, 420, 480);
             }
         });
     </script>
