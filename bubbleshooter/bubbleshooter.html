@@ -105,6 +105,7 @@
             default:'arcade', 
             arcade:{ 
                 gravity:{y:0}, 
+                // وضع هذا على true قد يساعد في رؤية حدود الأجسام للتصحيح
                 debug:false 
             } 
         },
@@ -122,12 +123,13 @@
     let originalQuestionIndexBeforeError = 0; 
 
     const BUBBLE_TYPES = ['bubble1', 'bubble2', 'bubble3'];
-    const BUBBLE_SCALE = 0.25; // 🎯 تم تصغير حجم الفقاعات هنا
-    let FIRE_DELAY = 300; 
+    // 🎯 تم تخفيض حجم الفقاعات مرة أخرى
+    const BUBBLE_SCALE = 0.2; 
+    let FIRE_DELAY = 200; // 🎯 تم تخفيض تأخير الإطلاق
     let lastFired = 0;
 
     function preload() {
-        // ✅ تم العودة إلى المسار الأصلي 'assets/'
+        // ✅ العودة إلى المسار 'assets/'
         this.load.image('cannon', 'assets/cannon.png');
         this.load.image('shoot', 'assets/shoot.png');
         this.load.image('bubble1', 'assets/bubble1.png');
@@ -147,10 +149,16 @@
         wrongFeedbackDiv = document.getElementById('wrongFeedback');
         errorIndicator = document.getElementById('errorIndicator');
 
-        // 2. إعداد الأصوات
+        // 2. إعداد الأصوات (يجب أن يتم تشغيلها هنا لتجاوز قيود المتصفح)
         correctSound = this.sound.add('correct');
         wrongSound = this.sound.add('wrong');
         this.fireSound = this.sound.add('fire');
+        // 💡 تلميح: تشغيل صوت صامت عند أول نقرة/لمسة يمكن أن يحل مشاكل الأصوات
+        this.input.once('pointerdown', () => {
+            if (this.sound.context.state !== 'running') {
+                this.sound.context.resume();
+            }
+        });
 
         // 3. إعداد المدفع (Cannon)
         cannon = this.add.sprite(width / 2, height * 0.95, 'cannon').setScale(0.8); 
@@ -160,7 +168,13 @@
         projectileGroup = this.physics.add.group({
             defaultKey: 'shoot',
             maxSize: 10,
-            runChildUpdate: true
+            runChildUpdate: true,
+            // 💡 الإعدادات الأولية للجسم
+            createCallback: function (projectile) {
+                // ضبط الخصائص التي تضمن أن القذيفة مرئية ولها دائرة تصادم
+                projectile.body.setCircle(projectile.width * 0.5); // دائرة التصادم نصف قطرها نصف العرض
+                projectile.body.allowGravity = false;
+            }
         });
 
         bubblesGroup = this.physics.add.group({
@@ -179,7 +193,6 @@
 
         // 7. إطلاق القذيفة عند النقر/اللمس
         this.input.on('pointerdown', pointer => {
-            // ✅ تم التأكد من أن الإطلاق يحدث فقط إذا كان الإدخال مُفعّلاً
             if(this.input.enabled) { 
                 fireProjectile(this);
             }
@@ -195,31 +208,41 @@
 
     function fireProjectile(scene) {
         if (scene.time.now > lastFired + FIRE_DELAY) {
+            // 💡 سيتم تشغيل الصوت هنا
             this.fireSound.play();
+            // ✅ استخدام .get() مع تمرير الموقع لضمان إعادة استخدام الأجسام
             const projectile = projectileGroup.get(cannon.x, cannon.y - cannon.displayHeight/2);
             
             if (projectile) {
-                projectile.setActive(true).setVisible(true).setScale(0.4); 
-                projectile.body.setCircle(projectile.width/2);
-                projectile.body.setMass(1);
-                
-                projectile.setVelocityY(-1000); 
-                lastFired = scene.time.now;
+                // 🎯 تقليل حجم القذيفة لضمان ظهورها
+                projectile.setActive(true).setVisible(true).setScale(0.25); 
+                // إعادة ضبط دائرة التصادم بعد تغيير الـ scale
+                projectile.body.setCircle(projectile.width / 2);
 
+                projectile.setVelocityY(-1000); // سرعة الإطلاق للأعلى
+                
+                // 💡 المدفع لا يطلق إلا بعد مرور هذا الوقت
+                lastFired = scene.time.now; 
+
+                // إزالة القذيفة عند خروجها من حدود الشاشة (عن طريق التأخير)
                 scene.time.delayedCall(1500, () => {
-                    projectile.destroy();
+                    projectile.setActive(false).setVisible(false);
+                    projectileGroup.killAndHide(projectile); // إعادتها للمجموعة لإعادة الاستخدام
                 });
             }
         }
     }
 
     function hitBubble(projectile, bubble) {
-        projectile.destroy();
+        // إزالة القذيفة
+        projectile.setActive(false).setVisible(false);
+        projectileGroup.killAndHide(projectile);
 
         const bubbleData = bubble.getData('data');
 
         if (!bubbleData) {
-            bubble.destroy(); 
+            bubble.emit('destroy'); 
+            bubble.destroy();
             return;
         }
 
@@ -230,7 +253,7 @@
 
     function createBubbles(scene, questionData) {
         // إزالة الفقاعات القديمة ونصوصها
-        bubblesGroup.children.iterate((bubble) => {
+        bubblesGroup.children.each((bubble) => {
             if (bubble && bubble.active) {
                 bubble.emit('destroy'); 
                 bubble.destroy();
@@ -242,7 +265,7 @@
         const options = questionData.options;
 
         const startY = height * 0.1;
-        const endY = height * 0.5;
+        const endY = height * 0.6; // 🎯 زيادة منطقة حركة الفقاعات
 
         Phaser.Utils.Array.Shuffle(options); 
         
@@ -253,7 +276,8 @@
             const y = Phaser.Math.Between(startY, endY);
             
             const bubble = bubblesGroup.create(x, y, bubbleType).setScale(BUBBLE_SCALE);
-            bubble.body.setCircle(bubble.width/2); 
+            // 🎯 ضبط دائرة التصادم بناءً على حجم الفقاعة الجديد
+            bubble.body.setCircle(bubble.width / 2); 
 
             bubble.setData('data', {
                 answer: opt,
@@ -278,31 +302,23 @@
                 answerText.y = bubble.y; 
             });
             
-            const speed = 100;
+            // 🎯 سرعة متوسطة
+            const speed = 150; 
             bubble.setVelocity(
-                Phaser.Math.Between(-speed / 2, speed / 2),
-                Phaser.Math.Between(-speed / 2, speed / 2)
+                Phaser.Math.Between(-speed, speed),
+                Phaser.Math.Between(-speed, speed)
             );
             
+            // 🎯 ضبط الارتداد والاصطدام بحدود الشاشة بالكامل
             bubble.setBounce(1);
             bubble.setCollideWorldBounds(true);
-            bubble.body.onWorldBounds = true;
 
-            bubble.body.setBoundsRectangle(new Phaser.Geom.Rectangle(0, startY, width, endY - startY));
-
-            bubble.body.world.on('worldbounds', (body) => {
-                if (body.gameObject === bubble) {
-                    bubble.setVelocity(
-                        bubble.body.velocity.x * (body.blocked.left || body.blocked.right ? -1 : 1),
-                        bubble.body.velocity.y * (body.blocked.up || body.blocked.down ? -1 : 1)
-                    );
-                }
-            });
+            // ❌ تم حذف setBoundsRectangle للسماح بحركة أوسع
         });
         
     }
 
-    // دالة عرض السؤال
+    // دالة عرض السؤال (لم يتم تغييرها)
     function showQuestion(index){
         const isReviewing = questionToRepeat !== null;
         const q = isReviewing ? questionToRepeat : QUESTIONS[index];
@@ -319,25 +335,22 @@
         createBubbles(scene, q);
     }
 
-    // دالة التحقق من الإجابة
+    // دالة التحقق من الإجابة (لم يتم تغييرها)
     function checkAnswer(bubble, selectedAnswer){
         const scene = game.scene.getScene('default');
         
         const isReviewing = questionToRepeat !== null;
         const currentQ = isReviewing ? questionToRepeat : QUESTIONS[currentQuestionIndex];
 
-        // ⚠️ تعطيل المدفع أثناء معالجة الإجابة لتجنب الإطلاق المزدوج
         scene.input.enabled = false;
 
         if(selectedAnswer === currentQ.correctAnswer){
-            // ✅ الإجابة الصحيحة
             correctSound.play();
             
             bubble.emit('destroy'); 
             bubble.destroy(); 
 
             scene.time.delayedCall(500, ()=>{
-                // ✅ إعادة تفعيل الإدخال بعد معالجة الإجابة
                 scene.input.enabled = true; 
                 
                 let nextIndex = currentQuestionIndex + 1; 
@@ -365,7 +378,6 @@
             });
 
         } else {
-            // ❌ الإجابة الخاطئة
             wrongSound.play();
             
             wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0.5)';
@@ -387,14 +399,12 @@
                 currentQuestionIndex = prevIndex;
                 
                 scene.time.delayedCall(1500, ()=>{
-                    // ✅ إعادة تفعيل الإدخال بعد فترة قصيرة
                     scene.input.enabled = true; 
                     showQuestion(currentQuestionIndex); 
                 });
                 
             } else {
                 scene.time.delayedCall(500, ()=>{
-                    // ✅ إعادة تفعيل الإدخال في حالة الخطأ على السؤال الأول
                     scene.input.enabled = true; 
                     showQuestion(currentQuestionIndex); 
                 });
