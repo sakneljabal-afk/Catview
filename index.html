@@ -239,21 +239,26 @@
             questionBox.style.display='none';
             
             if(isReviewing){
-                // 1. مسح سجل السؤال المكرر بعد الإجابة الصحيحة
+                // 1. مسح سجل السؤال المكرر
                 questionToRepeat = null;
                 
-                // 2. التقدم للمنصة التي أخطأ عليها اللاعب أصلاً (originalPlatformBeforeError)
-                let nextIndex = originalPlatformBeforeError; 
+                // 2. التقدم خطوة واحدة فقط للأمام من المنصة الحالية
+                let nextIndex = currentPlatformIndexUsed + 1; 
+
+                // 3. المنصة التي أخطأ عليها (originalPlatformBeforeError) تصبح المنصة الحالية للتقدم
+                // هذا يضمن أننا نصل إلى المنصة التي أخطأنا عليها لنجد السؤال التالي (السؤال الذي كان مقرراً للمنصة)
+                originalPlatformBeforeError = nextIndex; 
                 
                 if(nextIndex < platformPositions.length){
                     currentPlatformIndex = nextIndex;
-                    // نذهب للمنصة التي أخطأ عليها لنجد السؤال التالي (سؤال المنصة 3 في مثالك)
+                    // نذهب للمنصة التالية مباشرة
                     moveCat(scene, nextIndex, true); 
                 } else { showQuestion(nextIndex); }
             } else {
                 // التقدم الطبيعي للمنصة التالية (سؤال جديد)
                 let nextIndex = currentPlatformIndexUsed + 1;
-                originalPlatformBeforeError = nextIndex; // تحديث المنصة الأصلية قبل الخطأ التالي
+                // تحديث المنصة الأصلية قبل الخطأ التالي
+                originalPlatformBeforeError = nextIndex; 
 
                 if(nextIndex<platformPositions.length){
                     currentPlatformIndex=nextIndex;
