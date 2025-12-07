@@ -138,10 +138,10 @@
     let correctSound, wrongSound;
     let catBreathingTween;
     let questionToRepeat = null; // السؤال الذي يتم تكراره عند الرجوع
-    let currentQuestionIndex = 0; // مؤشر المنصة/السؤال في الترتيب الأصلي (أين يجب أن يكون اللاعب)
-    let originalPlatformBeforeError = 0; // المنصة التي أخطأ عليها اللاعب أول مرة
+    let originalPlatformBeforeError = 0; // المنصة التي أخطأ عليها اللاعب أول مرة (لتحديد نقطة العودة)
 
     function preload() {
+        // يجب توفير الصور والأصوات في مجلد assets/
         this.load.image('cat','assets/cat.png');
         this.load.image('platform','assets/platform.png');
         this.load.audio('correct','assets/correct.mp3'); 
@@ -194,9 +194,9 @@
 
     function update(){}
 
-    // دالة عرض السؤال (المعدلة لدعم تكرار السؤال)
+    // دالة عرض السؤال
     function showQuestion(index){
-        // تحديد السؤال المعروض: إذا كان هناك سؤال مُعاد، يعرضه. وإلا يعرض السؤال التالي.
+        // إذا كان هناك سؤال مكرر (أي أن اللاعب أخطأ سابقاً)
         const q = questionToRepeat !== null ? 
                                  questionToRepeat : 
                                  QUESTIONS[index];
@@ -223,7 +223,7 @@
         });
     }
 
-    // دالة التحقق من الإجابة (المنطق المُصحَّح)
+    // دالة التحقق من الإجابة (المنطق المصحح بناءً على طلبك)
     function checkAnswer(button, selectedAnswer, currentPlatformIndexUsed){
         
         const isReviewing = questionToRepeat !== null;
@@ -239,23 +239,26 @@
             questionBox.style.display='none';
             
             if(isReviewing){
-                // 1. مسح سجل السؤال المكرر
-                questionToRepeat = null;
+                // حالة المراجعة: الإجابة الصحيحة على سؤال الخطأ المكرر
                 
-                // 2. التقدم خطوة واحدة فقط للأمام من المنصة الحالية
+                // 1. التقدم منصة واحدة فقط
                 let nextIndex = currentPlatformIndexUsed + 1; 
-
-                // 3. المنصة التي أخطأ عليها (originalPlatformBeforeError) تصبح المنصة الحالية للتقدم
-                // هذا يضمن أننا نصل إلى المنصة التي أخطأنا عليها لنجد السؤال التالي (السؤال الذي كان مقرراً للمنصة)
-                originalPlatformBeforeError = nextIndex; 
                 
+                // 2. إذا وصلنا إلى المنصة التي أخطأنا عليها أول مرة، نمسح السؤال المكرر (Mastered)
+                if (nextIndex === originalPlatformBeforeError) {
+                    questionToRepeat = null; // إتقان السؤال، الآن يمكن مسحه
+                    // originalPlatformBeforeError لا يتغير هنا
+                }
+                
+                // 3. تحديث مؤشر المنصة والتحرك
                 if(nextIndex < platformPositions.length){
                     currentPlatformIndex = nextIndex;
-                    // نذهب للمنصة التالية مباشرة
+                    // moveCat(..., true) سيؤدي إلى showQuestion(nextIndex) عند الوصول
                     moveCat(scene, nextIndex, true); 
-                } else { showQuestion(nextIndex); }
+                } else { showQuestion(nextIndex); } // نهاية اللعبة أو آخر سؤال
+
             } else {
-                // التقدم الطبيعي للمنصة التالية (سؤال جديد)
+                // التقدم الطبيعي (سؤال جديد)
                 let nextIndex = currentPlatformIndexUsed + 1;
                 // تحديث المنصة الأصلية قبل الخطأ التالي
                 originalPlatformBeforeError = nextIndex; 
@@ -284,8 +287,8 @@
                 // 1. تحديد السؤال الحالي (سؤال الخطأ) للتكرار
                 if(!isReviewing) {
                    questionToRepeat = currentQ;
-                   // تسجيل المنصة التي أخطأ عليها اللاعب لأول مرة
-                   originalPlatformBeforeError = currentPlatformIndexUsed; 
+                   // تسجيل المنصة التي كان يجب أن نتقدم إليها (نقطة العودة)
+                   originalPlatformBeforeError = currentPlatformIndexUsed + 1; 
                 }
 
                 // 2. الرجوع للمنصة السابقة
@@ -349,7 +352,7 @@
                     catBreathingTween = scene.tweens.add({targets:cat,y:targetY-5,duration:1000,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
                 }
 
-                if(isCorrect) showQuestion(currentPlatformIndex);
+                if(isCorrect) showQuestion(currentPlatformIndex); 
                 if(!isCorrect) document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
             }
         });
