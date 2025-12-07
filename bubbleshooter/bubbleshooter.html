@@ -10,9 +10,9 @@
   /* === تنسيقات الصفحة العامة === */
   body {
     margin: 0;
-    /* خلفية متدرجة لطيفة للصفحة بالكامل */
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* خلفية برتقالية دافئة ومناسبة للطفل 12 سنة */
+    background: linear-gradient(135deg, #FFD580 0%, #FFB347 100%);
+    font-family: 'Segoe UI', 'Tajawal', Tahoma, Geneva, Verdana, sans-serif;
     touch-action: none; 
     overflow: hidden; 
     height: 100vh;
@@ -25,8 +25,8 @@
     background: #2c3e50; 
     color: #fff;
     text-align: center;
-    padding: 10px;
-    height: 20vh;
+    padding: 15px;
+    height: 25vh; /* زيادة الارتفاع ليكون السؤال أكثر وضوحاً */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -36,25 +36,33 @@
   }
 
   header h3 {
-    margin: 0 0 5px 0;
-    /* 💥 زيادة الحد الأدنى للخط ليصبح أوضح على الموبايل */
-    font-size: clamp(1.8rem, 6vw, 2.0rem); 
-    color: #ffd700;
+    margin: 0 0 10px 0;
+    /* زيادة حجم الخط بشكل ملحوظ للوضوح على الموبايل */
+    font-size: clamp(2.2rem, 7vw, 2.8rem); 
+    color: #FFD700;
+    font-weight: bold;
+    line-height: 1.4;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
   }
 
   .answers {
     display: block; 
     text-align: right; 
-    padding: 5px 20px; 
+    padding: 10px 20px; 
+    margin-top: 10px;
   }
   
   .answers span {
     display: block; 
-    /* 💥 زيادة الحد الأدنى للخط ليصبح أوضح على الموبايل */
-    font-size: clamp(1.5rem, 5vw, 1.7rem); 
-    margin: 4px 0; 
-    padding: 3px 0;
-    border-bottom: 1px dashed rgba(255,255,255,0.2);
+    /* زيادة حجم الخط للخيارات */
+    font-size: clamp(1.8rem, 6vw, 2.2rem); 
+    margin: 8px 0; 
+    padding: 8px 12px;
+    border-bottom: 2px solid rgba(255,255,255,0.3);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    font-weight: 600;
+    line-height: 1.5;
   }
   
   .answers span:last-child {
@@ -68,21 +76,22 @@
     justify-content: center;
     align-items: center;
     position: relative;
+    padding: 10px;
   }
 
   /* الإطار الخارجي للعبة */
   #game-frame {
-    width: 90vw; 
+    width: 95vw; 
     height: 70vh; 
-    max-width: 600px; 
-    /* خلفية الإطار ما زالت برتقالية خفيفة (تطبيق CSS) */
-    background: #FFF3E0; 
-    /* الإطار الخارجي أزرق داكن */
-    border: 8px solid #34495e; 
-    border-radius: 20px;
+    max-width: 700px; 
+    /* خلفية برتقالية خفيفة ومناسبة للأطفال */
+    background: #FFF0D9; 
+    /* إطار خارجي ملون وجذاب للأطفال */
+    border: 12px solid #FF8C42; 
+    border-radius: 25px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.25);
   }
 
   #game-container {
@@ -105,17 +114,49 @@
 
   /* علامة الخطأ الكبيرة */
   #errorMark {
-    font-size: 8rem;
+    font-size: 10rem;
     color: white;
-    background: rgba(255, 0, 0, 0.8);
-    width: 150px;
-    height: 150px;
+    background: rgba(231, 76, 60, 0.9);
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
     display: none; 
     justify-content: center;
     align-items: center;
-    box-shadow: 0 0 20px rgba(0,0,0,0.3);
-    border: 5px solid white;
+    box-shadow: 0 0 30px rgba(0,0,0,0.4);
+    border: 8px solid white;
+    font-weight: bold;
+  }
+
+  /* تأثيرات تفاعلية للخيارات عند اللمس */
+  @media (hover: hover) {
+    .answers span:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.02);
+      transition: transform 0.2s;
+    }
+  }
+
+  /* تحسينات للشاشات الصغيرة جداً */
+  @media (max-width: 480px) {
+    header {
+      height: 30vh;
+      padding: 12px;
+    }
+    
+    header h3 {
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+    }
+    
+    .answers span {
+      font-size: clamp(1.6rem, 5vw, 2rem);
+      padding: 6px 10px;
+    }
+    
+    #game-frame {
+      height: 65vh;
+      border-width: 10px;
+    }
   }
 
 </style>
@@ -137,43 +178,43 @@
 
 <script>
 /* ======================
-   1. البيانات (الأسئلة)
+   1. البيانات (الأسئلة)
 ====================== */
 const QUESTIONS = [
-  { q:"ما هو الكوكب الأحمر؟", o:["هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب الزهرة","هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب المريخ","هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب المشتري"], a:1 },
- { q:"كم عدد أرجل القط؟", o:["2","4","6"], a:1 },
- { q:"ناتج 5 + 5؟", o:["9","10","11"], a:1 },
- { q:"عاصمة مصر؟", o:["القاهرة","الاسكندرية","أسوان"], a:0 }
+  { q:"ما هو الكوكب الأحمر؟", o:["هل الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب الزهرة","هل الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب المريخ","هل الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب المشتري"], a:1 },
+  { q:"كم عدد أرجل القط؟", o:["2","4","6"], a:1 },
+  { q:"ناتج 5 + 5؟", o:["9","10","11"], a:1 },
+  { q:"عاصمة مصر؟", o:["القاهرة","الاسكندرية","أسوان"], a:0 }
 ];
 
 /* ======================
-   2. إعدادات اللعبة (Phaser)
+   2. إعدادات اللعبة (Phaser)
 ====================== */
 const config = {
- type: Phaser.AUTO,
- parent: 'game-container', 
- width: 600,  
- height: 800, 
-  // 💥 تعيين لون الخلفية البرتقالي الخفيف مباشرة في إعدادات Phaser
-  backgroundColor: '#FFF3E0', 
- scale: {
-   mode: Phaser.Scale.FIT, 
-   autoCenter: Phaser.Scale.CENTER_BOTH
- },
- physics: {
-   default: 'arcade',
-   arcade: {
-     gravity: { y: 0 },
-     debug: false
-   }
- },
- scene: { preload, create, update }
+  type: Phaser.AUTO,
+  parent: 'game-container', 
+  width: 600,  
+  height: 800, 
+  // لون خلفية برتقالي خفيف ومناسب للأطفال
+  backgroundColor: '#FFF0D9', 
+  scale: {
+    mode: Phaser.Scale.FIT, 
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 0 },
+      debug: false
+    }
+  },
+  scene: { preload, create, update }
 };
 
 const game = new Phaser.Game(config);
 
 /* ======================
-   3. المتغيرات العامة
+   3. المتغيرات العامة
 ====================== */
 let cannon, bubbles, arrow, invisibleWall;
 let currentQ = 0;
@@ -181,206 +222,207 @@ let canShoot = true;
 let isAiming = false;
 let missedShots = 0;
 
-const BUBBLE_IMG_SIZE = 300; 
+const BUBBLE_IMG_SIZE = 300; 
 
 /* ======================
-   4. التحميل (Preload)
+   4. التحميل (Preload)
 ====================== */
 function preload(){
- this.load.image('cannon','assets/cannon.png');
- this.load.image('shoot','assets/shoot.png');
- this.load.image('bubble1','assets/bubble1.png');
- this.load.image('bubble2','assets/bubble2.png');
- this.load.image('bubble3','assets/bubble3.png');
- this.load.audio('correct','assets/correct.mp3');
- this.load.audio('wrong','assets/wrong.mp3');
+  this.load.image('cannon','assets/cannon.png');
+  this.load.image('shoot','assets/shoot.png');
+  this.load.image('bubble1','assets/bubble1.png');
+  this.load.image('bubble2','assets/bubble2.png');
+  this.load.image('bubble3','assets/bubble3.png');
+  this.load.audio('correct','assets/correct.mp3');
+  this.load.audio('wrong','assets/wrong.mp3');
 }
 
 /* ======================
-   5. الإنشاء (Create)
+   5. الإنشاء (Create)
 ====================== */
 function create(){
- const width = this.scale.width;
- const height = this.scale.height;
+  const width = this.scale.width;
+  const height = this.scale.height;
 
- this.correctSound = this.sound.add('correct');
- this.wrongSound = this.sound.add('wrong');
+  this.correctSound = this.sound.add('correct');
+  this.wrongSound = this.sound.add('wrong');
 
- this.physics.world.setBounds(0, 0, width, height);
+  this.physics.world.setBounds(0, 0, width, height);
 
- invisibleWall = this.add.rectangle(width/2, height * 0.55, width, 20, 0x000000, 0);
- this.physics.add.existing(invisibleWall, true);
+  invisibleWall = this.add.rectangle(width/2, height * 0.55, width, 20, 0x000000, 0);
+  this.physics.add.existing(invisibleWall, true);
 
- const cannonHeight = height * 0.10; 
- const cannonScale = cannonHeight / 300; 
+  const cannonHeight = height * 0.10; 
+  const cannonScale = cannonHeight / 300; 
 
- cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
-   .setScale(cannonScale)
-   .setDepth(1); 
+  cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
+    .setScale(cannonScale)
+    .setDepth(1); 
 
- bubbles = this.physics.add.group({
-   collideWorldBounds: true,
-   bounceX: 1,
-   bounceY: 1
- });
- this.physics.add.collider(bubbles, invisibleWall);
+  bubbles = this.physics.add.group({
+    collideWorldBounds: true,
+    bounceX: 1,
+    bounceY: 1
+  });
+  this.physics.add.collider(bubbles, invisibleWall);
 
- arrow = this.add.text(cannon.x, cannon.y - (cannon.displayHeight), '⬆️', {
-   fontSize: '28px',
-   fontFamily: 'Arial'
- }).setOrigin(0.5);
+  arrow = this.add.text(cannon.x, cannon.y - (cannon.displayHeight), '⬆️', {
+    fontSize: '32px',
+    fontFamily: 'Arial',
+    color: '#FF5722'
+  }).setOrigin(0.5);
 
- this.input.on('pointermove', (pointer) => {
-   let xPos = pointer.x;
-   cannon.x = Phaser.Math.Clamp(xPos, width * 0.1, width * 0.9);
-   arrow.x = cannon.x;
- });
+  this.input.on('pointermove', (pointer) => {
+    let xPos = pointer.x;
+    cannon.x = Phaser.Math.Clamp(xPos, width * 0.1, width * 0.9);
+    arrow.x = cannon.x;
+  });
 
- this.input.on('pointerdown', () => {
-   if (!isAiming) { isAiming = true; return; }
-   if (canShoot) fire(this);
- });
+  this.input.on('pointerdown', () => {
+    if (!isAiming) { isAiming = true; return; }
+    if (canShoot) fire(this);
+  });
 
- showQuestion(this);
+  showQuestion(this);
 }
 
 /* ======================
-   6. التحديث المستمر (Update)
+   6. التحديث المستمر (Update)
 ====================== */
 function update() {
-  bubbles.children.iterate((b) => {
-    if (b) b.rotation += 0.005;
-  });
+  bubbles.children.iterate((b) => {
+    if (b) b.rotation += 0.005;
+  });
 }
 
 /* ======================
-   7. منطق الإطلاق (Fire)
+   7. منطق الإطلاق (Fire)
 ====================== */
 function fire(scene){
- canShoot = false;
- isAiming = false;
- arrow.setVisible(false);
+  canShoot = false;
+  isAiming = false;
+  arrow.setVisible(false);
 
- const width = scene.scale.width;
- const shotScale = (width * 0.12) / 300; 
+  const width = scene.scale.width;
+  const shotScale = (width * 0.12) / 300; 
 
- const shot = scene.physics.add.sprite(
-   cannon.x,
-   cannon.y - cannon.displayHeight/1.5,
-   'shoot'
- ).setScale(shotScale);
+  const shot = scene.physics.add.sprite(
+    cannon.x,
+    cannon.y - cannon.displayHeight/1.5,
+    'shoot'
+  ).setScale(shotScale);
 
- shot.setVelocityY(-800); 
+  shot.setVelocityY(-800); 
 
- scene.physics.add.overlap(shot, bubbles, (s, b) => {
-   s.destroy();
-   missedShots = 0;
-   bubbleHit(scene, b);
- });
+  scene.physics.add.overlap(shot, bubbles, (s, b) => {
+    s.destroy();
+    missedShots = 0;
+    bubbleHit(scene, b);
+  });
 
- shot.setCollideWorldBounds(true);
- shot.body.onWorldBounds = true;
+  shot.setCollideWorldBounds(true);
+  shot.body.onWorldBounds = true;
 
- shot.body.world.on('worldbounds', (body) => {
-   if (body.gameObject === shot) {
-     shot.destroy();
-     missedShots++;
-     if (missedShots >= 2) {
-       missedShots = 0;
-       showQuestion(scene); 
-     }
-   }
- });
+  shot.body.world.on('worldbounds', (body) => {
+    if (body.gameObject === shot) {
+      shot.destroy();
+      missedShots++;
+      if (missedShots >= 2) {
+        missedShots = 0;
+        showQuestion(scene); 
+      }
+    }
+  });
 
- scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
- 
- scene.time.delayedCall(800, () => {
-   canShoot = true;
-   arrow.setVisible(true);
- });
+  scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
+  
+  scene.time.delayedCall(800, () => {
+    canShoot = true;
+    arrow.setVisible(true);
+  });
 }
 
 /* ======================
-   8. منطق الإصابة (Hit)
+   8. منطق الإصابة (Hit)
 ====================== */
 function bubbleHit(scene, bubble){
- const correct = bubble.getData('correct');
- bubble.destroy();
+  const correct = bubble.getData('correct');
+  bubble.destroy();
 
- if(correct){
-   scene.correctSound.play();
-   scene.time.delayedCall(500, () => {
-     currentQ++;
-     showQuestion(scene);
-   });
- } else {
-   const flash = document.getElementById('wrongFlash');
-   const mark = document.getElementById('errorMark');
-   
-   scene.wrongSound.play();
-   
-   flash.style.background = 'rgba(255,0,0,0.4)';
-   mark.style.display = 'flex'; 
-   
-   setTimeout(() => {
-     flash.style.background = 'rgba(255,0,0,0)';
-     mark.style.display = 'none';
-   }, 400); 
+  if(correct){
+    scene.correctSound.play();
+    scene.time.delayedCall(500, () => {
+      currentQ++;
+      showQuestion(scene);
+    });
+  } else {
+    const flash = document.getElementById('wrongFlash');
+    const mark = document.getElementById('errorMark');
+    
+    scene.wrongSound.play();
+    
+    flash.style.background = 'rgba(255,0,0,0.4)';
+    mark.style.display = 'flex'; 
+    
+    setTimeout(() => {
+      flash.style.background = 'rgba(255,0,0,0)';
+      mark.style.display = 'none';
+    }, 400); 
 
-   scene.time.delayedCall(600, () => showQuestion(scene));
- }
+    scene.time.delayedCall(600, () => showQuestion(scene));
+  }
 }
 
 /* ======================
-   9. عرض السؤال وتوليد الفقاعات
+   9. عرض السؤال وتوليد الفقاعات
 ====================== */
 function showQuestion(scene){
- const q = QUESTIONS[currentQ];
- 
- if(!q){
-   document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3>';
-   bubbles.clear(true, true);
-   return;
- }
+  const q = QUESTIONS[currentQ];
+  
+  if(!q){
+    document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
+    bubbles.clear(true, true);
+    return;
+  }
 
- document.getElementById('questionHeader').innerHTML = `
-   <h3>${q.q}</h3>
-   <div class="answers">
-     <span style="color:#81d4fa">1: ${q.o[0]}</span>
-     <span style="color:#a5d6a7">2: ${q.o[1]}</span>
-     <span style="color:#ffe082">3: ${q.o[2]}</span>
-   </div>
- `;
+  document.getElementById('questionHeader').innerHTML = `
+    <h3>${q.q}</h3>
+    <div class="answers">
+      <span style="color:#81d4fa">1: ${q.o[0]}</span>
+      <span style="color:#a5d6a7">2: ${q.o[1]}</span>
+      <span style="color:#ffe082">3: ${q.o[2]}</span>
+    </div>
+  `;
 
- bubbles.clear(true, true);
- 
- const width = scene.scale.width;
- const height = scene.scale.height;
+  bubbles.clear(true, true);
+  
+  const width = scene.scale.width;
+  const height = scene.scale.height;
 
- const bubbleTargetSize = width * 0.18; 
- const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
+  const bubbleTargetSize = width * 0.18; 
+  const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
 
- const positions = [0.2, 0.5, 0.8]; 
+  const positions = [0.2, 0.5, 0.8]; 
 
- for(let i=0; i<3; i++){
-   const b = bubbles.create(
-     width * positions[i],
-     height * 0.3, 
-     'bubble' + (i+1)
-   ).setScale(bubbleScale);
+  for(let i=0; i<3; i++){
+    const b = bubbles.create(
+      width * positions[i],
+      height * 0.3, 
+      'bubble' + (i+1)
+    ).setScale(bubbleScale);
 
-   b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE))); 
+    b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE))); 
 
-   b.setData('correct', i === q.a);
-   
-   b.setVelocity(
-     Phaser.Math.Between(-50, 50), 
-     Phaser.Math.Between(-30, 30)
-   );
-   
-   b.setBounce(1);
-   b.setCollideWorldBounds(true);
- }
+    b.setData('correct', i === q.a);
+    
+    b.setVelocity(
+      Phaser.Math.Between(-50, 50), 
+      Phaser.Math.Between(-30, 30)
+    );
+    
+    b.setBounce(1);
+    b.setCollideWorldBounds(true);
+  }
 }
 </script>
 </body>
