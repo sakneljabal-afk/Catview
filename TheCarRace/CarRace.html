@@ -163,6 +163,28 @@
             display: none;
         }
 
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #4cc9f0;
+            padding-bottom: 10px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #f72585;
+        }
+
         .question-text {
             font-size: 1.2rem; /* تقليل حجم الخط للموبايل */
             margin-bottom: 20px;
@@ -171,6 +193,27 @@
         .option {
             padding: 12px;
             font-size: 1rem;
+            background-color: #2c3e50;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .option:hover {
+            background-color: #34495e;
+        }
+
+        .option.correct {
+            background-color: #2ecc71; /* أخضر للإجابة الصحيحة */
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .option.incorrect {
+            background-color: #e74c3c; /* أحمر للإجابة الخاطئة */
+            color: #fff;
+            font-weight: bold;
         }
         
         @media (min-width: 769px) {
@@ -229,42 +272,14 @@
 
     <script>
         // بيانات الأسئلة
-        const allQuestions = [
-            {
-                "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:",
-                "c": ["أوراق عريضة تطفو على الماء", "جذور قصيرة ضعيفة", "جذور طويلة وقوية لمقاومة الأمواج"],
-                "a": 2 
-            },
-            {
-                "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟",
-                "c": ["تخزين كميات كبيرة من الماء", "امتصاص الضوء من سطح الماء", "الصمود أمام الأمواج القوية"],
-                "a": 2
-            },
-            {
-                "q": "كيف تتخلص شجرة المانجروف من الملح الزائد؟",
-                "c": ["عن طريق الجذور التي تفرز الملح", "عن طريق الأوراق التي تفرز الملح", "عن طريق الساق التي تخزن الملح"],
-                "a": 1
-            },
-            {
-                "q": "أين توجد أشجار المانجروف عادة؟",
-                "c": ["في الصحاري الحارة", "على قمم الجبال", "في مناطق المد والجزر على السواحل"],
-                "a": 2
-            },
-            {
-                "q": "ما أهمية أشجار المانجروف للبيئة البحرية؟",
-                "c": ["تزيد ملوحة المياه", "توفر بيئة آمنة لتكاثر الأسماك والكائنات البحرية", "تقلل من كمية الأكسجين في الماء"],
-                "a": 1
-            },
-            {
-                "q": "كيف تساعد جذور المانجروف الهوائية الشجرة على التنفس؟",
-                "c": ["تمتص الماء المالح فقط", "تسمح بتبادل الغازات في التربة الفقيرة بالأكسجين", "تخزن الغذاء لفترات الجفاف"],
-                "a": 1
-            },
-            {
-                "q": "ما هو التهديد الرئيسي لأشجار المانجروف؟",
-                "c": ["الحيوانات البرية", "التلوث والقطع الجائر والتنمية الساحلية", "زيادة هطول الأمطار"],
-                "a": 1
-            }
+        const allQuestionsData = [
+            { "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:", "c": ["أوراق عريضة تطفو على الماء", "جذور قصيرة ضعيفة", "جذور طويلة وقوية لمقاومة الأمواج"], "a": 2, "id": 1 },
+            { "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟", "c": ["تخزين كميات كبيرة من الماء", "امتصاص الضوء من سطح الماء", "الصمود أمام الأمواج القوية"], "a": 2, "id": 2 },
+            { "q": "كيف تتخلص شجرة المانجروف من الملح الزائد؟", "c": ["عن طريق الجذور التي تفرز الملح", "عن طريق الأوراق التي تفرز الملح", "عن طريق الساق التي تخزن الملح"], "a": 1, "id": 3 },
+            { "q": "أين توجد أشجار المانجروف عادة؟", "c": ["في الصحاري الحارة", "على قمم الجبال", "في مناطق المد والجزر على السواحل"], "a": 2, "id": 4 },
+            { "q": "ما أهمية أشجار المانجروف للبيئة البحرية؟", "c": ["تزيد ملوحة المياه", "توفر بيئة آمنة لتكاثر الأسماك والكائنات البحرية", "تقلل من كمية الأكسجين في الماء"], "a": 1, "id": 5 },
+            { "q": "كيف تساعد جذور المانجروف الهوائية الشجرة على التنفس؟", "c": ["تمتص الماء المالح فقط", "تسمح بتبادل الغازات في التربة الفقيرة بالأكسجين", "تخزن الغذاء لفترات الجفاف"], "a": 1, "id": 6 },
+            { "q": "ما هو التهديد الرئيسي لأشجار المانجروف؟", "c": ["الحيوانات البرية", "التلوث والقطع الجائر والتنمية الساحلية", "زيادة هطول الأمطار"], "a": 1, "id": 7 }
         ];
 
         // متغيرات اللعبة
@@ -279,8 +294,10 @@
         let score = 0;
         let scoreText;
         let wrongQuestions = [];
-        // التحكم في معدل توليد الصناديق (تم زيادته)
-        const QUESTION_BOX_GENERATION_DELAY = 4500; 
+        let remainingQuestions = [...allQuestionsData]; // قائمة الأسئلة المتبقية
+
+        // التحكم في معدل توليد الصناديق (تم زيادته لزيادة المسافة)
+        const QUESTION_BOX_GENERATION_DELAY = 6000; 
 
         // عناصر DOM الإضافية لتأثير الخطأ
         const errorOverlay = document.getElementById('errorOverlay');
@@ -292,11 +309,13 @@
                 super({ key: 'GameScene' });
                 this.isMovingUp = false;
                 this.isMovingDown = false;
+                this.backgroundObjects = null; // مجموعة عناصر الخلفية
             }
             
             preload() {
                 this.createCarTexture();
                 this.createQuestionBoxTexture();
+                this.createBackgroundObjectTextures(); // إنشاء نسيج عناصر الخلفية
             }
 
             // دالة لتوليد نسيج السيارة
@@ -330,11 +349,41 @@
                 boxGraphics.generateTexture('questionBoxTexture', 50, 50);
                 boxGraphics.destroy();
             }
+
+            // دالة لتوليد نسيج عناصر الخلفية (منزل/شجرة/عمود) - غامقة ومبسطة
+            createBackgroundObjectTextures() {
+                const graphics = this.add.graphics({ add: false });
+
+                // نسيج منزل غامق
+                graphics.fillStyle(0x000000, 0.7);
+                graphics.fillRect(0, 15, 30, 15); // الجزء السفلي
+                graphics.fillStyle(0x0a0a0a, 0.9);
+                graphics.fillTriangle(0, 15, 30, 15, 15, 0); // السقف
+                graphics.generateTexture('houseTexture', 30, 30);
+                graphics.clear();
+
+                // نسيج شجرة غامق
+                graphics.fillStyle(0x000000, 0.8);
+                graphics.fillRect(13, 20, 4, 10); // الجذع
+                graphics.fillStyle(0x1a1a1a, 0.85);
+                graphics.fillCircle(15, 15, 15); // الأوراق
+                graphics.generateTexture('treeTexture', 30, 30);
+                graphics.clear();
+                
+                // نسيج عمود إنارة غامق
+                graphics.fillStyle(0x2a2a2a, 0.9);
+                graphics.fillRect(14, 0, 2, 30); // العمود
+                graphics.fillStyle(0xfff59d, 0.5);
+                graphics.fillCircle(15, 3, 3); // الضوء الخافت
+                graphics.generateTexture('poleTexture', 30, 30);
+                graphics.destroy();
+            }
             
             create() {
                 this.createBackground();
                 this.createRoad();
-                
+                this.backgroundObjects = this.add.group(); // إنشاء مجموعة لعناصر الخلفية
+
                 player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
                 player.setCollideWorldBounds(true);
                 player.setScale(0.8);
@@ -355,10 +404,18 @@
                     fontStyle: 'bold'
                 }).setScrollFactor(0).setDepth(100);
 
-                // مؤقت لتوليد صناديق الأسئلة (تم تعديل التأخير)
+                // مؤقت لتوليد صناديق الأسئلة (بفاصل كبير)
                 this.time.addEvent({
                     delay: QUESTION_BOX_GENERATION_DELAY, 
                     callback: this.generateQuestionBox,
+                    callbackScope: this,
+                    loop: true
+                });
+
+                // مؤقت لتوليد عناصر الخلفية (بفاصل صغير)
+                this.time.addEvent({
+                    delay: 500, // توليد سريع
+                    callback: this.generateBackgroundObject,
                     callbackScope: this,
                     loop: true
                 });
@@ -381,6 +438,7 @@
 
             // دالة إعداد التحكم باللمس
             setupMobileControls() {
+                // ... (نفس دالة setupMobileControls الأصلية) ...
                 const upBtn = document.getElementById('upBtn');
                 const downBtn = document.getElementById('downBtn');
 
@@ -416,9 +474,12 @@
             }
             
             createBackground() {
+                // خلفية السماء (سوداء/ليلية)
                 const graphics = this.add.graphics();
                 graphics.fillGradientStyle(0x0a0a20, 0x0e1332, 0x0a0a20, 0x0e1332);
                 graphics.fillRect(0, 0, 800, 600);
+
+                // النجوم (أو نقاط الإضاءة البعيدة)
                 for (let i = 0; i < 100; i++) {
                     const x = Phaser.Math.Between(0, 800);
                     const y = Phaser.Math.Between(0, 300);
@@ -426,29 +487,71 @@
                     const alpha = Phaser.Math.FloatBetween(0.2, 0.8);
                     this.add.circle(x, y, size, 0xffffff, alpha);
                 }
+
+                // سحب دخانية بعيدة (لإضافة عمق)
+                const fogGraphics = this.add.graphics({ fillStyle: { color: 0x111122, alpha: 0.5 } });
+                for(let i = 0; i < 5; i++) {
+                    fogGraphics.fillRect(i * 200, 300 + Phaser.Math.Between(0, 50), 300, 50);
+                }
             }
             
             createRoad() {
                 const roadGraphics = this.add.graphics();
+                // الطريق الرئيسي (الأسفلت)
                 roadGraphics.fillStyle(0x333333, 1);
-                roadGraphics.fillRect(0, 500, 800, 100);
+                roadGraphics.fillRect(0, 400, 800, 200); // زيادة ارتفاع الطريق ليشمل منطقة حركة السيارة
+
+                // حدود الطريق
                 roadGraphics.fillStyle(0xf72585, 1);
-                roadGraphics.fillRect(0, 500, 800, 10);
+                roadGraphics.fillRect(0, 400, 800, 10);
                 roadGraphics.fillRect(0, 590, 800, 10);
+
+                // خطوط المنتصف (متحركة)
+                this.roadLines = this.add.group();
+                for (let i = 0; i < 10; i++) {
+                    this.roadLines.add(this.add.rectangle(i * 100, 500, 50, 5, 0xffffff));
+                }
+            }
+
+            generateBackgroundObject() {
+                const textures = ['houseTexture', 'treeTexture', 'poleTexture'];
+                const randomTexture = Phaser.Utils.Array.GetRandom(textures);
+                
+                // تحديد مكان ظهور الكائن
+                const x = 850;
+                const y = 350; // فوق الطريق بقليل
+                const scaleFactor = Phaser.Math.FloatBetween(0.8, 1.5); // حجم متغير
+
+                const obj = this.add.sprite(x, y, randomTexture);
+                obj.setOrigin(0.5, 1); // تثبيت الكائن على الأرضية
+                obj.setScale(scaleFactor);
+                obj.setDepth(Phaser.Math.Between(10, 20)); // عمق عشوائي لإحساس 3D
+                this.backgroundObjects.add(obj);
             }
             
             update() {
-                // تحريك الخلفية
-                this.children.list.forEach(child => {
-                    if (child.type === 'Circle' && child.fillColor === 0xffffff) {
-                        child.x -= scrollSpeed / 500;
-                        if (child.x < -10) {
-                            child.x = 810;
-                            child.y = Phaser.Math.Between(0, 300);
-                        }
+                // تحريك خطوط المنتصف
+                this.roadLines.getChildren().forEach(line => {
+                    line.x -= scrollSpeed / 30; // حركة سريعة جدا
+                    if (line.x < -50) {
+                        line.x = 850;
                     }
                 });
-                
+
+                // تحريك عناصر الخلفية (لإحساس الحركة السريعة للسيارة)
+                this.backgroundObjects.getChildren().forEach(obj => {
+                    // حركة أفقية
+                    obj.x -= scrollSpeed / 50; // حركة أسرع من الصناديق/الخلفية العادية
+
+                    // تأثير المنظور
+                    const distanceFactor = 1 - (obj.y - 350) / 100;
+                    obj.x -= scrollSpeed * distanceFactor * 0.01;
+                    
+                    if (obj.x < -50) {
+                        obj.destroy();
+                    }
+                });
+
                 // تحريك صناديق الأسئلة
                 if (questionBoxGroup) {
                     questionBoxGroup.getChildren().forEach(box => {
@@ -472,23 +575,40 @@
                         player.y += moveAmount;
                     }
                     // ضمان بقاء السيارة ضمن حدود الطريق
-                    player.y = Phaser.Math.Clamp(player.y, 420, 480);
+                    player.y = Phaser.Math.Clamp(player.y, 420, 560); // تعديل حدود الطريق
                 }
             }
             
             generateQuestionBox(questionData = null) {
-                // استخدام سؤال محدد (سؤال خاطئ) أو سؤال عشوائي
-                if (!questionData) {
-                    if (wrongQuestions.length > 0 && Math.random() < 0.2) { 
-                        // فرصة أقل لظهور سؤال خاطئ عشوائياً (لضمان ظهور الجديد أولاً)
-                        questionData = wrongQuestions.shift();
-                    } else {
-                        const randomIndex = Math.floor(Math.random() * allQuestions.length);
-                        questionData = allQuestions[randomIndex];
-                    }
+                if (questionBoxGroup.getLength() > 0) {
+                    // لا تولد صندوقاً جديداً إذا كان هناك صندوق قيد الحركة
+                    return;
                 }
                 
-                const box = this.physics.add.sprite(850, 450, 'questionBoxTexture'); 
+                // 1. سؤال خاطئ أولاً
+                if (wrongQuestions.length > 0) { 
+                    questionData = wrongQuestions.shift();
+                } 
+                // 2. سؤال جديد من القائمة المتبقية
+                else if (remainingQuestions.length > 0) {
+                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
+                    // إزالة السؤال من القائمة المتبقية لضمان عدم تكراره
+                    questionData = remainingQuestions.splice(randomIndex, 1)[0]; 
+                } 
+                // 3. كل الأسئلة تمت الإجابة عليها صحيحاً، نبدأ دورة جديدة بفرز الأسئلة عشوائياً
+                else {
+                    remainingQuestions = Phaser.Utils.Array.Shuffle([...allQuestionsData]);
+                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
+                    questionData = remainingQuestions.splice(randomIndex, 1)[0]; 
+                }
+                
+                // **في حالة انتهاء جميع الأسئلة والصناديق الخاطئة**
+                if (!questionData) {
+                    console.log("جميع الأسئلة تمت الإجابة عليها بشكل صحيح!");
+                    return; // إيقاف توليد الصناديق
+                }
+                
+                const box = this.physics.add.sprite(850, 500, 'questionBoxTexture'); 
                 box.setScale(0.8);
                 questionBoxGroup.add(box);
                 box.setData('question', questionData);
@@ -515,7 +635,7 @@
                 questionData.c.forEach((option, index) => {
                     const optionElement = document.createElement('div');
                     optionElement.className = 'option';
-                    optionElement.textContent = `${index + 1}. ${option}`;
+                    optionElement.textContent = `${option}`;
                     optionElement.dataset.index = index;
                     
                     optionElement.onclick = () => {
@@ -551,11 +671,9 @@
                     baseSpeed *= 0.6;
                     baseSpeed = Math.max(50, baseSpeed); 
                     
-                    // **تعديل: إضافة السؤال للقائمة وتوليد الصندوق الجديد فوراً**
+                    // إضافة السؤال إلى قائمة الأسئلة الخاطئة لظهوره لاحقاً
                     if (!wrongQuestions.includes(activeQuestion)) {
                          wrongQuestions.push(activeQuestion);
-                         // توليد صندوق السؤال الخاطئ مباشرةً (سيظهر في نهاية الصناديق الحالية)
-                         this.generateQuestionBox(activeQuestion); 
                     }
                     
                     this.findAndRemoveQuestionBox();
@@ -575,7 +693,7 @@
             findAndRemoveQuestionBox() {
                 if (questionBoxGroup) {
                     questionBoxGroup.getChildren().forEach(box => {
-                        if (box.getData('used') && !box.getData('isNewWrong')) {
+                        if (box.getData('used')) {
                             // إزالة الصندوق الأصلي الذي تم الاصطدام به
                             this.tweens.add({
                                 targets: box,
@@ -607,12 +725,12 @@
 
         // إعداد تكوين اللعبة
         const config = {
-            type: Phaser.AUTO, // استخدام AUTO ليتناسب مع البيئة (موبايل/كمبيوتر)
+            type: Phaser.AUTO, 
             width: 800,
             height: 600,
             parent: 'gameCanvas',
             scale: {
-                mode: Phaser.Scale.FIT, // جعل اللعبة متناسبة داخل الشاشة
+                mode: Phaser.Scale.FIT, 
                 autoCenter: Phaser.Scale.CENTER_BOTH
             },
             physics: {
