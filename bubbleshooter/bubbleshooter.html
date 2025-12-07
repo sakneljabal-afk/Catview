@@ -105,8 +105,8 @@
             default:'arcade', 
             arcade:{ 
                 gravity:{y:0}, 
-                // وضع هذا على true قد يساعد في رؤية حدود الأجسام للتصحيح
-                debug:false 
+                // يمكنك تغيير هذا إلى true لرؤية مربعات التصادم وتصحيح الأخطاء
+                debug: false 
             } 
         },
         scene: { preload, create, update }
@@ -123,13 +123,14 @@
     let originalQuestionIndexBeforeError = 0; 
 
     const BUBBLE_TYPES = ['bubble1', 'bubble2', 'bubble3'];
-    // 🎯 تم تخفيض حجم الفقاعات مرة أخرى
-    const BUBBLE_SCALE = 0.2; 
-    let FIRE_DELAY = 200; // 🎯 تم تخفيض تأخير الإطلاق
+    
+    // ⬇️ التعديل الثاني: تصغير حجم الفقاعات
+    const BUBBLE_SCALE = 0.15; 
+    
+    let FIRE_DELAY = 200; 
     let lastFired = 0;
 
     function preload() {
-        // ✅ العودة إلى المسار 'assets/'
         this.load.image('cannon', 'assets/cannon.png');
         this.load.image('shoot', 'assets/shoot.png');
         this.load.image('bubble1', 'assets/bubble1.png');
@@ -149,11 +150,11 @@
         wrongFeedbackDiv = document.getElementById('wrongFeedback');
         errorIndicator = document.getElementById('errorIndicator');
 
-        // 2. إعداد الأصوات (يجب أن يتم تشغيلها هنا لتجاوز قيود المتصفح)
+        // 2. إعداد الأصوات
         correctSound = this.sound.add('correct');
         wrongSound = this.sound.add('wrong');
         this.fireSound = this.sound.add('fire');
-        // 💡 تلميح: تشغيل صوت صامت عند أول نقرة/لمسة يمكن أن يحل مشاكل الأصوات
+        
         this.input.once('pointerdown', () => {
             if (this.sound.context.state !== 'running') {
                 this.sound.context.resume();
@@ -161,20 +162,15 @@
         });
 
         // 3. إعداد المدفع (Cannon)
-        cannon = this.add.sprite(width / 2, height * 0.95, 'cannon').setScale(0.8); 
+        // ⬇️ التعديل الأول: تصغير حجم المدفع (0.4) ووضعه في مكان مناسب
+        cannon = this.add.sprite(width / 2, height * 0.90, 'cannon').setScale(0.4); 
         cannon.setDepth(10);
         
         // 4. مجموعات الفيزياء (Physics Groups)
         projectileGroup = this.physics.add.group({
             defaultKey: 'shoot',
             maxSize: 10,
-            runChildUpdate: true,
-            // 💡 الإعدادات الأولية للجسم
-            createCallback: function (projectile) {
-                // ضبط الخصائص التي تضمن أن القذيفة مرئية ولها دائرة تصادم
-                projectile.body.setCircle(projectile.width * 0.5); // دائرة التصادم نصف قطرها نصف العرض
-                projectile.body.allowGravity = false;
-            }
+            runChildUpdate: true
         });
 
         bubblesGroup = this.physics.add.group({
@@ -186,12 +182,12 @@
         // 5. تفاعلات الاصطدام
         this.physics.add.overlap(projectileGroup, bubblesGroup, hitBubble, null, this);
 
-        // 6. التحكم بالإدخال (المدفع يتبع حركة المؤشر/اللمس)
+        // 6. التحكم بالإدخال
         this.input.on('pointermove', pointer => {
             cannon.x = Phaser.Math.Clamp(pointer.x, width * 0.1, width * 0.9);
         });
 
-        // 7. إطلاق القذيفة عند النقر/اللمس
+        // 7. إطلاق القذيفة
         this.input.on('pointerdown', pointer => {
             if(this.input.enabled) { 
                 fireProjectile(this);
@@ -208,40 +204,43 @@
 
     function fireProjectile(scene) {
         if (scene.time.now > lastFired + FIRE_DELAY) {
-            // 💡 سيتم تشغيل الصوت هنا
             this.fireSound.play();
-            // ✅ استخدام .get() مع تمرير الموقع لضمان إعادة استخدام الأجسام
-            const projectile = projectileGroup.get(cannon.x, cannon.y - cannon.displayHeight/2);
+            
+            const projectile = projectileGroup.get(cannon.x, cannon.y - 50);
             
             if (projectile) {
-                // 🎯 تقليل حجم القذيفة لضمان ظهورها
-                projectile.setActive(true).setVisible(true).setScale(0.25); 
-                // إعادة ضبط دائرة التصادم بعد تغيير الـ scale
-                projectile.body.setCircle(projectile.width / 2);
-
-                projectile.setVelocityY(-1000); // سرعة الإطلاق للأعلى
+                // ⬇️ التعديل الثالث (الهام): تفعيل الجسم الفيزيائي وإعادة ضبطه
+                projectile.enableBody(true, cannon.x, cannon.y - 50, true, true);
                 
-                // 💡 المدفع لا يطلق إلا بعد مرور هذا الوقت
+                // تصغير حجم القذيفة لتناسب الفقاعات الصغيرة
+                projectile.setScale(0.15); 
+                
+                // ضبط دائرة التصادم للقذيفة
+                projectile.body.setCircle(projectile.width * 0.5);
+
+                projectile.setVelocityY(-1000); 
+                
                 lastFired = scene.time.now; 
 
-                // إزالة القذيفة عند خروجها من حدود الشاشة (عن طريق التأخير)
+                // إزالة القذيفة عند خروجها
                 scene.time.delayedCall(1500, () => {
-                    projectile.setActive(false).setVisible(false);
-                    projectileGroup.killAndHide(projectile); // إعادتها للمجموعة لإعادة الاستخدام
+                    if (projectile.active) {
+                        projectile.setActive(false).setVisible(false);
+                        projectile.disableBody(true, true); // تعطيل الجسم الفيزيائي عند الإخفاء
+                    }
                 });
             }
         }
     }
 
     function hitBubble(projectile, bubble) {
-        // إزالة القذيفة
+        // إخفاء القذيفة فوراً وتعطيل جسمها الفيزيائي
         projectile.setActive(false).setVisible(false);
-        projectileGroup.killAndHide(projectile);
+        projectile.disableBody(true, true);
 
         const bubbleData = bubble.getData('data');
 
         if (!bubbleData) {
-            bubble.emit('destroy'); 
             bubble.destroy();
             return;
         }
@@ -252,11 +251,9 @@
     // --- منطق الفقاعات والأسئلة ---
 
     function createBubbles(scene, questionData) {
-        // إزالة الفقاعات القديمة ونصوصها
         bubblesGroup.children.each((bubble) => {
             if (bubble && bubble.active) {
-                bubble.emit('destroy'); 
-                bubble.destroy();
+                bubble.destroy(); // استخدام destroy لإزالة النصوص المرتبطة
             }
         });
         bubblesGroup.clear(true, true); 
@@ -264,8 +261,8 @@
         const { width, height } = scene.scale;
         const options = questionData.options;
 
-        const startY = height * 0.1;
-        const endY = height * 0.6; // 🎯 زيادة منطقة حركة الفقاعات
+        const startY = height * 0.15;
+        const endY = height * 0.55;
 
         Phaser.Utils.Array.Shuffle(options); 
         
@@ -275,22 +272,26 @@
             const x = Phaser.Math.Between(width * 0.1, width * 0.9);
             const y = Phaser.Math.Between(startY, endY);
             
+            // استخدام الحجم الجديد
             const bubble = bubblesGroup.create(x, y, bubbleType).setScale(BUBBLE_SCALE);
-            // 🎯 ضبط دائرة التصادم بناءً على حجم الفقاعة الجديد
-            bubble.body.setCircle(bubble.width / 2); 
+            
+            // ضبط دائرة التصادم للفقاعة
+            bubble.body.setCircle(bubble.width * 0.45); 
 
             bubble.setData('data', {
                 answer: opt,
                 index: index + 1
             });
 
+            // تصغير الخط قليلاً ليناسب الفقاعة الصغيرة
             const answerText = scene.add.text(x, y, opt, { 
                 fontFamily: 'Arial',
-                fontSize: 20,
+                fontSize: '16px', // ⬇️ خط أصغر
                 color: '#000',
                 backgroundColor: '#ffffffcc', 
-                padding: { x: 8, y: 5 },
-                wordWrap: { width: bubble.displayWidth - 20, useSoftWrap: true }
+                padding: { x: 5, y: 3 },
+                align: 'center',
+                wordWrap: { width: bubble.displayWidth, useSoftWrap: true }
             }).setOrigin(0.5);
 
             bubble.setDepth(2);
@@ -302,23 +303,19 @@
                 answerText.y = bubble.y; 
             });
             
-            // 🎯 سرعة متوسطة
             const speed = 150; 
             bubble.setVelocity(
                 Phaser.Math.Between(-speed, speed),
                 Phaser.Math.Between(-speed, speed)
             );
             
-            // 🎯 ضبط الارتداد والاصطدام بحدود الشاشة بالكامل
             bubble.setBounce(1);
             bubble.setCollideWorldBounds(true);
-
-            // ❌ تم حذف setBoundsRectangle للسماح بحركة أوسع
         });
         
     }
 
-    // دالة عرض السؤال (لم يتم تغييرها)
+    // دالة عرض السؤال (لم تتغير)
     function showQuestion(index){
         const isReviewing = questionToRepeat !== null;
         const q = isReviewing ? questionToRepeat : QUESTIONS[index];
@@ -335,7 +332,7 @@
         createBubbles(scene, q);
     }
 
-    // دالة التحقق من الإجابة (لم يتم تغييرها)
+    // دالة التحقق من الإجابة (لم تتغير)
     function checkAnswer(bubble, selectedAnswer){
         const scene = game.scene.getScene('default');
         
@@ -347,7 +344,6 @@
         if(selectedAnswer === currentQ.correctAnswer){
             correctSound.play();
             
-            bubble.emit('destroy'); 
             bubble.destroy(); 
 
             scene.time.delayedCall(500, ()=>{
