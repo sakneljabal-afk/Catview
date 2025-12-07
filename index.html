@@ -5,156 +5,130 @@
 <title>لعبة تعليمية - Phaser</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
 <style>
-  body { margin:0; background:#ccf2ff; overflow:hidden; }
-  #questionBox { 
-    position:absolute; 
-    top:10px; 
-    width:100%; 
-    text-align:center; 
-    font-family: 'Arial', sans-serif; 
-    font-size:18px; 
-    color: #000; /* تأكيد لون النص الأسود */
-    background: rgba(255, 255, 255, 0.8); /* خلفية شفافة قليلاً لضمان القراءة */
-    padding: 10px 0;
-    z-index: 1000; /* لضمان ظهوره فوق شاشة اللعب */
-}
-  .option { 
-    margin:5px; 
-    padding:8px 15px; 
-    border:2px solid #000; /* border أسود واضح */
-    display:inline-block; 
-    cursor:pointer; 
-    background:#fff;
-    border-radius: 8px; 
-    transition: background 0.2s;
-}
-  .option:hover {
-    background: #f0f0f0;
-  }
+  body { margin:0; background:#ccf2ff; overflow:hidden; }
+  #questionBox { 
+    position:absolute; top:10px; width:100%; text-align:center; 
+    font-family:'Arial',sans-serif; font-size:20px; color:#000; 
+    background: rgba(255,255,255,0.9); padding:15px 0; z-index:1000; 
+    border-radius: 10px;
+  }
+  .option { 
+    margin:5px; padding:8px 15px; border:2px solid #000; 
+    display:inline-block; cursor:pointer; background:#fff;
+    border-radius: 8px; transition: background 0.2s;
+  }
+  .option:hover { background:#f0f0f0; }
 </style>
 </head>
 <body>
 <div id="questionBox"></div>
 <script>
 const questions = [
-  { q: "ما لون السماء؟", c: ["أحمر","أزرق","أصفر"], a: 1 },
-  { q: "كم عدد أرجل القط؟", c: ["2","4","6"], a: 1 },
-  { q: "هل الشمس نجمة؟", c: ["نعم","لا","ممكن"], a: 0 },
-  { q: "أين تشرق الشمس؟", c: ["الجنوب","الشرق","الغرب"], a: 1 },
+  { q:"ما لون السماء؟", c:["أحمر","أزرق","أصفر"], a:1 },
+  { q:"كم عدد أرجل القط؟", c:["2","4","6"], a:1 },
+  { q:"هل الشمس نجمة؟", c:["نعم","لا","ممكن"], a:0 },
+  { q:"أين تشرق الشمس؟", c:["الجنوب","الشرق","الغرب"], a:1 },
 ];
 
-let currentQuestion = 0;
-let currentPlatformIndex = 0;
-// تعديل مقياس المنصة لتصبح عريضة قليلاً (0.6) ورقيقة جداً (0.1)
-const PLATFORM_SCALE_X = 0.6; 
-const PLATFORM_SCALE_Y = 0.1; 
-const platformCount = 4; 
+let currentQuestion=0, currentPlatformIndex=0;
 
+const PLATFORM_SCALE_X = 0.3; // مناسب لحجم القطة
+const PLATFORM_SCALE_Y = 0.05; 
 const config = {
-  type: Phaser.CANVAS,
-  width: 600,
-  height: 600,
-  physics: { default: 'arcade', arcade: { gravity: { y: 600 } } }, 
-  scene: { preload, create, update }
+  type: Phaser.CANVAS,
+  width:600, height:600,
+  physics:{ default:'arcade', arcade:{ gravity:{y:600} } },
+  scene:{ preload, create, update }
 };
 
 const game = new Phaser.Game(config);
 let player, platforms, sceneRef;
 
 function preload() {
- this.load.image('player', 'assets/cat.png');
- this.load.image('platform', 'assets/platform.png');
+  this.load.image('player','assets/cat.png'); 
+  this.load.image('platform','assets/platform.png'); 
 }
 
 function create() {
-  sceneRef = this;
-  platforms = this.physics.add.staticGroup();
+  sceneRef = this;
+  platforms = this.physics.add.staticGroup();
 
-  const positions = [
-    {x: 300, y: 500}, 
-    {x: 200, y: 400}, 
-    {x: 400, y: 300}, 
-    {x: 250, y: 200}
-  ];
-  
-  // حل المشكلة 1: تطبيق المقياس الجديد
-  positions.forEach(pos => platforms.create(pos.x, pos.y, 'platform').setScale(PLATFORM_SCALE_X, PLATFORM_SCALE_Y).refreshBody());
-  
-  // وضع القطة على أول منصة
-  const firstPlatform = platforms.getChildren()[0];
-  // حساب دقيق لموضع الـ Y الجديد لتقف القطة على السطح
-  const initialY = firstPlatform.y - firstPlatform.displayHeight/2 - player.displayHeight/2; 
-  
-  player = this.physics.add.sprite(firstPlatform.x, initialY, 'player').setScale(0.2);
-  player.setCollideWorldBounds(true);
-  
-  this.physics.add.collider(player, platforms);
+  const positions = [
+    {x:300, y:500}, {x:200, y:400}, {x:400, y:300}, {x:250, y:200}
+  ];
 
-  showQuestion();
+  positions.forEach(pos=>{
+    platforms.create(pos.x,pos.y,'platform').setScale(PLATFORM_SCALE_X, PLATFORM_SCALE_Y).refreshBody();
+  });
+
+  const firstPlatform = platforms.getChildren()[0];
+  player = this.physics.add.sprite(firstPlatform.x, firstPlatform.y-30,'player').setScale(0.2);
+  player.setCollideWorldBounds(true);
+  this.physics.add.collider(player, platforms);
+
+  // حركة رأس القطة خفيفة لأعلى وأسفل
+  this.tweens.add({
+    targets:player,
+    y:player.y-5,
+    duration:500,
+    yoyo:true,
+    repeat:-1
+  });
+
+  showQuestion();
 }
 
-// عرض السؤال
-function showQuestion() {
-  if(currentQuestion >= questions.length) {
-    document.getElementById("questionBox").innerHTML = "<h2>أحسنت! لقد أنهيت جميع التحديات!</h2>";
-    return;
-  }
-  
-  const q = questions[currentQuestion];
-  const box = document.getElementById("questionBox");
-  // تم إرجاع عرض السؤال كما كان (المشكلة 2)
-  let html = `<h2>${q.q}</h2>`;
-  q.c.forEach((opt,i)=>{
-    html += `<div class="option" onclick="answer(${i})">${opt}</div>`;
-  });
-  box.innerHTML = html;
+function showQuestion(){
+  if(currentQuestion>=questions.length){
+    document.getElementById("questionBox").innerHTML="<h2>أحسنت! لقد أنهيت جميع التحديات!</h2>";
+    return;
+  }
+  const q = questions[currentQuestion];
+  const box = document.getElementById("questionBox");
+  let html = `<h2>${q.q}</h2>`;
+  q.c.forEach((opt,i)=>{
+    html += `<div class="option" onclick="answer(${i})">${opt}</div>`;
+  });
+  box.innerHTML = html;
 }
 
-// التعامل مع الإجابة
-function answer(selected) {
-  if(currentQuestion >= questions.length) return; 
-
-  const q = questions[currentQuestion];
-  if(selected === q.a){
-    player.setTint(0x00ff00); 
-    currentPlatformIndex = Math.min(currentPlatformIndex + 1, platforms.getChildren().length - 1);
-    currentQuestion++;
-  } else {
-    player.setTint(0xff6666); 
-    if(currentPlatformIndex > 0) currentPlatformIndex--;
-  }
-  
-  movePlayerToPlatform(currentPlatformIndex); 
-
-  setTimeout(() => { player.clearTint(); showQuestion(); }, 500);
+function answer(selected){
+  if(currentQuestion>=questions.length) return;
+  const q = questions[currentQuestion];
+  if(selected===q.a){
+    player.setTint(0x00ff00);
+    currentPlatformIndex = Math.min(currentPlatformIndex+1, platforms.getChildren().length-1);
+    currentQuestion++;
+  } else {
+    player.setTint(0xff6666);
+    if(currentPlatformIndex>0) currentPlatformIndex--;
+  }
+  movePlayerToPlatform(currentPlatformIndex);
+  setTimeout(()=>{player.clearTint(); showQuestion();},500);
 }
 
-// تحريك اللاعب للمنصة المطلوبة
 function movePlayerToPlatform(index){
-  const targetPlatform = platforms.getChildren()[index];
-  
-  const targetX = targetPlatform.x;
-  // الحساب الدقيق لـ Y لضمان الهبوط على سطح المنصة النحيف
-  const targetY = targetPlatform.y - targetPlatform.displayHeight/2 - player.displayHeight/2; 
+  const target = platforms.getChildren()[index];
+  const targetX = target.x;
+  const targetY = target.y - target.displayHeight/2 - player.displayHeight/2;
 
-  player.body.allowGravity = false;
-  player.body.enable = false; 
+  player.body.allowGravity = false;
+  player.body.enable = false;
 
-  sceneRef.tweens.add({
-    targets: player,
-    x: targetX,
-    y: targetY,
-    duration: 400, 
-    ease: 'Power1',
-    onComplete: () => {
-      player.body.enable = true;
-      player.body.allowGravity = true;
-    }
-  });
+  sceneRef.tweens.add({
+    targets:player,
+    x:targetX,
+    y:targetY,
+    duration:400,
+    ease:'Power1',
+    onComplete:()=>{
+      player.body.enable=true;
+      player.body.allowGravity=true;
+    }
+  });
 }
 
-function update() {
-}
+function update(){}
 </script>
 </body>
 </html>
