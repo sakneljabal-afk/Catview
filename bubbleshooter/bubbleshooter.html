@@ -37,22 +37,22 @@
 
   header h3 {
     margin: 0 0 5px 0;
-    /* 💥 زيادة الحد الأقصى لحجم خط السؤال */
-    font-size: clamp(1.2rem, 5vw, 1.8rem); 
+    /* 💥 زيادة حجم الخط ليكون أوضح */
+    font-size: clamp(1.5rem, 6vw, 2.0rem); 
     color: #ffd700;
   }
 
   .answers {
     display: block; 
     text-align: right; 
-    padding: 5px 20px; /* زيادة الهامش الأفقي */
+    padding: 5px 20px; 
   }
   
   .answers span {
     display: block; 
-    /* 💥 زيادة الحد الأقصى لحجم خط الإجابات */
-    font-size: clamp(1rem, 4.5vw, 1.5rem); 
-    margin: 4px 0; /* زيادة الهامش العمودي بين الإجابات */
+    /* 💥 زيادة حجم الخط ليكون أوضح */
+    font-size: clamp(1.3rem, 5vw, 1.7rem); 
+    margin: 4px 0; 
     padding: 3px 0;
     border-bottom: 1px dashed rgba(255,255,255,0.2);
   }
@@ -75,8 +75,9 @@
     width: 90vw; 
     height: 70vh; 
     max-width: 600px; 
-    /* 💥 خلفية برتقالية خفيفة جداً (Amber Lighten 5) */
+    /* 💥 خلفية اللعبة الداخلية برتقالي خفيف */
     background: #FFF3E0; 
+    /* 💥 الإطار الخارجي أزرق داكن */
     border: 8px solid #34495e; 
     border-radius: 20px;
     overflow: hidden;
@@ -366,7 +367,7 @@ function showQuestion(scene){
      'bubble' + (i+1)
    ).setScale(bubbleScale);
 
-   b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE))); 
+   b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE))); 
 
    b.setData('correct', i === q.a);
    
