@@ -31,23 +31,25 @@ const questions = [
 ];
 
 let currentQuestion=0, currentPlatformIndex=0;
-
 const PLATFORM_SCALE_X = 0.2;
 const PLATFORM_SCALE_Y = 0.05;
 
 const config = {
   type: Phaser.CANVAS,
   width:600, height:600,
-  physics:{ default:'arcade', arcade:{ gravity:{y:0}, debug:false } }, // جاذبية صفر
+  physics:{ default:'arcade', arcade:{ gravity:{y:0}, debug:false } },
   scene:{ preload, create, update }
 };
 
 const game = new Phaser.Game(config);
-let player, platforms, sceneRef, redOverlay;
+let player, platforms, sceneRef, redOverlay, correctSound, wrongSound;
 
 function preload() {
   this.load.image('player','assets/cat.png'); 
   this.load.image('platform','assets/platform.png'); 
+  // أصوات
+  this.load.audio('correct','assets/correct.mp3');
+  this.load.audio('wrong','assets/wrong.mp3');
 }
 
 function create() {
@@ -81,6 +83,10 @@ function create() {
   redOverlay = this.add.rectangle(300,300,600,600,0xff0000,0);
   redOverlay.setDepth(1000);
 
+  // الأصوات
+  correctSound = this.sound.add('correct');
+  wrongSound = this.sound.add('wrong');
+
   showQuestion();
 }
 
@@ -104,15 +110,17 @@ function answer(selected){
   if(selected===q.a){
     currentPlatformIndex = Math.min(currentPlatformIndex+1, platforms.getChildren().length-1);
     currentQuestion++;
+    correctSound.play();
   } else {
     if(currentPlatformIndex>0) currentPlatformIndex--;
-    // فيدباك أحمر عند الخطأ
+    // فيدباك أحمر
     redOverlay.alpha = 0.5;
     sceneRef.tweens.add({
       targets:redOverlay,
       alpha:0,
       duration:300
     });
+    wrongSound.play();
   }
   movePlayerToPlatform(currentPlatformIndex);
   setTimeout(showQuestion,400);
@@ -120,15 +128,20 @@ function answer(selected){
 
 function movePlayerToPlatform(index){
   const target = platforms.getChildren()[index];
-  const targetX = target.x;
-  const targetY = target.y - target.displayHeight/2 - player.displayHeight/2;
+  const startY = player.y;
+  const endX = target.x;
+  const endY = target.y - target.displayHeight/2 - player.displayHeight/2;
+  const peak = startY - 50; // ارتفاع القفز
 
-  sceneRef.tweens.add({
+  // Tween مع قفزة للقطة
+  sceneRef.tweens.timeline({
     targets:player,
-    x:targetX,
-    y:targetY,
-    duration:400,
-    ease:'Power1'
+    ease:'Power1',
+    tweens:[
+      { y:peak, duration:200 }, // الصعود
+      { x:endX, duration:400 }, // الحركة أفقياً
+      { y:endY, duration:200 }  // الهبوط
+    ]
   });
 }
 
