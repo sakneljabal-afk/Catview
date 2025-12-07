@@ -137,9 +137,9 @@
     let questionBox, wrongFeedbackDiv, errorIndicator;
     let correctSound, wrongSound;
     let catBreathingTween;
-    // المصفوفة لتخزين الأسئلة التي يجب مراجعتها (المهمة جداً)
-    let questionsToReview = []; 
-    let currentQuestionIndex = 0; // مؤشر السؤال/المنصة التي كنا عليها في الترتيب الأصلي
+    let questionToRepeat = null; // السؤال الذي يتم تكراره عند الرجوع
+    let currentQuestionIndex = 0; // مؤشر المنصة/السؤال في الترتيب الأصلي (أين يجب أن يكون اللاعب)
+    let originalPlatformBeforeError = 0; // المنصة التي أخطأ عليها اللاعب أول مرة
 
     function preload() {
         this.load.image('cat','assets/cat.png');
@@ -168,7 +168,6 @@
             { x: width*0.9, y: height*0.4 }
         ];
         
-        // بناء المنصات بناءً على عدد الأسئلة
         platformPositions = PLATFORM_LOCATIONS_POOL.slice(0, QUESTIONS.length); 
 
         platformPositions.forEach(pos=>{
@@ -195,25 +194,21 @@
 
     function update(){}
 
-    // دالة عرض السؤال (المعدلة لدعم الأسئلة المكررة)
+    // دالة عرض السؤال (المعدلة لدعم تكرار السؤال)
     function showQuestion(index){
-        
-        // الأولوية للسؤال المكرر، وإلا السؤال من الترتيب الأصلي
-        const q = questionsToReview.length > 0 ? questionsToReview[0] : QUESTIONS[index];
+        // تحديد السؤال المعروض: إذا كان هناك سؤال مُعاد، يعرضه. وإلا يعرض السؤال التالي.
+        const q = questionToRepeat !== null ? 
+                                 questionToRepeat : 
+                                 QUESTIONS[index];
         
         if(!q){
-            questionBox.innerHTML='<h3>أحسنت! لقد أنهيت الجولة بنجاح!</h3>';
+            questionBox.innerHTML='<h3>أحسنت! لقد أنهيت اللعبة بنجاح!</h3>';
             questionBox.style.display='block';
             return;
         }
 
         questionBox.style.display='block';
-        // لا نغير currentQuestionIndex هنا إلا إذا لم يكن هناك أسئلة مراجعة
-        if(questionsToReview.length === 0){
-             currentQuestionIndex = index;
-        }
-
-
+        
         let html = `<h3>${q.question}</h3><div class="options-container">`;
         q.options.forEach(opt=>{
             html+=`<button class="option-button">${opt}</button>`;
@@ -221,8 +216,9 @@
         html+=`</div>`;
         questionBox.innerHTML = html;
 
+        // ربط الأحداث
         document.querySelectorAll('.option-button').forEach(btn=>{
-            // نمرر مؤشر المنصة الحالية (التي تقف عليها القطة)
+            // نمرر الـ index للمنصة الحالية (التي تقف عليها القطة)
             btn.onclick = ()=>checkAnswer(btn, btn.textContent, index);
         });
     }
@@ -230,9 +226,9 @@
     // دالة التحقق من الإجابة (المنطق المُصحَّح)
     function checkAnswer(button, selectedAnswer, currentPlatformIndexUsed){
         
-        const isReviewing = questionsToReview.length > 0;
+        const isReviewing = questionToRepeat !== null;
         // نحدد السؤال الذي يتم الإجابة عليه
-        const currentQ = isReviewing ? questionsToReview[0] : QUESTIONS[currentPlatformIndexUsed];
+        const currentQ = isReviewing ? questionToRepeat : QUESTIONS[currentPlatformIndexUsed];
         const scene = game.scene.getScene('default');
 
         document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=true);
@@ -243,34 +239,21 @@
             questionBox.style.display='none';
             
             if(isReviewing){
-                // 1. إزالة السؤال من قائمة المراجعة
-                questionsToReview.shift();
+                // 1. مسح سجل السؤال المكرر بعد الإجابة الصحيحة
+                questionToRepeat = null;
                 
-                // 2. إذا لم يتبق أسئلة مراجعة، نتقدم خطوة واحدة من آخر موقع صحيح (currentQuestionIndex)
-                if(questionsToReview.length === 0){
-                    let nextIndex = currentQuestionIndex + 1;
-                    
-                    if(nextIndex < platformPositions.length){
-                        currentPlatformIndex = nextIndex;
-                        // نذهب للمنصة التالية في الترتيب الأصلي
-                        moveCat(scene, nextIndex, true); 
-                    } else { showQuestion(nextIndex); }
-                    return;
-                }
+                // 2. التقدم للمنصة التي أخطأ عليها اللاعب أصلاً (originalPlatformBeforeError)
+                let nextIndex = originalPlatformBeforeError; 
                 
-                // 3. إذا كان هناك أسئلة مراجعة أخرى، نبقى في المكان ونعرض السؤال التالي للمراجعة
-                 scene.time.delayedCall(1500, ()=>{
-                    document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
-                    // نبقى على نفس المنصة التي نجح فيها الآن لعرض السؤال التالي في قائمة المراجعة
-                    showQuestion(currentPlatformIndexUsed); 
-                });
-                return;
-
+                if(nextIndex < platformPositions.length){
+                    currentPlatformIndex = nextIndex;
+                    // نذهب للمنصة التي أخطأ عليها لنجد السؤال التالي (سؤال المنصة 3 في مثالك)
+                    moveCat(scene, nextIndex, true); 
+                } else { showQuestion(nextIndex); }
             } else {
-                // التقدم الطبيعي للمنصة التالية (عند الإجابة الصحيحة على سؤال جديد)
+                // التقدم الطبيعي للمنصة التالية (سؤال جديد)
                 let nextIndex = currentPlatformIndexUsed + 1;
-                // تحديث المؤشر الأصلي للتقدم
-                currentQuestionIndex = nextIndex - 1; 
+                originalPlatformBeforeError = nextIndex; // تحديث المنصة الأصلية قبل الخطأ التالي
 
                 if(nextIndex<platformPositions.length){
                     currentPlatformIndex=nextIndex;
@@ -282,7 +265,6 @@
             // ❌ الإجابة الخاطئة
             wrongSound.play();
             
-            // عرض المؤشر البصري واللون الأحمر
             wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0.5)';
             errorIndicator.style.opacity = 1;
             
@@ -291,24 +273,27 @@
                 errorIndicator.style.opacity = 0;
             });
 
-            // 1. إضافة السؤال الخاطئ إلى مصفوفة المراجعة (إذا لم يكن موجوداً بالفعل)
-            if (!isReviewing) {
-                 questionsToReview.push(currentQ);
-                 // نضبط مؤشر التقدم على المنصة التي تم فيها الخطأ
-                 currentQuestionIndex = currentPlatformIndexUsed;
-            }
-
-            // 2. الرجوع للمنصة السابقة
+            // منطق الإتقان: الرجوع للمنصة السابقة
             if(currentPlatformIndexUsed > 0){
+                
+                // 1. تحديد السؤال الحالي (سؤال الخطأ) للتكرار
+                if(!isReviewing) {
+                   questionToRepeat = currentQ;
+                   // تسجيل المنصة التي أخطأ عليها اللاعب لأول مرة
+                   originalPlatformBeforeError = currentPlatformIndexUsed; 
+                }
+
+                // 2. الرجوع للمنصة السابقة
                 let prevIndex = currentPlatformIndexUsed - 1;
                 currentPlatformIndex = prevIndex;
                 
+                // 3. حركة القطة
                 moveCat(scene, prevIndex, false);
                 
-                // 3. عرض السؤال المكرر (الذي تم إضافته للتو) على المنصة السابقة
+                // 4. عرض السؤال المكرر على المنصة السابقة
                 scene.time.delayedCall(1500, ()=>{
                     document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
-                    // نعرض السؤال على المنصة السابقة (prevIndex)، وسوف showQuestion يعرض questionsToReview[0]
+                    // showQuestion سيعرض questionToRepeat
                     showQuestion(prevIndex); 
                 });
                 
@@ -319,7 +304,7 @@
         }
     }
 
-    // دالة حركة القطة
+    // دالة حركة القطة (للقفز الواقعي والتثبيت)
     function moveCat(scene,targetIndex,isCorrect){
         if(isMoving) return;
         isMoving=true;
