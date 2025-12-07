@@ -4,103 +4,114 @@
 <meta charset="UTF-8">
 <title>لعبة تعليمية - Phaser + Supabase</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-  body { margin:0; background:#ccf2ff; overflow:hidden; }
-  #questionBox { 
-    position:absolute; top:10px; width:100%; text-align:center; 
-    font-family:'Arial',sans-serif; font-size:20px; color:#000; 
-    background: rgba(255,255,255,0.9); padding:15px 0; z-index:1000; 
-    border-radius: 10px;
-  }
-  .option { 
-    margin:5px; padding:8px 15px; border:2px solid #000; 
-    display:inline-block; cursor:pointer; background:#fff;
-    border-radius: 8px; transition: background 0.2s;
-  }
-  .option:hover { background:#f0f0f0; }
+body { margin:0; background:#ccf2ff; overflow:hidden; }
+#questionBox { 
+    position:absolute; top:10px; width:100%; text-align:center; 
+    font-family:'Arial',sans-serif; font-size:20px; color:#000; 
+    background: rgba(255,255,255,0.9); padding:15px 0; z-index:1000; 
+    border-radius: 10px;
+}
+.option { 
+    margin:5px; padding:8px 15px; border:2px solid #000; 
+    display:inline-block; cursor:pointer; background:#fff;
+    border-radius: 8px; transition: background 0.2s;
+}
+.option:hover { background:#f0f0f0; }
 </style>
 </head>
 <body>
 <div id="questionBox"></div>
-<script>
-// =======================================================
-// ** 🚨 هام: قم بتعديل هذه القيم بمفاتيح مشروعك الحقيقية 🚨 **
-// =======================================================
+
+<!-- استدعاء Supabase كـ ES Module -->
+<script type="module">
+import { createClient } from 'https://unpkg.com/@supabase/supabase-js@2/dist/supabase.js';
+
+// ==============================================
+// مفاتيح Supabase (استبدلها بمفاتيحك الفعلية)
+// ==============================================
 const SUPABASE_URL = 'https://zjacblvmrhmakxynffay.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqYWNibHZtcmhtYWt4eW5mZmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNjY2NjQsImV4cCI6MjA4MDY0MjY2NH0.FjxNgBK7HRxs3gWlBNocH1ypcKlz-DA3MY2ltIY491o'; 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqYWNibHZtcmhtYWt4eW5mZmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNjY2NjQsImV4cCI6MjA4MDY0MjY2NH0.FjxNgBK7HRxs3gWlBNocH1ypcKlz-DA3MY2ltIY491o';
 
-// *الحل:* تم استخدام window.supabase وتغيير اسم العميل إلى supabaseClient
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// =======================================================
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ==============================================
 // متغيرات اللعبة
+// ==============================================
 let questions = []; 
 let currentQuestion=0, currentPlatformIndex=0;
 const PLATFORM_SCALE_X = 0.2;
 const PLATFORM_SCALE_Y = 0.05;
 
 const config = {
-  type: Phaser.CANVAS,
-  width:600, height:600,
-  physics:{ default:'arcade', arcade:{ gravity:{y:600}, debug:true } },
-  scene:{ preload, create, update }
+  type: Phaser.CANVAS,
+  width:600, height:600,
+  physics:{ default:'arcade', arcade:{ gravity:{y:600}, debug:true } },
+  scene:{ preload, create, update }
 };
 
 const game = new Phaser.Game(config);
 let player, platforms, sceneRef, redOverlay, correctSound, wrongSound;
 
+// ==============================================
+// تحميل الصور والأصوات
+// ==============================================
 function preload() {
-  this.load.image('player','assets/cat.png'); 
-  this.load.image('platform','assets/platform.png'); 
-  this.load.audio('correct','assets/correct.mp3');
-  this.load.audio('wrong','assets/wrong.mp3');
+  this.load.image('player','assets/cat.png'); 
+  this.load.image('platform','assets/platform.png'); 
+  this.load.audio('correct','assets/correct.mp3');
+  this.load.audio('wrong','assets/wrong.mp3');
 }
 
+// ==============================================
+// إنشاء المشهد
+// ==============================================
 function create() {
-  sceneRef = this;
-  platforms = this.physics.add.staticGroup();
+  sceneRef = this;
+  platforms = this.physics.add.staticGroup();
 
-  const positions = [
-    {x:300, y:500}, {x:200, y:400}, {x:400, y:300}, {x:250, y:200}
-  ];
+  const positions = [
+    {x:300, y:500}, {x:200, y:400}, {x:400, y:300}, {x:250, y:200}
+  ];
 
-  positions.forEach(pos=>{
-    const plat = platforms.create(pos.x, pos.y, 'platform');
-    plat.setScale(PLATFORM_SCALE_X, PLATFORM_SCALE_Y).refreshBody();
-  });
-  
-  const firstPlatform = platforms.getChildren()[0];
-  player = this.physics.add.sprite(firstPlatform.x, firstPlatform.y - firstPlatform.displayHeight/2 - 20,'player').setScale(0.2);
-  player.setCollideWorldBounds(true);
-  this.physics.add.collider(player, platforms);
+  positions.forEach(pos=>{
+    const plat = platforms.create(pos.x, pos.y, 'platform');
+    plat.setScale(PLATFORM_SCALE_X, PLATFORM_SCALE_Y).refreshBody();
+  });
+  
+  const firstPlatform = platforms.getChildren()[0];
+  player = this.physics.add.sprite(firstPlatform.x, firstPlatform.y - firstPlatform.displayHeight/2 - 20,'player').setScale(0.2);
+  player.setCollideWorldBounds(true);
+  this.physics.add.collider(player, platforms);
 
-  redOverlay = this.add.rectangle(300,300,600,600,0xff0000,0);
-  redOverlay.setDepth(1000);
+  redOverlay = this.add.rectangle(300,300,600,600,0xff0000,0);
+  redOverlay.setDepth(1000);
 
-  correctSound = this.sound.add('correct');
-  wrongSound = this.sound.add('wrong');
+  correctSound = this.sound.add('correct');
+  wrongSound = this.sound.add('wrong');
 
-  // البدء في جلب الأسئلة عند تحميل المشهد
-  getQuestionsFromSupabase(); 
+  // البدء في جلب الأسئلة عند تحميل المشهد
+  getQuestionsFromSupabase(); 
 }
 
-// دالة جلب الأسئلة من Supabase
+// ==============================================
+// جلب الأسئلة من Supabase
+// ==============================================
 async function getQuestionsFromSupabase() {
     document.getElementById("questionBox").innerHTML = "<h2>جارٍ تحميل الأسئلة... الرجاء الانتظار</h2>";
     
-    let { data, error } = await supabaseClient // استخدام الاسم المعدل
+    let { data, error } = await supabase
         .from('questions')
         .select('text, options, answer_index'); 
 
     if (error) {
         console.error('Error fetching questions:', error);
-        document.getElementById("questionBox").innerHTML = "<h2>❌ خطأ في الاتصال. راجع المفاتيح وقواعد الأمان (RLS).</h2>";
+        document.getElementById("questionBox").innerHTML = "<h2>❌ خطأ في الاتصال. راجع المفاتيح وقواعد الأمان.</h2>";
         return;
     }
 
     if (data && data.length > 0) {
-        // تحويل البيانات المسترجعة إلى الهيكل المطلوب (q, c, a)
+        // تحويل البيانات المسترجعة إلى الهيكل المطلوب
         questions = data.map(q => ({
             q: q.text,
             c: q.options, 
@@ -109,83 +120,89 @@ async function getQuestionsFromSupabase() {
         
         console.log(`Successfully loaded ${questions.length} questions.`);
         
-        // بمجرد جلب البيانات، ابدأ عرض السؤال الأول
+        // عرض السؤال الأول
         showQuestion(); 
     } else {
          document.getElementById("questionBox").innerHTML = "<h2>لم يتم العثور على أسئلة في قاعدة البيانات.</h2>";
     }
 }
 
-
+// ==============================================
+// عرض السؤال الحالي
+// ==============================================
 function showQuestion(){
-  if(currentQuestion>=questions.length){
-    document.getElementById("questionBox").innerHTML="<h2>أحسنت! لقد أنهيت جميع التحديات!</h2>";
-    return;
-  }
-  const q = questions[currentQuestion];
-  const box = document.getElementById("questionBox");
-  let html = `<h2>${q.q}</h2>`;
-  q.c.forEach((opt,i)=>{
-    html += `<div class="option" onclick="answer(${i})">${opt}</div>`;
-  });
-  box.innerHTML = html;
+  if(currentQuestion>=questions.length){
+    document.getElementById("questionBox").innerHTML="<h2>أحسنت! لقد أنهيت جميع التحديات!</h2>";
+    return;
+  }
+  const q = questions[currentQuestion];
+  const box = document.getElementById("questionBox");
+  let html = `<h2>${q.q}</h2>`;
+  q.c.forEach((opt,i)=>{
+    html += `<div class="option" onclick="answer(${i})">${opt}</div>`;
+  });
+  box.innerHTML = html;
 }
 
+// ==============================================
+// التحقق من الإجابة وتحريك اللاعب
+// ==============================================
 function answer(selected){
-  if(currentQuestion>=questions.length) return;
-  const q = questions[currentQuestion];
-  
-  if (sceneRef.tweens.isTweening(player)) return; 
+  if(currentQuestion>=questions.length) return;
+  const q = questions[currentQuestion];
+  
+  if (sceneRef.tweens.isTweening(player)) return; 
 
-  if(selected===q.a){
-    currentPlatformIndex = Math.min(currentPlatformIndex+1, platforms.getChildren().length-1);
-    currentQuestion++;
-    correctSound.play();
-  } else {
-    if(currentPlatformIndex>0) currentPlatformIndex--;
-    
-    redOverlay.alpha = 0.5;
-    sceneRef.tweens.add({
-      targets:redOverlay,
-      alpha:0,
-      duration:300
-    });
-    wrongSound.play();
-  }
-  movePlayerToPlatform(currentPlatformIndex);
-  setTimeout(showQuestion,500); 
+  if(selected===q.a){
+    currentPlatformIndex = Math.min(currentPlatformIndex+1, platforms.getChildren().length-1);
+    currentQuestion++;
+    correctSound.play();
+  } else {
+    if(currentPlatformIndex>0) currentPlatformIndex--;
+    
+    redOverlay.alpha = 0.5;
+    sceneRef.tweens.add({
+      targets:redOverlay,
+      alpha:0,
+      duration:300
+    });
+    wrongSound.play();
+  }
+  movePlayerToPlatform(currentPlatformIndex);
+  setTimeout(showQuestion,500); 
 }
 
+// ==============================================
+// تحريك اللاعب إلى منصة معينة
+// ==============================================
 function movePlayerToPlatform(index){
-  const target = platforms.getChildren()[index];
-  const startY = player.y;
-  const endX = target.x;
-  const endY = target.y - target.displayHeight/2 - player.displayHeight/2;
-  const peak = Math.min(startY, endY) - 70; 
-  
-  player.body.setAllowGravity(false);
-  player.body.setVelocity(0, 0); 
-  
-  sceneRef.tweens.timeline({
-    targets:player,
-    ease:'Power1',
-    tweens:[
-      { y:peak, duration:200 }, 
-      { x:endX, duration:400 }, 
-      { 
-        y:endY, 
-        duration:200,
-        onComplete: () => {
-          player.body.setAllowGravity(true);
-        }
-      }  
-    ]
-  });
+  const target = platforms.getChildren()[index];
+  const startY = player.y;
+  const endX = target.x;
+  const endY = target.y - target.displayHeight/2 - player.displayHeight/2;
+  const peak = Math.min(startY, endY) - 70; 
+  
+  player.body.setAllowGravity(false);
+  player.body.setVelocity(0, 0); 
+  
+  sceneRef.tweens.timeline({
+    targets:player,
+    ease:'Power1',
+    tweens:[
+      { y:peak, duration:200 }, 
+      { x:endX, duration:400 }, 
+      { 
+        y:endY, 
+        duration:200,
+        onComplete: () => {
+          player.body.setAllowGravity(true);
+        }
+      }  
+    ]
+  });
 }
 
 function update(){}
 </script>
 </body>
 </html>
-
-
