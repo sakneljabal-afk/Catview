@@ -1,368 +1,269 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة القطة التعليمية</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <style>
-        /* 🎨 2. CSS التصميم */
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden; 
-            font-family: 'Arial', sans-serif;
-            direction: rtl; 
-            background-color: #add8e6; 
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة القطة التعليمية</title>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Arial', sans-serif;
+    background-color: #add8e6;
+}
 
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-        /* مربع السؤال HTML (#questionBox) */
-        #questionBox {
-            position: fixed; 
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000; 
-            background-color: rgba(0, 0, 0, 0.8); 
-            color: white;
-            padding: 15px;
-            box-sizing: border-box;
-            text-align: center;
-            display: none; 
-        }
+/* مربع السؤال */
+#questionBox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: rgba(0,0,0,0.8);
+    color: white;
+    padding: 15px;
+    box-sizing: border-box;
+    text-align: center;
+    display: none;
+}
 
-        #questionBox h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: clamp(1.2em, 3vw, 1.5em); 
-            line-height: 1.4;
-        }
+#questionBox h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: clamp(1.2em, 3vw, 1.5em);
+}
 
-        .options-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap; 
-            gap: 10px;
-        }
+.options-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
 
-        .option-button {
-            background-color: #3f88c5; 
-            color: white;
-            border: 3px solid #285f8f;
-            border-radius: 10px;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: clamp(1em, 2.5vw, 1.2em);
-            transition: background-color 0.3s, transform 0.1s;
-            flex-grow: 1;
-            max-width: 250px;
-        }
+.option-button {
+    background-color: #3f88c5;
+    color: white;
+    border: 3px solid #285f8f;
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: clamp(1em, 2.5vw, 1.2em);
+    transition: background-color 0.3s, transform 0.1s;
+    flex-grow: 1;
+    max-width: 250px;
+}
 
-        .option-button:hover {
-            background-color: #5599d1;
-            transform: scale(1.03); 
-        }
+.option-button:hover {
+    background-color: #5599d1;
+    transform: scale(1.03);
+}
 
-        .option-button:active {
-            transform: scale(0.98);
-        }
+.option-button:active {
+    transform: scale(0.98);
+}
 
-        /* الفيدباك الخاطئ الأحمر */
-        #wrongFeedback {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(255, 0, 0, 0); 
-            z-index: 999; 
-            pointer-events: none;
-            transition: background-color 0.1s; 
-        }
-    </style>
+/* فيدباك خطأ */
+#wrongFeedback {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255,0,0,0);
+    z-index: 999;
+    pointer-events: none;
+    transition: background-color 0.1s;
+}
+</style>
 </head>
 <body>
 
-    <div id="wrongFeedback"></div>
+<div id="wrongFeedback"></div>
+<div id="questionBox"></div>
+<div id="game-container"></div>
 
-    <div id="questionBox">
-        </div>
+<script>
+const QUESTIONS = [
+    {question:"ما هو الكوكب الذي يسمى 'الكوكب الأحمر'؟", options:["الزهرة","المريخ","المشتري"], correctAnswer:"المريخ"},
+    {question:"كم عدد أرجل القطط؟", options:["اثنين","أربعة","ستة"], correctAnswer:"أربعة"},
+    {question:"ما هو أكبر محيط في العالم؟", options:["الأطلسي","الهندي","الهادئ"], correctAnswer:"الهادئ"},
+    {question:"ما هو الشكل الهندسي الذي يحتوي على ثلاثة أضلاع؟", options:["المربع","المثلث","الدائرة"], correctAnswer:"المثلث"}
+];
 
-    <div id="game-container"></div>
+const config = {
+    type: Phaser.AUTO,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    parent: 'game-container',
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    physics: { default:'arcade', arcade:{gravity:{y:0}, debug:false} },
+    scene: { preload, create, update }
+};
 
-    <script>
-        // 💾 7. متطلبات إضافية - مصفوفة الأسئلة
-        const QUESTIONS = [
-            {
-                question: "ما هو الكوكب الذي يسمى 'الكوكب الأحمر'؟",
-                options: ["الزهرة", "المريخ", "المشتري"],
-                correctAnswer: "المريخ"
-            },
-            {
-                question: "كم عدد أرجل القطط؟",
-                options: ["اثنين", "أربعة", "ستة"],
-                correctAnswer: "أربعة"
-            },
-            {
-                question: "ما هو أكبر محيط في العالم؟",
-                options: ["الأطلسي", "الهندي", "الهادئ"],
-                correctAnswer: "الهادئ"
-            },
-            {
-                question: "ما هو الشكل الهندسي الذي يحتوي على ثلاثة أضلاع؟",
-                options: ["المربع", "المثلث", "الدائرة"],
-                correctAnswer: "المثلث"
-            }
-        ];
+let game = new Phaser.Game(config);
 
-        // 🖼️ 4. إعدادات اللعبة
-        const config = {
-            type: Phaser.AUTO,
-            width: 800, 
-            height: 600, 
-            parent: 'game-container',
-            scale: {
-                mode: Phaser.Scale.FIT,
-                autoCenter: Phaser.Scale.CENTER_BOTH
-            },
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 0 }, 
-                    debug: false 
-                }
-            },
-            scene: {
-                preload: preload,
-                create: create,
-                update: update
-            }
-        };
+let cat, platforms, platformPositions, currentPlatformIndex=0, isMoving=false;
+let questionBox, wrongFeedbackDiv;
+let correctSound, wrongSound;
+let catBreathingTween;
 
-        let game = new Phaser.Game(config);
+function preload() {
+    this.load.image('cat','assets/cat.png');
+    this.load.image('platform','assets/platform.png');
+    this.load.audio('correct','assets/correct.mp3');
+    this.load.audio('wrong','assets/wrong.mp3');
+}
 
-        // متغيرات المشهد
-        let cat;
-        let platforms;
-        let platformPositions;
-        let currentPlatformIndex = 0;
-        let isMoving = false; 
-        let questionBox;
-        let wrongFeedbackDiv;
-        let correctSound;
-        let wrongSound;
-        let catBreathingTween; // المتغير الجديد للتحكم في حركة التنفس
+function create() {
+    questionBox = document.getElementById('questionBox');
+    wrongFeedbackDiv = document.getElementById('wrongFeedback');
 
-        // 📦 تحميل الأصول (Preload)
-        function preload() {
-            this.load.image('cat', 'assets/cat.png'); 
-            this.load.image('platform', 'assets/platform.png');
-            // تأكد أن هذه الملفات موجودة في assets/
-            this.load.audio('correct', 'assets/correct.mp3'); 
-            this.load.audio('wrong', 'assets/wrong.mp3');
+    correctSound = this.sound.add('correct');
+    wrongSound = this.sound.add('wrong');
+
+    platforms = this.physics.add.staticGroup();
+    const { width, height } = this.scale;
+
+    platformPositions = [
+        { x: width*0.2, y: height*0.8 },
+        { x: width*0.8, y: height*0.65 },
+        { x: width*0.35, y: height*0.5 },
+        { x: width*0.65, y: height*0.35 }
+    ];
+
+    platformPositions.forEach(pos=>{
+        let p = platforms.create(pos.x,pos.y,'platform');
+        p.setScale(0.2,0.05).refreshBody();
+        p.setImmovable(true);
+    });
+
+    const startPlatform = platforms.getChildren()[0];
+    cat = this.physics.add.sprite(startPlatform.x, startPlatform.y,'cat');
+    cat.setScale(0.15);
+    cat.body.allowGravity=false;
+    cat.setDepth(1);
+
+    const startY = startPlatform.y - startPlatform.displayHeight/2 - cat.displayHeight/2;
+    cat.y = startY;
+
+    this.physics.add.collider(cat, platforms, ()=>{cat.setVelocity(0); isMoving=false;});
+
+    // حركة تنفس القطة
+    catBreathingTween = this.tweens.add({targets:cat, y:startY-5, duration:1000, yoyo:true, repeat:-1, ease:'Sine.easeInOut'});
+
+    showQuestion(0);
+}
+
+function update(){}
+
+function showQuestion(index){
+    const currentQ = QUESTIONS[index];
+    if(!currentQ){
+        questionBox.innerHTML='<h3>أحسنت! لقد أنهيت اللعبة بنجاح!</h3>';
+        questionBox.style.display='block';
+        return;
+    }
+    questionBox.style.display='block';
+    let html = `<h3>${currentQ.question}</h3><div class="options-container">`;
+    currentQ.options.forEach(opt=>{
+        html+=`<button class="option-button">${opt}</button>`;
+    });
+    html+=`</div>`;
+    questionBox.innerHTML = html;
+
+    // ربط الأحداث
+    document.querySelectorAll('.option-button').forEach(btn=>{
+        btn.onclick = ()=>checkAnswer(btn, btn.textContent, index);
+    });
+}
+
+function checkAnswer(button, selectedAnswer, questionIndex){
+    const currentQ = QUESTIONS[questionIndex];
+    const scene = game.scene.getScene('default');
+
+    document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=true);
+
+    if(selectedAnswer===currentQ.correctAnswer){
+        correctSound.play();
+        questionBox.style.display='none';
+        let nextIndex = questionIndex+1;
+        if(nextIndex<platformPositions.length){
+            currentPlatformIndex=nextIndex;
+            moveCat(scene,nextIndex,true);
+        } else { showQuestion(nextIndex); }
+    } else {
+        wrongSound.play();
+        wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0.5)';
+        scene.time.delayedCall(400, ()=>{
+            wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0)';
+            document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
+        });
+
+        if(questionIndex>0){
+            let prevIndex=questionIndex-1;
+            currentPlatformIndex=prevIndex;
+            moveCat(scene,prevIndex,false);
+            scene.time.delayedCall(1500,()=>{showQuestion(prevIndex);});
+        } else {
+            document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
         }
+    }
+}
 
-        // 🛠️ إنشاء المشهد (Create)
-        function create() {
-            const { width, height } = this.scale;
-            questionBox = document.getElementById('questionBox');
-            wrongFeedbackDiv = document.getElementById('wrongFeedback');
+function moveCat(scene,targetIndex,isCorrect){
+    if(isMoving) return;
+    isMoving=true;
 
-            correctSound = this.sound.add('correct');
-            wrongSound = this.sound.add('wrong');
-            
-            platforms = this.physics.add.staticGroup();
+    if(catBreathingTween) catBreathingTween.pause();
 
-            // تحديد مواقع المنصات (x, y)
-            platformPositions = [
-                { x: width * 0.2, y: height * 0.8 },
-                { x: width * 0.8, y: height * 0.65 },
-                { x: width * 0.35, y: height * 0.5 },
-                { x: width * 0.65, y: height * 0.35 }
-            ];
+    const targetPlatform = platforms.getChildren()[targetIndex];
+    const startX = cat.x;
+    const startY = cat.y;
+    const targetX = targetPlatform.x;
+    const targetY = targetPlatform.y - targetPlatform.displayHeight/2 - cat.displayHeight/2;
 
-            platformPositions.forEach(pos => {
-                let platform = platforms.create(pos.x, pos.y, 'platform');
-                platform.setScale(0.2, 0.05).refreshBody(); 
-                platform.setImmovable(true);
-            });
+    const distance = Phaser.Math.Distance.Between(startX,startY,targetX,targetY);
+    const duration = distance*3;
 
-            const startPlatform = platforms.getChildren()[0];
-            
-            cat = this.physics.add.sprite(startPlatform.x, startPlatform.y, 'cat');
-            cat.setScale(0.15); 
-            cat.body.allowGravity = false; 
-            cat.setDepth(1); 
-            
-            // تحديد الموقع الأولي الدقيق للقطة فوق المنصة الأولى
-            const startPlatformTopY = startPlatform.y - startPlatform.displayHeight / 2;
-            const initialCatY = startPlatformTopY - cat.displayHeight / 2;
-            cat.y = initialCatY;
+    const apexY = Math.min(startY,targetY)-70;
 
-            this.physics.add.collider(cat, platforms, () => {
-                cat.setVelocity(0);
-                isMoving = false;
-            });
+    scene.tweens.add({
+        targets: cat,
+        duration: duration,
+        ease: 'Linear',
+        x: targetX,
+        onUpdate: (tween,target)=>{
+            const progress=tween.progress;
+            const factor=1-Math.pow(2*progress-1,2);
+            const linearY=Phaser.Math.Interpolation.Linear([startY,targetY],progress);
+            target.y=linearY-(startY-apexY)*factor;
+        },
+        onComplete: ()=>{
+            cat.x=targetX;
+            cat.y=targetY;
+            isMoving=false;
+            cat.setVelocity(0);
 
-            // تخزين حركة التنفس في المتغير الجديد (catBreathingTween)
-            catBreathingTween = this.tweens.add({ 
-                targets: cat,
-                y: initialCatY - 5, // تتحرك 5 بكسل للأعلى من موقعها الأولي
-                duration: 1000,
-                yoyo: true, 
-                repeat: -1, 
-                ease: 'Sine.easeInOut'
-            });
-
-            showQuestion(this, 0);
-        }
-
-        // 🔄 تحديث المشهد (Update)
-        function update() {
-            // لا حاجة لمنطق خاص هنا
-        }
-
-        // 3. دالة إظهار السؤال في مربع HTML
-        function showQuestion(scene, index) {
-            const currentQ = QUESTIONS[index];
-            if (!currentQ) {
-                questionBox.innerHTML = '<h3>أحسنت! لقد أنهيت اللعبة بنجاح!</h3>';
-                questionBox.style.display = 'block';
-                return;
-            }
-
-            questionBox.style.display = 'block';
-
-            let html = `<h3>${currentQ.question}</h3><div class="options-container">`;
-            
-            currentQ.options.forEach(option => {
-                html += `<button class="option-button" onclick="checkAnswer(this, '${option}', ${index})">${option}</button>`;
-            });
-
-            html += `</div>`;
-            questionBox.innerHTML = html;
-        }
-
-        // 3. دالة التحقق من الإجابة
-        window.checkAnswer = function(button, selectedAnswer, questionIndex) {
-            const currentQ = QUESTIONS[questionIndex];
-            const scene = game.scene.getScene('default'); 
-
-            document.querySelectorAll('.option-button').forEach(btn => btn.disabled = true);
-
-            if (selectedAnswer === currentQ.correctAnswer) {
-                // الإجابة الصحيحة
-                correctSound.play(); 
-                questionBox.style.display = 'none'; 
-                
-                let nextIndex = questionIndex + 1;
-                if (nextIndex < platformPositions.length) {
-                    currentPlatformIndex = nextIndex;
-                    moveCat(scene, nextIndex, true); 
-                } else {
-                    showQuestion(scene, nextIndex); 
-                }
-
-            } else {
-                // الإجابة الخاطئة
-                wrongSound.play(); 
-                
-                // فيدباك بصري باللون الأحمر
-                wrongFeedbackDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-                scene.time.delayedCall(200, () => {
-                    wrongFeedbackDiv.style.backgroundColor = 'rgba(255, 0, 0, 0)';
-                    document.querySelectorAll('.option-button').forEach(btn => btn.disabled = false);
-                });
-
-                // الرجوع إلى المنصة السابقة
-                if (questionIndex > 0) {
-                    let prevIndex = questionIndex - 1;
-                    currentPlatformIndex = prevIndex;
-                    moveCat(scene, prevIndex, false); 
-                    
-                    scene.time.delayedCall(1500, () => {
-                        showQuestion(scene, prevIndex);
-                    });
-                } else {
-                    document.querySelectorAll('.option-button').forEach(btn => btn.disabled = false);
-                }
-            }
-        }
-
-        // 4. دالة حركة القطة بين المنصات (الكود المُحسَّن)
-        function moveCat(scene, targetIndex, isCorrect) {
-            if (isMoving) return;
-            isMoving = true;
-
-            // 🛑 إيقاف حركة التنفس لتجنب التداخل
-            if (catBreathingTween) {
-                catBreathingTween.pause();
+            if(catBreathingTween){
+                catBreathingTween.remove();
+                catBreathingTween = scene.tweens.add({targets:cat,y:targetY-5,duration:1000,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
             }
 
-            const targetPlatform = platforms.getChildren()[targetIndex];
-            const startX = cat.x;
-            const startY = cat.y;
-            
-            // حساب الموقع الدقيق: (قمة المنصة) - (نصف ارتفاع القطة)
-            const catHeight = cat.displayHeight;
-            const platformTopY = targetPlatform.y - targetPlatform.displayHeight / 2;
-            const targetY = platformTopY - catHeight / 2; 
-            const targetX = targetPlatform.x;
-            
-            const distance = Phaser.Math.Distance.Between(startX, startY, targetX, targetY);
-            const duration = distance * 2.5; 
-            
-            const jumpHeight = 70; 
-            const apexY = Math.min(startY, targetY) - jumpHeight;
-
-            scene.tweens.add({
-                targets: cat,
-                duration: duration,
-                ease: 'Linear', 
-                x: targetX,
-
-                onUpdate: (tween, target) => {
-                    const progress = tween.progress;
-                    const parabolicFactor = 1 - Math.pow(2 * progress - 1, 2); 
-                    
-                    const linearY = Phaser.Math.Interpolation.Linear([startY, targetY], progress);
-                    
-                    // تطبيق المسار القوسي
-                    target.y = linearY - (startY - apexY) * parabolicFactor;
-                },
-
-                onComplete: () => {
-                    // ✅ التثبيت اليدوي للموقع النهائي لضمان الوقوف فوق المنصة
-                    cat.x = targetX;
-                    cat.y = targetY; 
-                    
-                    isMoving = false;
-                    cat.setVelocity(0); 
-
-                    // ✅ إعادة تشغيل حركة التنفس من الموقع الجديد
-                    if (catBreathingTween) {
-                         // إعادة ضبط موقع التنفس ليبدأ من الموقع الجديد
-                        catBreathingTween.updateTo({ y: targetY - 5 }, true);
-                        catBreathingTween.resume(); 
-                    }
-                    
-                    if (isCorrect) {
-                        showQuestion(scene, currentPlatformIndex);
-                    }
-                    if (!isCorrect) {
-                        document.querySelectorAll('.option-button').forEach(btn => btn.disabled = false);
-                    }
-                }
-            });
+            if(isCorrect) showQuestion(currentPlatformIndex);
+            if(!isCorrect) document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
         }
-    </script>
+    });
+}
+</script>
 </body>
 </html>
