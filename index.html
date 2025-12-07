@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>لعبة تعليمية - Phaser</title>
+<title>لعبة تعليمية - Phaser + Supabase</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -25,14 +25,16 @@
 <div id="questionBox"></div>
 <script>
 // =======================================================
-// 2. تهيئة عميل Supabase (يجب تعديل هذه القيم)
+// ** 🚨 هام: قم بتعديل هذه القيم بمفاتيح مشروعك الحقيقية 🚨 **
 // =======================================================
-const SUPABASE_URL = 'https://your-project-id.supabase.co'; 
-const SUPABASE_ANON_KEY = 'YOUR_ANON_PUBLIC_KEY'; // مفتاحك العام
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = 'https://[your-project-id].supabase.co'; 
+const SUPABASE_ANON_KEY = 'YOUR_ANON_PUBLIC_KEY'; 
+
+// *الحل:* تم استخدام window.supabase وتغيير اسم العميل إلى supabaseClient
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // =======================================================
 
-// 3. إزالة مصفوفة الأسئلة الثابتة واستبدالها بمتغير فارغ
+// متغيرات اللعبة
 let questions = []; 
 let currentQuestion=0, currentPlatformIndex=0;
 const PLATFORM_SCALE_X = 0.2;
@@ -68,7 +70,6 @@ function create() {
     plat.setScale(PLATFORM_SCALE_X, PLATFORM_SCALE_Y).refreshBody();
   });
   
-  // وضع القطة على أول منصة (مؤقتًا)
   const firstPlatform = platforms.getChildren()[0];
   player = this.physics.add.sprite(firstPlatform.x, firstPlatform.y - firstPlatform.displayHeight/2 - 20,'player').setScale(0.2);
   player.setCollideWorldBounds(true);
@@ -80,35 +81,33 @@ function create() {
   correctSound = this.sound.add('correct');
   wrongSound = this.sound.add('wrong');
 
-  // 4. البدء في جلب الأسئلة
+  // البدء في جلب الأسئلة عند تحميل المشهد
   getQuestionsFromSupabase(); 
 }
 
-// 5. دالة جلب الأسئلة من Supabase
+// دالة جلب الأسئلة من Supabase
 async function getQuestionsFromSupabase() {
-    console.log("Attempting to fetch questions from Supabase...");
+    document.getElementById("questionBox").innerHTML = "<h2>جارٍ تحميل الأسئلة... الرجاء الانتظار</h2>";
     
-    // تأكد أن أسماء الأعمدة هنا تطابق تماماً أسماء الأعمدة في جدولك
-    let { data, error } = await supabase
+    let { data, error } = await supabaseClient // استخدام الاسم المعدل
         .from('questions')
         .select('text, options, answer_index'); 
 
     if (error) {
         console.error('Error fetching questions:', error);
-        document.getElementById("questionBox").innerHTML = "<h2>❌ خطأ في الاتصال بالخادم. تحقق من المفاتيح أو قواعد الأمان.</h2>";
+        document.getElementById("questionBox").innerHTML = "<h2>❌ خطأ في الاتصال. راجع المفاتيح وقواعد الأمان (RLS).</h2>";
         return;
     }
 
     if (data && data.length > 0) {
-        // تحويل البيانات المسترجعة لتناسب هيكل كود اللعبة:
+        // تحويل البيانات المسترجعة إلى الهيكل المطلوب (q, c, a)
         questions = data.map(q => ({
             q: q.text,
-            c: q.options, // سيتم سحبها الآن كمصفوفة جاهزة
+            c: q.options, 
             a: q.answer_index,
-            // يمكنك إضافة حقول أخرى مثل explanation هنا
         }));
         
-        console.log(`Successfully loaded ${questions.length} questions. Starting game.`);
+        console.log(`Successfully loaded ${questions.length} questions.`);
         
         // بمجرد جلب البيانات، ابدأ عرض السؤال الأول
         showQuestion(); 
