@@ -11,18 +11,21 @@
     top:10px; 
     width:100%; 
     text-align:center; 
-    font-family: 'Arial', sans-serif; /* تغيير خط Tahoma لضمان عرضه */
+    font-family: 'Arial', sans-serif; 
     font-size:18px; 
-    z-index: 1000; /* لضمان ظهور مربع السؤال فوق اللعبة */
+    color: #000; /* تأكيد لون النص الأسود */
+    background: rgba(255, 255, 255, 0.8); /* خلفية شفافة قليلاً لضمان القراءة */
+    padding: 10px 0;
+    z-index: 1000; /* لضمان ظهوره فوق شاشة اللعب */
 }
   .option { 
     margin:5px; 
-    padding:8px 15px; /* زيادة مساحة الزر */
-    border:2px solid #333; 
+    padding:8px 15px; 
+    border:2px solid #000; /* border أسود واضح */
     display:inline-block; 
     cursor:pointer; 
     background:#fff;
-    border-radius: 8px; /* حواف مستديرة */
+    border-radius: 8px; 
     transition: background 0.2s;
 }
   .option:hover {
@@ -42,13 +45,16 @@ const questions = [
 
 let currentQuestion = 0;
 let currentPlatformIndex = 0;
-const PLATFORM_SCALE = 0.5; // مقياس موحد للمنصة
+// تعديل مقياس المنصة لتصبح عريضة قليلاً (0.6) ورقيقة جداً (0.1)
+const PLATFORM_SCALE_X = 0.6; 
+const PLATFORM_SCALE_Y = 0.1; 
+const platformCount = 4; 
 
 const config = {
   type: Phaser.CANVAS,
   width: 600,
   height: 600,
-  physics: { default: 'arcade', arcade: { gravity: { y: 600 } } }, // زيادة الجاذبية قليلاً
+  physics: { default: 'arcade', arcade: { gravity: { y: 600 } } }, 
   scene: { preload, create, update }
 };
 
@@ -56,8 +62,6 @@ const game = new Phaser.Game(config);
 let player, platforms, sceneRef;
 
 function preload() {
-  // هذا يفترض أن ملفاتك موجودة في مجلد assets.
-  // تأكد من وجود ملف cat.png و platform.png
  this.load.image('player', 'assets/cat.png');
  this.load.image('platform', 'assets/platform.png');
 }
@@ -66,7 +70,6 @@ function create() {
   sceneRef = this;
   platforms = this.physics.add.staticGroup();
 
-  // إنشاء المنصات بمواقع مختلفة
   const positions = [
     {x: 300, y: 500}, 
     {x: 200, y: 400}, 
@@ -74,20 +77,19 @@ function create() {
     {x: 250, y: 200}
   ];
   
-  // حل المشكلة 1: تصغير حجم المنصة باستخدام مقياس ثابت (PLATFORM_SCALE)
-  positions.forEach(pos => platforms.create(pos.x, pos.y, 'platform').setScale(PLATFORM_SCALE).refreshBody());
-
-  // اللاعب
+  // حل المشكلة 1: تطبيق المقياس الجديد
+  positions.forEach(pos => platforms.create(pos.x, pos.y, 'platform').setScale(PLATFORM_SCALE_X, PLATFORM_SCALE_Y).refreshBody());
+  
   // وضع القطة على أول منصة
   const firstPlatform = platforms.getChildren()[0];
-  player = this.physics.add.sprite(firstPlatform.x, firstPlatform.y - 50, 'player').setScale(0.2);
+  // حساب دقيق لموضع الـ Y الجديد لتقف القطة على السطح
+  const initialY = firstPlatform.y - firstPlatform.displayHeight/2 - player.displayHeight/2; 
+  
+  player = this.physics.add.sprite(firstPlatform.x, initialY, 'player').setScale(0.2);
   player.setCollideWorldBounds(true);
   
-  // إضافة التصادم بين اللاعب والمنصات
   this.physics.add.collider(player, platforms);
 
-  // إزالة حركة الرأس التجميلية المبدئية لتجنب التعارض مع منطق الحركة الرئيسي
-  
   showQuestion();
 }
 
@@ -100,6 +102,7 @@ function showQuestion() {
   
   const q = questions[currentQuestion];
   const box = document.getElementById("questionBox");
+  // تم إرجاع عرض السؤال كما كان (المشكلة 2)
   let html = `<h2>${q.q}</h2>`;
   q.c.forEach((opt,i)=>{
     html += `<div class="option" onclick="answer(${i})">${opt}</div>`;
@@ -113,44 +116,36 @@ function answer(selected) {
 
   const q = questions[currentQuestion];
   if(selected === q.a){
-    player.setTint(0x00ff00); // أخضر للإجابة الصحيحة
-    // التقدم للمنصة التالية
+    player.setTint(0x00ff00); 
     currentPlatformIndex = Math.min(currentPlatformIndex + 1, platforms.getChildren().length - 1);
     currentQuestion++;
   } else {
-    player.setTint(0xff6666); // أحمر للإجابة الخطأ
-    // التراجع للمنصة السابقة (عقوبة)
+    player.setTint(0xff6666); 
     if(currentPlatformIndex > 0) currentPlatformIndex--;
   }
   
-  // الحركة الأوتوماتيكية
   movePlayerToPlatform(currentPlatformIndex); 
 
-  // إعادة التلوين وعرض السؤال التالي بعد ثواني
   setTimeout(() => { player.clearTint(); showQuestion(); }, 500);
 }
 
-// تحريك اللاعب للمنصة المطلوبة باستخدام الحركة الانسيابية (Tween) وإصلاح مشكلة السقوط
+// تحريك اللاعب للمنصة المطلوبة
 function movePlayerToPlatform(index){
   const targetPlatform = platforms.getChildren()[index];
   
-  // حساب الموضع النهائي: يجب أن يكون على سطح المنصة
-  // 1. تحديد الـ X المستهدف
   const targetX = targetPlatform.x;
-  // 2. تحديد الـ Y المستهدف (المنصة Y - نصف ارتفاع اللاعب - هامش صغير)
+  // الحساب الدقيق لـ Y لضمان الهبوط على سطح المنصة النحيف
   const targetY = targetPlatform.y - targetPlatform.displayHeight/2 - player.displayHeight/2; 
 
-  // حل المشكلة 2: تعطيل الجاذبية مؤقتاً أثناء الحركة الانسيابية
   player.body.allowGravity = false;
-  player.body.enable = false; // تعطيل كامل للفيزياء لضمان الحركة السلسة
+  player.body.enable = false; 
 
   sceneRef.tweens.add({
     targets: player,
     x: targetX,
     y: targetY,
-    duration: 400, // مدة حركة سريعة
+    duration: 400, 
     ease: 'Power1',
-    // عند انتهاء الحركة، نعيد تفعيل الفيزياء
     onComplete: () => {
       player.body.enable = true;
       player.body.allowGravity = true;
@@ -159,7 +154,6 @@ function movePlayerToPlatform(index){
 }
 
 function update() {
-  // لا يوجد تحديث يدوي مطلوب
 }
 </script>
 </body>
