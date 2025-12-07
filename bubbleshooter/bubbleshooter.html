@@ -10,6 +10,7 @@
   /* === تنسيقات الصفحة العامة === */
   body {
     margin: 0;
+    /* خلفية متدرجة لطيفة للصفحة بالكامل */
     background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     touch-action: none; 
@@ -25,7 +26,7 @@
     color: #fff;
     text-align: center;
     padding: 10px;
-    height: 20vh; /* 💥 زيادة الارتفاع لإتاحة مساحة أكبر للنص */
+    height: 20vh;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -36,21 +37,23 @@
 
   header h3 {
     margin: 0 0 5px 0;
-    font-size: clamp(1rem, 4.5vw, 1.6rem); /* تكبير الخط قليلاً */
+    /* 💥 زيادة الحد الأقصى لحجم خط السؤال */
+    font-size: clamp(1.2rem, 5vw, 1.8rem); 
     color: #ffd700;
   }
 
   .answers {
-    display: block; /* 💥 جعل كل إجابة في سطر منفصل */
-    text-align: right; /* محاذاة النص لليمين */
-    padding: 5px 15px; /* هوامش داخلية */
+    display: block; 
+    text-align: right; 
+    padding: 5px 20px; /* زيادة الهامش الأفقي */
   }
   
   .answers span {
-    display: block; /* كل Span يظهر في سطر جديد */
-    font-size: clamp(0.9rem, 3.8vw, 1.3rem); /* خط مناسب للموبايل */
-    margin: 3px 0;
-    padding: 2px 0;
+    display: block; 
+    /* 💥 زيادة الحد الأقصى لحجم خط الإجابات */
+    font-size: clamp(1rem, 4.5vw, 1.5rem); 
+    margin: 4px 0; /* زيادة الهامش العمودي بين الإجابات */
+    padding: 3px 0;
     border-bottom: 1px dashed rgba(255,255,255,0.2);
   }
   
@@ -67,12 +70,13 @@
     position: relative;
   }
 
-  /* الإطار الخارجي للعبة (تم تصغير ارتفاعه لاستيعاب الـ header الأكبر) */
+  /* الإطار الخارجي للعبة */
   #game-frame {
     width: 90vw; 
-    height: 70vh; /* 💥 تقليل الارتفاع */
+    height: 70vh; 
     max-width: 600px; 
-    background: #f0faff; 
+    /* 💥 خلفية برتقالية خفيفة جداً (Amber Lighten 5) */
+    background: #FFF3E0; 
     border: 8px solid #34495e; 
     border-radius: 20px;
     overflow: hidden;
@@ -146,11 +150,11 @@ const QUESTIONS = [
 ====================== */
 const config = {
  type: Phaser.AUTO,
- parent: 'game-container', 
- width: 600,  
- height: 800, 
+ parent: 'game-container', 
+ width: 600,  
+ height: 800, 
  scale: {
-   mode: Phaser.Scale.FIT, 
+   mode: Phaser.Scale.FIT, 
    autoCenter: Phaser.Scale.CENTER_BOTH
  },
  physics: {
@@ -174,7 +178,7 @@ let canShoot = true;
 let isAiming = false;
 let missedShots = 0;
 
-const BUBBLE_IMG_SIZE = 300; 
+const BUBBLE_IMG_SIZE = 300; 
 
 /* ======================
    4. التحميل (Preload)
@@ -205,11 +209,11 @@ function create(){
  this.physics.add.existing(invisibleWall, true);
 
  const cannonHeight = height * 0.10; 
- const cannonScale = cannonHeight / 300; 
+ const cannonScale = cannonHeight / 300; 
 
  cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
    .setScale(cannonScale)
-   .setDepth(1); 
+   .setDepth(1); 
 
  bubbles = this.physics.add.group({
    collideWorldBounds: true,
@@ -280,7 +284,7 @@ function fire(scene){
      missedShots++;
      if (missedShots >= 2) {
        missedShots = 0;
-       showQuestion(scene); 
+       showQuestion(scene); 
      }
    }
  });
@@ -313,12 +317,12 @@ function bubbleHit(scene, bubble){
    scene.wrongSound.play();
    
    flash.style.background = 'rgba(255,0,0,0.4)';
-   mark.style.display = 'flex'; 
+   mark.style.display = 'flex'; 
    
    setTimeout(() => {
      flash.style.background = 'rgba(255,0,0,0)';
      mark.style.display = 'none';
-   }, 400); 
+   }, 400); 
 
    scene.time.delayedCall(600, () => showQuestion(scene));
  }
@@ -350,11 +354,10 @@ function showQuestion(scene){
  const width = scene.scale.width;
  const height = scene.scale.height;
 
- // 💥 تصغير حجم الفقاعة من 22% إلى 18% من عرض اللعبة الداخلي
- const bubbleTargetSize = width * 0.18; 
+ const bubbleTargetSize = width * 0.18; 
  const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
 
- const positions = [0.2, 0.5, 0.8]; 
+ const positions = [0.2, 0.5, 0.8]; 
 
  for(let i=0; i<3; i++){
    const b = bubbles.create(
@@ -363,7 +366,7 @@ function showQuestion(scene){
      'bubble' + (i+1)
    ).setScale(bubbleScale);
 
-   b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE))); // تعديل نصف القطر ليتناسب مع الحجم الجديد
+   b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE))); 
 
    b.setData('correct', i === q.a);
    
