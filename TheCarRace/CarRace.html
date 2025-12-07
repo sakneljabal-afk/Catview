@@ -206,7 +206,7 @@
 <body>
     <div class="header">
         <h1>🚗 سيارة المسار السريع</h1>
-        <p class="subtitle">العبة تعليمية - أجِبْ على الأسئلة لزيادة سرعة سيارتك</p>
+        <p class="subtitle">لعبة تعليمية - أجب على الأسئلة لزيادة سرعة سيارتك</p>
     </div>
     
     <div class="game-container">
@@ -325,37 +325,24 @@
         let questionTimer = null;
         
         // المشهد الرئيسي للعبة
-        const GameScene = new Phaser.Class({
-            Extends: Phaser.Scene,
+        class GameScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GameScene' });
+            }
             
-            initialize: function GameScene() {
-                Phaser.Scene.call(this, { key: 'GameScene' });
-            },
+            preload() {
+                // لا نحتاج لتحميل أي صور - سنستخدم الرسومات
+            }
             
-            preload: function() {
-                // تحميل الصور (باستخدام رسومات بديلة إذا لم تكن الصور موجودة)
-                this.load.image('sky', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmdHcmFkaWVudCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGEwYTIwO3N0b3Atb3BhY2l0eToxIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3R5bGU9InN0b3AtY29sb3I6IzBlMTMzMjtzdG9wLW9wYWNpdHk6MSIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMDAwMDAwO3N0b3Atb3BhY2l0eToxIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNiZ0dyYWRpZW50KSIgLz4KICA8Y2lyY2xlIGN4PSI3MCUiIGN5PSIxNSUiIHI9IjQwIiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4=');
-                
-                this.load.image('road', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIiAvPgogIDxyZWN0IHg9IjAiIHk9IjQwIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIgLz4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMCIgZmlsbD0iI2Y3MCIgLz4KICA8cmVjdCB4PSIwIiB5PSI5MCIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAiIGZpbGw9IiNmNzAiIC8+Cjwvc3ZnPg==');
-                
-                // سيارة بسيطة
-                this.load.image('car', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjQwIiByeD0iNSIgZmlsbD0iIzQyODVmNCIvPgogIDxyZWN0IHg9IjUiIHk9IjUiIHdpZHRoPSI3MCIgaGVpZ2h0PSIzMCIgcng9IjMiIGZpbGw9IiMzNjdmZmYiLz4KICA8Y2lyY2xlIGN4PSIxNSIgY3k9IjM1IiByPSI2IiBmaWxsPSIjMjIyIi8+CiAgPGNpcmNsZSBjeD0iNjUiIGN5PSIzNSIgcj0iNiIgZmlsbD0iIzIyMiIvPgogIDxyZWN0IHg9IjI1IiB5PSIxMCIgd2lkdGg9IjMwIiBoZWlnaHQ9IjE1IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjYiLz4KPC9zdmc+');
-                
-                // صندوق السؤال
-                this.load.image('questionBox', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiByeD0iNSIgZmlsbD0iI2Y3MjV4NSIvPgogIDxyZWN0IHg9IjUiIHk9IjUiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcng9IjMiIGZpbGw9IiNmZmYiLz4KICA8dGV4dCB4PSIyNSIgeT0iMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzAwMCI+PyA8L3RleHQ+Cjwvc3ZnPg==');
-            },
-            
-            create: function() {
+            create() {
                 // إعداد الخلفية
-                background = this.add.tileSprite(400, 300, 800, 600, 'sky');
+                this.createBackground();
                 
                 // إعداد المسار
-                road = this.add.tileSprite(400, 500, 800, 100, 'road');
+                this.createRoad();
                 
                 // إعداد السيارة
-                player = this.physics.add.sprite(200, 450, 'car');
-                player.setCollideWorldBounds(true);
-                player.setScale(0.8);
+                this.createCar();
                 
                 // إعداد مجموعة صناديق الأسئلة
                 questionBoxGroup = this.physics.add.group();
@@ -396,32 +383,145 @@
                 document.getElementById('closeQuestion').addEventListener('click', () => {
                     this.resumeGame();
                 });
-            },
+            }
             
-            update: function() {
-                // تحريك الخلفية والمسار
-                background.tilePositionX += scrollSpeed / 100;
-                road.tilePositionX += scrollSpeed / 50;
+            createBackground() {
+                // خلفية متدرجة
+                const graphics = this.add.graphics();
+                const gradient = graphics.createGradient(0, 0, 800, 600, 0x0a0a20, 0x0e1332, 0x000000);
+                graphics.fillGradientStyle(gradient.topLeft, gradient.topRight, gradient.bottomLeft, gradient.bottomRight);
+                graphics.fillRect(0, 0, 800, 600);
                 
-                // تحريك صناديق الأسئلة
-                questionBoxGroup.getChildren().forEach(box => {
-                    box.x -= scrollSpeed / 60;
+                // إضافة نجوم
+                for (let i = 0; i < 100; i++) {
+                    const x = Phaser.Math.Between(0, 800);
+                    const y = Phaser.Math.Between(0, 300);
+                    const size = Phaser.Math.FloatBetween(0.5, 2);
+                    const alpha = Phaser.Math.FloatBetween(0.2, 0.8);
                     
-                    // إزالة الصناديق التي خرجت من الشاشة
-                    if (box.x < -50) {
-                        box.destroy();
+                    this.add.circle(x, y, size, 0xffffff, alpha);
+                }
+            }
+            
+            createRoad() {
+                // إنشاء المسار باستخدام رسومات
+                const roadGraphics = this.add.graphics();
+                
+                // الطريق الرئيسي (رمادي)
+                roadGraphics.fillStyle(0x333333, 1);
+                roadGraphics.fillRect(0, 500, 800, 100);
+                
+                // خطوط الطريق البيضاء
+                roadGraphics.fillStyle(0xffffff, 1);
+                roadGraphics.fillRect(0, 540, 800, 20);
+                
+                // حواف الطريق الحمراء
+                roadGraphics.fillStyle(0xf72585, 1);
+                roadGraphics.fillRect(0, 500, 800, 10);
+                roadGraphics.fillRect(0, 590, 800, 10);
+                
+                // جعل الطريق كائنًا فيزيائيًا
+                road = this.add.rectangle(400, 550, 800, 100, 0x333333);
+                this.physics.add.existing(road, true);
+            }
+            
+            createCar() {
+                // إنشاء السيارة باستخدام رسومات
+                const carGraphics = this.add.graphics();
+                
+                // جسم السيارة الرئيسي (أزرق)
+                carGraphics.fillStyle(0x4285f4, 1);
+                carGraphics.fillRoundedRect(0, 0, 80, 40, 5);
+                
+                // نافذة السيارة
+                carGraphics.fillStyle(0x3677ff, 1);
+                carGraphics.fillRoundedRect(5, 5, 70, 30, 3);
+                
+                // إطارات السيارة
+                carGraphics.fillStyle(0x222222, 1);
+                carGraphics.fillCircle(15, 35, 6);
+                carGraphics.fillCircle(65, 35, 6);
+                
+                // الزجاج الأمامي
+                carGraphics.fillStyle(0xffffff, 0.6);
+                carGraphics.fillRect(25, 10, 30, 15);
+                
+                // تحويل الرسومات إلى نسيج
+                const carTexture = carGraphics.generateTexture('car', 80, 40);
+                carGraphics.destroy();
+                
+                // إنشاء السيارة الفيزيائية
+                player = this.physics.add.sprite(200, 450, 'car');
+                player.setCollideWorldBounds(true);
+                player.setScale(0.8);
+            }
+            
+            createQuestionBox(x, y) {
+                // إنشاء صندوق سؤال باستخدام رسومات
+                const boxGraphics = this.add.graphics();
+                
+                // صندوق أحمر
+                boxGraphics.fillStyle(0xf72585, 1);
+                boxGraphics.fillRoundedRect(0, 0, 50, 50, 5);
+                
+                // داخل الصندوق الأبيض
+                boxGraphics.fillStyle(0xffffff, 1);
+                boxGraphics.fillRoundedRect(5, 5, 40, 40, 3);
+                
+                // علامة استفهام
+                boxGraphics.fillStyle(0x000000, 1);
+                boxGraphics.fillCircle(25, 25, 10);
+                boxGraphics.fillStyle(0xffffff, 1);
+                boxGraphics.fillCircle(25, 22, 3);
+                boxGraphics.fillRect(24, 28, 2, 5);
+                
+                // تحويل الرسومات إلى نسيج
+                const boxTexture = boxGraphics.generateTexture('questionBox', 50, 50);
+                boxGraphics.destroy();
+                
+                // إنشاء صندوق السؤال الفيزيائي
+                const box = this.physics.add.sprite(x, y, 'questionBox');
+                box.setScale(0.8);
+                return box;
+            }
+            
+            update() {
+                // تحريك الخلفية (النجوم) بشكل بسيط
+                this.children.list.forEach(child => {
+                    if (child.type === 'Circle' && child.fillColor === 0xffffff) {
+                        child.x -= scrollSpeed / 500;
+                        if (child.x < -10) {
+                            child.x = 810;
+                            child.y = Phaser.Math.Between(0, 300);
+                        }
                     }
                 });
                 
+                // تحريك صناديق الأسئلة
+                if (questionBoxGroup) {
+                    questionBoxGroup.getChildren().forEach(box => {
+                        box.x -= scrollSpeed / 60;
+                        
+                        // إزالة الصناديق التي خرجت من الشاشة
+                        if (box.x < -50) {
+                            box.destroy();
+                        }
+                    });
+                }
+                
                 // تحديث نص السرعة
-                speedText.setText(`السرعة: ${Math.round(baseSpeed)}`);
-                document.getElementById('speedValue').textContent = Math.round(baseSpeed);
+                if (speedText) {
+                    speedText.setText(`السرعة: ${Math.round(baseSpeed)}`);
+                    document.getElementById('speedValue').textContent = Math.round(baseSpeed);
+                }
                 
                 // تحديث نص النقاط
-                this.scoreText.setText(`النقاط: ${score}`);
-            },
+                if (this.scoreText) {
+                    this.scoreText.setText(`النقاط: ${score}`);
+                }
+            }
             
-            generateQuestionBox: function() {
+            generateQuestionBox() {
                 // تحديد إذا كنا سنولد سؤالاً خاطئاً (معاد) أم سؤالاً جديداً
                 let questionData;
                 
@@ -435,13 +535,13 @@
                 }
                 
                 // إنشاء صندوق السؤال
-                const box = questionBoxGroup.create(850, 450, 'questionBox');
-                box.setScale(0.8);
+                const box = this.createQuestionBox(850, 450);
+                questionBoxGroup.add(box);
                 box.setData('question', questionData);
                 box.setData('used', false);
-            },
+            }
             
-            hitQuestionBox: function(player, box) {
+            hitQuestionBox(player, box) {
                 if (box.getData('used')) return;
                 
                 // تعطيل الصندوق لمنع الاصطدام المتكرر
@@ -456,9 +556,9 @@
                 
                 // عرض واجهة السؤال
                 this.showQuestion(activeQuestion);
-            },
+            }
             
-            showQuestion: function(questionData) {
+            showQuestion(questionData) {
                 document.getElementById('questionText').textContent = questionData.q;
                 
                 const optionsContainer = document.getElementById('optionsContainer');
@@ -493,9 +593,9 @@
                 });
                 
                 questionUI.style.display = 'block';
-            },
+            }
             
-            checkAnswer: function(selectedIndex, correctIndex) {
+            checkAnswer(selectedIndex, correctIndex) {
                 if (selectedIndex === correctIndex) {
                     // إجابة صحيحة
                     baseSpeed += 20;
@@ -532,29 +632,31 @@
                         }, 5000);
                     }, 2000);
                 }
-            },
+            }
             
-            findAndRemoveQuestionBox: function() {
-                questionBoxGroup.getChildren().forEach(box => {
-                    if (box.getData('used')) {
-                        // تحريك الصندوق لأعلى وتلاشيه
-                        this.tweens.add({
-                            targets: box,
-                            y: box.y - 50,
-                            alpha: 0,
-                            duration: 500,
-                            onComplete: () => {
-                                box.destroy();
-                            }
-                        });
-                    }
-                });
-            },
+            findAndRemoveQuestionBox() {
+                if (questionBoxGroup) {
+                    questionBoxGroup.getChildren().forEach(box => {
+                        if (box.getData('used')) {
+                            // تحريك الصندوق لأعلى وتلاشيه
+                            this.tweens.add({
+                                targets: box,
+                                y: box.y - 50,
+                                alpha: 0,
+                                duration: 500,
+                                onComplete: () => {
+                                    box.destroy();
+                                }
+                            });
+                        }
+                    });
+                }
+            }
             
-            generateWrongQuestion: function(questionData) {
+            generateWrongQuestion(questionData) {
                 // توليد سؤال كان إجابته خاطئة سابقاً
-                const box = questionBoxGroup.create(850, 450, 'questionBox');
-                box.setScale(0.8);
+                const box = this.createQuestionBox(850, 450);
+                questionBoxGroup.add(box);
                 box.setData('question', questionData);
                 box.setData('used', false);
                 
@@ -566,9 +668,9 @@
                     yoyo: true,
                     repeat: 3
                 });
-            },
+            }
             
-            resumeGame: function() {
+            resumeGame() {
                 // إخفاء واجهة السؤال
                 questionUI.style.display = 'none';
                 
@@ -583,7 +685,7 @@
                     option.style.pointerEvents = 'auto';
                 });
             }
-        });
+        }
 
         // إعداد تكوين اللعبة
         const config = {
@@ -604,7 +706,7 @@
         // إنشاء اللعبة
         game = new Phaser.Game(config);
 
-        // إضافة تحكم باللوحة المفاتيح للعبة (اختياري)
+        // إضافة تحكم باللوحة المفاتيح للعبة
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
                 if (player && player.body) {
