@@ -5,36 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لعبة المدفع والفقاعات التعليمية</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-
 <style>
-body{
+body {
   margin:0;
   background:#add8e6;
   font-family:Arial;
 }
-header{
+header {
   background:#000;
   color:#fff;
   text-align:center;
   padding:1em;
 }
-header h3{
+header h3 {
   margin:0;
-  font-size:clamp(1.4rem,5vw,2rem);
+  font-size:clamp(1.5rem,5vw,2rem);
 }
-.answers{
+.answers {
   display:flex;
   justify-content:center;
   gap:1.2em;
   margin-top:.5em;
   font-size:clamp(1.1rem,4.5vw,1.5rem);
 }
-main{
+main {
   display:flex;
   justify-content:center;
   padding:1em 0;
 }
-#game-frame{
+#game-frame {
   width:95vw;
   max-width:520px;
   aspect-ratio:3/5;
@@ -42,9 +41,13 @@ main{
   border:6px solid #333;
   border-radius:16px;
   overflow:hidden;
+  position:relative;
 }
-#game-container{width:100%;height:100%}
-#wrongFlash{
+#game-container {
+  width:100%;
+  height:100%;
+}
+#wrongFlash {
   position:fixed;
   inset:0;
   background:rgba(255,0,0,0);
@@ -53,7 +56,6 @@ main{
 }
 </style>
 </head>
-
 <body>
 
 <header id="questionHeader"></header>
@@ -67,38 +69,29 @@ main{
 <div id="wrongFlash"></div>
 
 <script>
-/* ======================
-   الأسئلة
-====================== */
 const QUESTIONS = [
  { q:"ما هو الكوكب الأحمر؟", o:["الزهرة","المريخ","المشتري"], a:1 },
  { q:"كم عدد أرجل القط؟", o:["2","4","6"], a:1 }
 ];
 
-/* ======================
-   Phaser
-====================== */
-const config={
- type:Phaser.AUTO,
+const config = {
+ type: Phaser.AUTO,
  parent:'game-container',
  width:600,
  height:900,
  scale:{mode:Phaser.Scale.RESIZE},
- physics:{default:'arcade',arcade:{gravity:{y:0}}},
+ physics:{default:'arcade', arcade:{gravity:{y:0}}},
  scene:{preload,create}
 };
 new Phaser.Game(config);
 
-let cannon,bubbles,arrow;
+let cannon, bubbles, arrow;
 let currentQ=0;
 let canShoot=true;
 let isAiming=false;
 let missedShots=0;
 const cooldown=900;
 
-/* ======================
-   preload
-====================== */
 function preload(){
  this.load.image('cannon','assets/cannon.png');
  this.load.image('shoot','assets/shoot.png');
@@ -109,48 +102,49 @@ function preload(){
  this.load.audio('wrong','assets/wrong.mp3');
 }
 
-/* ======================
-   create
-====================== */
 function create(){
  const {width,height}=this.scale;
 
  this.correctSound=this.sound.add('correct');
  this.wrongSound=this.sound.add('wrong');
 
+ // ضبط حدود العالم داخل الإطار فقط
  this.physics.world.setBounds(0,0,width,height);
 
- this.cannonScale = height*0.00016;
- this.bubbleScale = width *0.00012;
- this.shotScale   = width *0.00015; // ✅ أكبر من السابق
+ // أحجام ديناميكية
+ this.cannonScale = width*0.14; // أكبر قليلاً
+ this.bubbleScale = width*0.18; 
+ this.shotScale = width*0.08; 
 
+// المدفع
  cannon=this.add.sprite(width/2,height*0.92,'cannon')
    .setScale(this.cannonScale);
 
+// مجموعة الفقاعات
  bubbles=this.physics.add.group({
    collideWorldBounds:true,
    bounce:1
- });
+});
 
- arrow=this.add.text(cannon.x,cannon.y-cannon.displayHeight-10,'⬆️',{fontSize:'24px'})
+// سهم صغير يوضح اتجاه الضرب
+ arrow=this.add.text(cannon.x,cannon.y-cannon.displayHeight-10,'⬆️',{fontSize:'28px'})
    .setOrigin(0.5);
 
+// حركة المدفع مع إصبع المستخدم أو الماوس
  this.input.on('pointermove',p=>{
    cannon.x=Phaser.Math.Clamp(p.x,width*0.12,width*0.88);
    arrow.x=cannon.x;
- });
+});
 
+// منطق إطلاق القذيفة
  this.input.on('pointerdown',()=>{
    if(!isAiming){isAiming=true;return;}
    if(canShoot) fire(this);
- });
+});
 
- showQuestion(this);
+showQuestion(this);
 }
 
-/* ======================
-   إطلاق
-====================== */
 function fire(scene){
  canShoot=false;
  isAiming=false;
@@ -158,42 +152,37 @@ function fire(scene){
 
  const shot=scene.physics.add.sprite(
    cannon.x,
-   cannon.y-cannon.displayHeight,
+   cannon.y-cannon.displayHeight/1.2,
    'shoot'
  ).setScale(scene.shotScale);
 
- shot.setVelocityY(-scene.scale.height*0.75);
+ shot.setVelocityY(-scene.scale.height*0.7);
 
  scene.physics.add.overlap(shot,bubbles,(s,b)=>{
    s.destroy();
    missedShots=0;
    bubbleHit(scene,b);
- });
+});
 
- shot.setCollideWorldBounds(true);
- shot.body.onWorldBounds=true;
+shot.setCollideWorldBounds(true);
+shot.body.onWorldBounds=true;
 
- shot.body.world.on('worldbounds',body=>{
+// إذا ضربت القذيفة في الفراغ
+shot.body.world.on('worldbounds',body=>{
    if(body.gameObject===shot){
      shot.destroy();
      missedShots++;
      if(missedShots>=2){
        missedShots=0;
-       showQuestion(scene); // ✅ إعادة الفقاعات بدون عقاب
+       showQuestion(scene); // إعادة الفقاعات بدون صوت خطأ
      }
    }
- });
+});
 
- scene.time.delayedCall(1200,()=>shot.destroy());
- scene.time.delayedCall(cooldown,()=>{
-   canShoot=true;
-   arrow.setVisible(true);
- });
+scene.time.delayedCall(1200,()=>shot.destroy());
+scene.time.delayedCall(cooldown,()=>{canShoot=true; arrow.setVisible(true);});
 }
 
-/* ======================
-   إصابة فقاعة
-====================== */
 function bubbleHit(scene,bubble){
  const correct=bubble.getData('correct');
  bubble.destroy();
@@ -209,9 +198,6 @@ function bubbleHit(scene,bubble){
  }
 }
 
-/* ======================
-   عرض السؤال
-====================== */
 function showQuestion(scene){
  const q=QUESTIONS[currentQ];
  if(!q){
@@ -229,9 +215,10 @@ function showQuestion(scene){
    </div>
  `;
 
+// إزالة الفقاعات القديمة
  bubbles.clear(true,true);
- const xs=[0.25,0.5,0.75];
 
+ const xs=[0.25,0.5,0.75];
  for(let i=0;i<3;i++){
    const b=bubbles.create(
      scene.scale.width*xs[i],
@@ -240,12 +227,25 @@ function showQuestion(scene){
    ).setScale(scene.bubbleScale);
 
    b.setData('correct',i===q.a);
+
+   // حركة الفقاعات الطافية
    b.setVelocity(
-     Phaser.Math.Between(-25,25), // ✅ أبطأ
-     Phaser.Math.Between(30,60)
+     Phaser.Math.Between(-15,15), // أبطأ
+     Phaser.Math.Between(-10,10)   // طافية
    );
- }
+   b.setBounce(1);
+   b.body.setCollideWorldBounds(true);
+
+   // حصر الحركة في نصف اللعبة العلوي
+   b.body.setBoundsRectangle(new Phaser.Geom.Rectangle(
+     0,
+     scene.scale.height*0.12,
+     scene.scale.width,
+     scene.scale.height*0.45
+   ));
+}
 }
 </script>
+
 </body>
 </html>
