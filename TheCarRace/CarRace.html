@@ -1,747 +1,661 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>سيارة المسار السريع - لعبة تعليمية</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none; /* لمنع تحديد النص على الموبايل */
-        }
-        
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px; /* تقليل البادينج ليناسب الموبايل */
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 15px;
-            width: 100%;
-            max-width: 800px;
-        }
-        
-        h1 {
-            color: #4cc9f0;
-            font-size: 2.2rem;
-            margin-bottom: 5px;
-            text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
-        }
-        
-        .subtitle {
-            color: #b8b8d1;
-            font-size: 1rem;
-            margin-bottom: 15px;
-        }
-        
-        .game-container {
-            width: 100%;
-            max-width: 800px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            position: relative;
-            /* لضمان نسبة أبعاد مناسبة على الموبايل */
-            aspect-ratio: 800 / 600; 
-        }
-        
-        #gameCanvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            background-color: #0d1117;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سيارة المسار السريع - لعبة تعليمية</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        h1 {
+            color: #4cc9f0;
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
+        }
+        
+        .subtitle {
+            color: #b8b8d1;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            aspect-ratio: 800 / 600;
+        }
+        
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #0d1117;
+        }
 
-        /* --- واجهة التحكم (للموبايل) --- */
-        .controls {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            z-index: 50; /* أعلى من اللعبة ولكن أسفل السؤال */
-        }
+        .speed-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            border: 2px solid #4cc9f0;
+            z-index: 10;
+        }
 
-        .control-btn {
-            background: rgba(76, 201, 240, 0.7);
-            color: #1a1a2e;
-            border: 2px solid #fff;
-            padding: 15px 30px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
-            flex-grow: 1;
-            margin: 0 5px;
-            text-align: center;
-        }
-        
-        .control-btn:active {
-            background: #4cc9f0;
-            transform: scale(0.98);
-        }
-        /* -------------------------------- */
+        #errorOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(247, 37, 133, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            pointer-events: none;
+        }
 
-        /* --- تأثير الخطأ البصري --- */
-        #errorOverlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(247, 37, 133, 0.5); /* أحمر شفاف */
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100; /* أعلى من كل شيء عدا واجهة السؤال */
-            pointer-events: none; /* للسماح بالضغط على زر الإغلاق */
-        }
+        #errorIcon {
+            font-size: 8rem;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.2s;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
 
-        #errorIcon {
-            font-size: 8rem;
-            color: white;
-            opacity: 0;
-            transition: opacity 0.2s;
-            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-        }
-        /* --------------------------- */
-        
-        /* باقي التنسيقات (التعليمات، عرض السرعة، إلخ) كما هي */
-        .speed-display {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 1rem;
-            border: 2px solid #4cc9f0;
-            z-index: 10;
-        }
+        .instructions {
+            background: rgba(22, 33, 62, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 800px;
+            border-left: 5px solid #4cc9f0;
+        }
+        
+        .instructions h2 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
 
-        .instructions {
-            background: rgba(22, 33, 62, 0.8);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            width: 100%;
-            max-width: 800px;
-            border-left: 5px solid #4cc9f0;
-        }
-        
-        .instructions h2 {
-            font-size: 1.2rem;
-            margin-bottom: 8px;
-        }
+        .question-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 600px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border: 3px solid #4cc9f0;
+            z-index: 1000;
+            display: none;
+        }
 
-        .question-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 95%; /* زيادة العرض ليناسب الموبايل */
-            max-width: 600px;
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            border: 3px solid #4cc9f0;
-            z-index: 1000; /* قيمة عالية جداً لضمان ظهوره فوق كل شيء */
-            display: none;
-        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #4cc9f0;
+            padding-bottom: 10px;
+        }
 
-        .question-header {
-            display: flex;
-            /* تم إزالة justify-content: space-between; لوجود عنصر واحد */
-            justify-content: flex-start; /* لضبط المحاذاة بعد إزالة زر الإغلاق */
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #4cc9f0;
-            padding-bottom: 10px;
-        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
 
-        .close-btn {
-            /* هذا الزر أصبح غير مستخدم الآن */
-            display: none;
-        }
+        .close-btn:hover {
+            color: #f72585;
+        }
 
-        .question-text {
-            font-size: 1.2rem; /* تقليل حجم الخط للموبايل */
-            margin-bottom: 20px;
-        }
-        
-        .option {
-            padding: 12px;
-            font-size: 1rem;
-            background-color: #2c3e50;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
+        .question-text {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .option {
+            padding: 12px;
+            font-size: 1rem;
+            background-color: #2c3e50;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
 
-        .option:hover {
-            background-color: #34495e;
-        }
+        .option:hover {
+            background-color: #34495e;
+        }
 
-        .option.correct {
-            background-color: #2ecc71; /* أخضر للإجابة الصحيحة */
-            color: #fff;
-            font-weight: bold;
-        }
+        .option.correct {
+            background-color: #2ecc71;
+            color: #fff;
+            font-weight: bold;
+        }
 
-        .option.incorrect {
-            background-color: #e74c3c; /* أحمر للإجابة الخاطئة */
-            color: #fff;
-            font-weight: bold;
-        }
-        
-        @media (min-width: 769px) {
-            /* إخفاء أزرار التحكم باللمس على شاشات سطح المكتب */
-            .controls {
-                display: none;
-            }
-        }
-    </style>
+        .option.incorrect {
+            background-color: #e74c3c;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .highlight {
+            color: #f72585;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🚗 سيارة المسار السريع</h1>
-        <p class="subtitle">لعبة تعليمية - أجب على الأسئلة لزيادة سرعة سيارتك</p>
-    </div>
-    
-    <div class="game-container">
-        <div id="errorOverlay">
-            <span id="errorIcon">❌</span>
-        </div>
+    <div class="header">
+        <h1>🚗 سيارة المسار السريع</h1>
+        <p class="subtitle">لعبة تعليمية - أجب على الأسئلة لزيادة سرعة سيارتك</p>
+    </div>
+    
+    <div class="game-container">
+        <div id="errorOverlay">
+            <span id="errorIcon">❌</span>
+        </div>
 
-        <div class="speed-display">السرعة: <span id="speedValue">200</span></div>
-        <div id="gameCanvas"></div>
+        <div class="speed-display">السرعة: <span id="speedValue">200</span></div>
+        <div id="gameCanvas"></div>
+    </div>
+    
+    <div class="instructions">
+        <h2>📋 كيفية اللعب:</h2>
+        <ul>
+            <li>تسير السيارة تلقائياً على المسار مع حركة عشوائية رأسيًا</li>
+            <li><span class="highlight">لا يمكنك تحريك السيارة</span> - الاصطدام بالصناديق إجباري</li>
+            <li>عند الاصطدام <span class="highlight">بصندوق الأسئلة</span>، تظهر لك سؤال</li>
+            <li>الإجابة الصحيحة تزيد سرعة سيارتك <span class="highlight">+20</span></li>
+            <li>الإجابة الخاطئة تقلل سرعة سيارتك <span class="highlight">40%</span> وتظهر شاشة حمراء <span class="highlight">❌</span></li>
+            <li>الأسئلة التي تجيب عليها خطأً تعود إليك في صندوق لاحق</li>
+            <li>هدفك: الإجابة على أكبر عدد من الأسئلة لزيادة سرعتك لأقصى حد!</li>
+        </ul>
+    </div>
+    
+    <div class="question-box" id="questionBox">
+        <div class="question-header">
+            <div>❓ سؤال تعليمي</div>
+            <button class="close-btn" id="closeQuestion">✕</button>
+        </div>
+        <div class="question-text" id="questionText"></div>
+        <div class="options-container" id="optionsContainer"></div>
+    </div>
+    
+    <div class="footer">
+        <p>لعبة تعليمية باستخدام Phaser 3 - تركز على نبات المانجروف وتكيفاته مع البيئة</p>
+    </div>
 
-        <div class="controls">
-            <button class="control-btn" id="upBtn">⬆️</button>
-            <button class="control-btn" id="downBtn">⬇️</button>
-        </div>
-    </div>
-    
-    <div class="instructions">
-        <h2>📋 كيفية اللعب:</h2>
-        <ul>
-            <li>تسير السيارة تلقائياً على المسار</li>
-            <li>**لتحريك السيارة:** استخدم أزرار **⬆️** و **⬇️** (على الموبايل) أو مفاتيح **الأسهم** (على الكمبيوتر).</li>
-            <li>**عند الاصطدام بصندوق الأسئلة، يتوقف اللعب وتصبح الإجابة إلزامية!**</li>
-            <li>الإجابة الصحيحة تزيد سرعة سيارتك <span class="highlight">+20</span></li>
-            <li>الإجابة الخاطئة تقلل سرعة سيارتك <span class="highlight">40%</span> وتظهر شاشة حمراء **❌** لفترة وجيزة.</li>
-            <li>الأسئلة التي تجيب عليها خطأً تعود إليك في صندوق لاحق (في نهاية الصناديق التي ستظهر).</li>
-            <li>هدفك: الإجابة على أكبر عدد من الأسئلة لزيادة سرعتك لأقصى حد!</li>
-        </ul>
-    </div>
-    
-    <div class="question-box" id="questionBox">
-        <div class="question-header">
-            <div>❓ سؤال تعليمي</div>
-                    </div>
-        <div class="question-text" id="questionText"></div>
-        <div class="options-container" id="optionsContainer"></div>
-    </div>
-    
-    <div class="footer">
-        <p>لعبة تعليمية باستخدام Phaser 3 - تركز على نبات المانجروف وتكيفاته مع البيئة</p>
-    </div>
+    <script>
+        // بيانات الأسئلة
+        const allQuestionsData = [
+            { "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:", "c": ["أوراق عريضة تطفو على الماء", "جذور قصيرة ضعيفة", "جذور طويلة وقوية لمقاومة الأمواج"], "a": 2, "id": 1 },
+            { "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟", "c": ["تخزين كميات كبيرة من الماء", "امتصاص الضوء من سطح الماء", "الصمود أمام الأمواج القوية"], "a": 2, "id": 2 },
+            { "q": "كيف تتخلص شجرة المانجروف من الملح الزائد؟", "c": ["عن طريق الجذور التي تفرز الملح", "عن طريق الأوراق التي تفرز الملح", "عن طريق الساق التي تخزن الملح"], "a": 1, "id": 3 },
+            { "q": "أين توجد أشجار المانجروف عادة؟", "c": ["في الصحاري الحارة", "على قمم الجبال", "في مناطق المد والجزر على السواحل"], "a": 2, "id": 4 },
+            { "q": "ما أهمية أشجار المانجروف للبيئة البحرية؟", "c": ["تزيد ملوحة المياه", "توفر بيئة آمنة لتكاثر الأسماك والكائنات البحرية", "تقلل من كمية الأكسجين في الماء"], "a": 1, "id": 5 },
+            { "q": "كيف تساعد جذور المانجروف الهوائية الشجرة على التنفس؟", "c": ["تمتص الماء المالح فقط", "تسمح بتبادل الغازات في التربة الفقيرة بالأكسجين", "تخزن الغذاء لفترات الجفاف"], "a": 1, "id": 6 },
+            { "q": "ما هو التهديد الرئيسي لأشجار المانجروف؟", "c": ["الحيوانات البرية", "التلوث والقطع الجائر والتنمية الساحلية", "زيادة هطول الأمطار"], "a": 1, "id": 7 }
+        ];
 
-    <script>
-        // بيانات الأسئلة
-        const allQuestionsData = [
-            { "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:", "c": ["أوراق عريضة تطفو على الماء", "جذور قصيرة ضعيفة", "جذور طويلة وقوية لمقاومة الأمواج"], "a": 2, "id": 1 },
-            { "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟", "c": ["تخزين كميات كبيرة من الماء", "امتصاص الضوء من سطح الماء", "الصمود أمام الأمواج القوية"], "a": 2, "id": 2 },
-            { "q": "كيف تتخلص شجرة المانجروف من الملح الزائد؟", "c": ["عن طريق الجذور التي تفرز الملح", "عن طريق الأوراق التي تفرز الملح", "عن طريق الساق التي تخزن الملح"], "a": 1, "id": 3 },
-            { "q": "أين توجد أشجار المانجروف عادة؟", "c": ["في الصحاري الحارة", "على قمم الجبال", "في مناطق المد والجزر على السواحل"], "a": 2, "id": 4 },
-            { "q": "ما أهمية أشجار المانجروف للبيئة البحرية؟", "c": ["تزيد ملوحة المياه", "توفر بيئة آمنة لتكاثر الأسماك والكائنات البحرية", "تقلل من كمية الأكسجين في الماء"], "a": 1, "id": 5 },
-            { "q": "كيف تساعد جذور المانجروف الهوائية الشجرة على التنفس؟", "c": ["تمتص الماء المالح فقط", "تسمح بتبادل الغازات في التربة الفقيرة بالأكسجين", "تخزن الغذاء لفترات الجفاف"], "a": 1, "id": 6 },
-            { "q": "ما هو التهديد الرئيسي لأشجار المانجروف؟", "c": ["الحيوانات البرية", "التلوث والقطع الجائر والتنمية الساحلية", "زيادة هطول الأمطار"], "a": 1, "id": 7 }
-        ];
+        // متغيرات اللعبة
+        let game;
+        let baseSpeed = 200;
+        let scrollSpeed = 200;
+        let player;
+        let questionBoxGroup;
+        let activeQuestion = null;
+        let questionUI;
+        let speedText;
+        let score = 0;
+        let scoreText;
+        let wrongQuestions = [];
+        let remainingQuestions = [...allQuestionsData];
+        let playerMoveDirection = 1; // 1 للأسفل، -1 للأعلى
+        let playerMoveSpeed = 2;
 
-        // متغيرات اللعبة
-        let game;
-        let baseSpeed = 200;
-        let scrollSpeed = 200;
-        let player;
-        let questionBoxGroup;
-        let activeQuestion = null;
-        let questionUI;
-        let speedText;
-        let score = 0;
-        let scoreText;
-        let wrongQuestions = [];
-        let remainingQuestions = [...allQuestionsData]; // قائمة الأسئلة المتبقية
+        // عناصر DOM الإضافية لتأثير الخطأ
+        const errorOverlay = document.getElementById('errorOverlay');
+        const errorIcon = document.getElementById('errorIcon');
+        
+        // المشهد الرئيسي للعبة
+        class GameScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GameScene' });
+                this.backgroundObjects = null;
+            }
+            
+            preload() {
+                this.createCarTexture();
+                this.createQuestionBoxTexture();
+                this.createBackgroundObjectTextures();
+            }
 
-        // التحكم في معدل توليد الصناديق (تم زيادته لزيادة المسافة)
-        const QUESTION_BOX_GENERATION_DELAY = 6000; 
+            // دالة لتوليد نسيج السيارة
+            createCarTexture() {
+                const carGraphics = this.add.graphics({ add: false });
+                carGraphics.fillStyle(0x4285f4, 1);
+                carGraphics.fillRoundedRect(0, 0, 80, 40, 5);
+                carGraphics.fillStyle(0x3677ff, 1);
+                carGraphics.fillRoundedRect(5, 5, 70, 30, 3);
+                carGraphics.fillStyle(0x222222, 1);
+                carGraphics.fillCircle(15, 35, 6);
+                carGraphics.fillCircle(65, 35, 6);
+                carGraphics.fillStyle(0xffffff, 0.6);
+                carGraphics.fillRect(25, 10, 30, 15);
+                carGraphics.generateTexture('carTexture', 80, 40); 
+                carGraphics.destroy();
+            }
 
-        // عناصر DOM الإضافية لتأثير الخطأ
-        const errorOverlay = document.getElementById('errorOverlay');
-        const errorIcon = document.getElementById('errorIcon');
-        
-        // المشهد الرئيسي للعبة
-        class GameScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'GameScene' });
-                this.isMovingUp = false;
-                this.isMovingDown = false;
-                this.backgroundObjects = null; // مجموعة عناصر الخلفية
-            }
-            
-            preload() {
-                this.createCarTexture();
-                this.createQuestionBoxTexture();
-                this.createBackgroundObjectTextures(); // إنشاء نسيج عناصر الخلفية
-            }
+            // دالة لتوليد نسيج صندوق الأسئلة
+            createQuestionBoxTexture() {
+                const boxGraphics = this.add.graphics({ add: false });
+                boxGraphics.fillStyle(0xf72585, 1);
+                boxGraphics.fillRoundedRect(0, 0, 50, 50, 5);
+                boxGraphics.fillStyle(0xffffff, 1);
+                boxGraphics.fillRoundedRect(5, 5, 40, 40, 3);
+                boxGraphics.fillStyle(0x000000, 1);
+                boxGraphics.fillCircle(25, 25, 10);
+                boxGraphics.fillStyle(0xffffff, 1);
+                boxGraphics.fillCircle(25, 22, 3);
+                boxGraphics.fillRect(24, 28, 2, 5);
+                boxGraphics.generateTexture('questionBoxTexture', 50, 50);
+                boxGraphics.destroy();
+            }
 
-            // دالة لتوليد نسيج السيارة
-            createCarTexture() {
-                const carGraphics = this.add.graphics({ add: false });
-                carGraphics.fillStyle(0x4285f4, 1);
-                carGraphics.fillRoundedRect(0, 0, 80, 40, 5);
-                carGraphics.fillStyle(0x3677ff, 1);
-                carGraphics.fillRoundedRect(5, 5, 70, 30, 3);
-                carGraphics.fillStyle(0x222222, 1);
-                carGraphics.fillCircle(15, 35, 6);
-                carGraphics.fillCircle(65, 35, 6);
-                carGraphics.fillStyle(0xffffff, 0.6);
-                carGraphics.fillRect(25, 10, 30, 15);
-                carGraphics.generateTexture('carTexture', 80, 40); 
-                carGraphics.destroy();
-            }
+            // دالة لتوليد نسيج عناصر الخلفية
+            createBackgroundObjectTextures() {
+                const graphics = this.add.graphics({ add: false });
+                graphics.fillStyle(0x000000, 0.7);
+                graphics.fillRect(0, 15, 30, 15);
+                graphics.fillStyle(0x0a0a0a, 0.9);
+                graphics.fillTriangle(0, 15, 30, 15, 15, 0);
+                graphics.generateTexture('houseTexture', 30, 30);
+                graphics.clear();
 
-            // دالة لتوليد نسيج صندوق الأسئلة
-            createQuestionBoxTexture() {
-                const boxGraphics = this.add.graphics({ add: false });
-                boxGraphics.fillStyle(0xf72585, 1);
-                boxGraphics.fillRoundedRect(0, 0, 50, 50, 5);
-                boxGraphics.fillStyle(0xffffff, 1);
-                boxGraphics.fillRoundedRect(5, 5, 40, 40, 3);
-                boxGraphics.fillStyle(0x000000, 1);
-                boxGraphics.fillCircle(25, 25, 10);
-                boxGraphics.fillStyle(0xffffff, 1);
-                boxGraphics.fillCircle(25, 22, 3);
-                boxGraphics.fillRect(24, 28, 2, 5);
-                boxGraphics.generateTexture('questionBoxTexture', 50, 50);
-                boxGraphics.destroy();
-            }
+                graphics.fillStyle(0x000000, 0.8);
+                graphics.fillRect(13, 20, 4, 10);
+                graphics.fillStyle(0x1a1a1a, 0.85);
+                graphics.fillCircle(15, 15, 15);
+                graphics.generateTexture('treeTexture', 30, 30);
+                graphics.clear();
+                
+                graphics.fillStyle(0x2a2a2a, 0.9);
+                graphics.fillRect(14, 0, 2, 30);
+                graphics.fillStyle(0xfff59d, 0.5);
+                graphics.fillCircle(15, 3, 3);
+                graphics.generateTexture('poleTexture', 30, 30);
+                graphics.destroy();
+            }
+            
+            create() {
+                this.createBackground();
+                this.createRoad();
+                this.backgroundObjects = this.add.group();
 
-            // دالة لتوليد نسيج عناصر الخلفية (منزل/شجرة/عمود) - غامقة ومبسطة
-            createBackgroundObjectTextures() {
-                const graphics = this.add.graphics({ add: false });
+                // إضافة السيارة في موضع عشوائي في البداية
+                player = this.physics.add.sprite(this.sys.game.config.width * 0.25, Phaser.Math.Between(420, 560), 'carTexture'); 
+                player.setCollideWorldBounds(true);
+                player.setScale(0.8);
+                
+                questionBoxGroup = this.physics.add.group();
+                this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
+                
+                // عرض السرعة والنقاط
+                speedText = this.add.text(20, 20, `السرعة: ${baseSpeed}`, {
+                    fontSize: '24px',
+                    fill: '#4cc9f0',
+                    fontStyle: 'bold'
+                }).setScrollFactor(0).setDepth(100); 
+                
+                this.scoreText = this.add.text(20, 60, `النقاط: ${score}`, {
+                    fontSize: '24px',
+                    fill: '#f72585',
+                    fontStyle: 'bold'
+                }).setScrollFactor(0).setDepth(100);
 
-                // نسيج منزل غامق
-                graphics.fillStyle(0x000000, 0.7);
-                graphics.fillRect(0, 15, 30, 15); // الجزء السفلي
-                graphics.fillStyle(0x0a0a0a, 0.9);
-                graphics.fillTriangle(0, 15, 30, 15, 15, 0); // السقف
-                graphics.generateTexture('houseTexture', 30, 30);
-                graphics.clear();
+                // مؤقت لتوليد صناديق الأسئلة (بفاصل كبير لكنها تغطي المسار بالكامل)
+                this.time.addEvent({
+                    delay: 3000, 
+                    callback: this.generateQuestionBoxRow,
+                    callbackScope: this,
+                    loop: true
+                });
 
-                // نسيج شجرة غامق
-                graphics.fillStyle(0x000000, 0.8);
-                graphics.fillRect(13, 20, 4, 10); // الجذع
-                graphics.fillStyle(0x1a1a1a, 0.85);
-                graphics.fillCircle(15, 15, 15); // الأوراق
-                graphics.generateTexture('treeTexture', 30, 30);
-                graphics.clear();
-                
-                // نسيج عمود إنارة غامق
-                graphics.fillStyle(0x2a2a2a, 0.9);
-                graphics.fillRect(14, 0, 2, 30); // العمود
-                graphics.fillStyle(0xfff59d, 0.5);
-                graphics.fillCircle(15, 3, 3); // الضوء الخافت
-                graphics.generateTexture('poleTexture', 30, 30);
-                graphics.destroy();
-            }
-            
-            create() {
-                this.createBackground();
-                this.createRoad();
-                this.backgroundObjects = this.add.group(); // إنشاء مجموعة لعناصر الخلفية
+                // مؤقت لتوليد عناصر الخلفية
+                this.time.addEvent({
+                    delay: 500,
+                    callback: this.generateBackgroundObject,
+                    callbackScope: this,
+                    loop: true
+                });
+                
+                // توليد أول صف من الصناديق
+                this.generateQuestionBoxRow();
+                scrollSpeed = baseSpeed;
+                
+                // إعداد واجهة الأسئلة في DOM
+                questionUI = document.getElementById('questionBox');
+                document.getElementById('closeQuestion').addEventListener('click', () => {
+                    this.resumeGame();
+                });
+            }
 
-                player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
-                player.setCollideWorldBounds(true);
-                player.setScale(0.8);
-                
-                questionBoxGroup = this.physics.add.group();
-                this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
-                
-                // عرض السرعة والنقاط
-                speedText = this.add.text(20, 20, `السرعة: ${baseSpeed}`, {
-                    fontSize: '24px',
-                    fill: '#4cc9f0',
-                    fontStyle: 'bold'
-                }).setScrollFactor(0).setDepth(100); 
-                
-                this.scoreText = this.add.text(20, 60, `النقاط: ${score}`, {
-                    fontSize: '24px',
-                    fill: '#f72585',
-                    fontStyle: 'bold'
-                }).setScrollFactor(0).setDepth(100);
+            createBackground() {
+                const graphics = this.add.graphics();
+                graphics.fillGradientStyle(0x0a0a20, 0x0e1332, 0x0a0a20, 0x0e1332);
+                graphics.fillRect(0, 0, 800, 600);
 
-                // مؤقت لتوليد صناديق الأسئلة (بفاصل كبير)
-                this.time.addEvent({
-                    delay: QUESTION_BOX_GENERATION_DELAY, 
-                    callback: this.generateQuestionBox,
-                    callbackScope: this,
-                    loop: true
-                });
+                for (let i = 0; i < 100; i++) {
+                    const x = Phaser.Math.Between(0, 800);
+                    const y = Phaser.Math.Between(0, 300);
+                    const size = Phaser.Math.FloatBetween(0.5, 2);
+                    const alpha = Phaser.Math.FloatBetween(0.2, 0.8);
+                    this.add.circle(x, y, size, 0xffffff, alpha);
+                }
 
-                // مؤقت لتوليد عناصر الخلفية (بفاصل صغير)
-                this.time.addEvent({
-                    delay: 500, // توليد سريع
-                    callback: this.generateBackgroundObject,
-                    callbackScope: this,
-                    loop: true
-                });
-                
-                this.generateQuestionBox();
-                scrollSpeed = baseSpeed;
-                
-                // إعداد واجهة الأسئلة في DOM
-                questionUI = document.getElementById('questionBox');
-                /*
-                // تم حذف مستمع زر الإغلاق ✕ لجعله إلزامياً
-                document.getElementById('closeQuestion').addEventListener('click', () => {
-                    this.resumeGame();
-                });
-                */
-                
-                // إعداد مدخلات لوحة المفاتيح
-                this.cursors = this.input.keyboard.createCursorKeys();
+                const fogGraphics = this.add.graphics({ fillStyle: { color: 0x111122, alpha: 0.5 } });
+                for(let i = 0; i < 5; i++) {
+                    fogGraphics.fillRect(i * 200, 300 + Phaser.Math.Between(0, 50), 300, 50);
+                }
+            }
+            
+            createRoad() {
+                const roadGraphics = this.add.graphics();
+                roadGraphics.fillStyle(0x333333, 1);
+                roadGraphics.fillRect(0, 400, 800, 200);
 
-                // إعداد مدخلات اللمس (للموبايل)
-                this.setupMobileControls();
-            }
+                roadGraphics.fillStyle(0xf72585, 1);
+                roadGraphics.fillRect(0, 400, 800, 10);
+                roadGraphics.fillRect(0, 590, 800, 10);
 
-            // دالة إعداد التحكم باللمس
-            setupMobileControls() {
-                // ... (نفس دالة setupMobileControls الأصلية) ...
-                const upBtn = document.getElementById('upBtn');
-                const downBtn = document.getElementById('downBtn');
+                this.roadLines = this.add.group();
+                for (let i = 0; i < 10; i++) {
+                    this.roadLines.add(this.add.rectangle(i * 100, 500, 50, 5, 0xffffff));
+                }
+            }
 
-                const startMove = (direction) => {
-                    if (scrollSpeed > 0) {
-                        if (direction === 'up') {
-                            this.isMovingUp = true;
-                        } else if (direction === 'down') {
-                            this.isMovingDown = true;
-                        }
-                    }
-                };
+            generateBackgroundObject() {
+                const textures = ['houseTexture', 'treeTexture', 'poleTexture'];
+                const randomTexture = Phaser.Utils.Array.GetRandom(textures);
+                
+                const x = 850;
+                const y = 350;
+                const scaleFactor = Phaser.Math.FloatBetween(0.8, 1.5);
 
-                const stopMove = (direction) => {
-                    if (direction === 'up') {
-                        this.isMovingUp = false;
-                    } else if (direction === 'down') {
-                        this.isMovingDown = false;
-                    }
-                };
+                const obj = this.add.sprite(x, y, randomTexture);
+                obj.setOrigin(0.5, 1);
+                obj.setScale(scaleFactor);
+                obj.setDepth(Phaser.Math.Between(10, 20));
+                this.backgroundObjects.add(obj);
+            }
+            
+            update() {
+                // تحريك خطوط المنتصف
+                this.roadLines.getChildren().forEach(line => {
+                    line.x -= scrollSpeed / 30;
+                    if (line.x < -50) {
+                        line.x = 850;
+                    }
+                });
 
-                // للأعلى
-                upBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startMove('up'); });
-                upBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopMove('up'); });
-                upBtn.addEventListener('mousedown', (e) => { startMove('up'); });
-                upBtn.addEventListener('mouseup', (e) => { stopMove('up'); });
+                // تحريك عناصر الخلفية
+                this.backgroundObjects.getChildren().forEach(obj => {
+                    obj.x -= scrollSpeed / 50;
+                    
+                    const distanceFactor = 1 - (obj.y - 350) / 100;
+                    obj.x -= scrollSpeed * distanceFactor * 0.01;
+                    
+                    if (obj.x < -50) {
+                        obj.destroy();
+                    }
+                });
 
-                // للأسفل
-                downBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startMove('down'); });
-                downBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopMove('down'); });
-                downBtn.addEventListener('mousedown', (e) => { startMove('down'); });
-                downBtn.addEventListener('mouseup', (e) => { stopMove('down'); });
-            }
-            
-            createBackground() {
-                // خلفية السماء (سوداء/ليلية)
-                const graphics = this.add.graphics();
-                graphics.fillGradientStyle(0x0a0a20, 0x0e1332, 0x0a0a20, 0x0e1332);
-                graphics.fillRect(0, 0, 800, 600);
+                // تحريك صناديق الأسئلة
+                if (questionBoxGroup) {
+                    questionBoxGroup.getChildren().forEach(box => {
+                        box.x -= scrollSpeed / 60;
+                        if (box.x < -50) {
+                            box.destroy();
+                        }
+                    });
+                }
+                
+                // تحديث السرعة والنقاط
+                document.getElementById('speedValue').textContent = Math.round(baseSpeed);
+                this.scoreText.setText(`النقاط: ${score}`);
 
-                // النجوم (أو نقاط الإضاءة البعيدة)
-                for (let i = 0; i < 100; i++) {
-                    const x = Phaser.Math.Between(0, 800);
-                    const y = Phaser.Math.Between(0, 300);
-                    const size = Phaser.Math.FloatBetween(0.5, 2);
-                    const alpha = Phaser.Math.FloatBetween(0.2, 0.8);
-                    this.add.circle(x, y, size, 0xffffff, alpha);
-                }
+                // حركة السيارة العشوائية التلقائية (لا تحكم من اللاعب)
+                if (scrollSpeed > 0) {
+                    // حركة السيارة بشكل عشوائي مع تغيير الاتجاه بشكل دوري
+                    if (Math.random() < 0.02) { // 2% فرصة لتغيير الاتجاه في كل إطار
+                        playerMoveDirection *= -1;
+                        playerMoveSpeed = Phaser.Math.Between(1, 3);
+                    }
+                    
+                    // تحريك السيارة
+                    player.y += playerMoveSpeed * playerMoveDirection;
+                    
+                    // ضمان بقاء السيارة ضمن حدود الطريق
+                    if (player.y < 420) {
+                        player.y = 420;
+                        playerMoveDirection = 1; // تغيير الاتجاه للأسفل
+                    } else if (player.y > 560) {
+                        player.y = 560;
+                        playerMoveDirection = -1; // تغيير الاتجاه للأعلى
+                    }
+                }
+            }
+            
+            // توليد صف كامل من الصناديق يغطي المسار
+            generateQuestionBoxRow() {
+                if (questionBoxGroup.getLength() > 10) {
+                    return;
+                }
+                
+                let questionData = null;
+                
+                // اختيار سؤال (خاطئ أولاً، ثم جديد)
+                if (wrongQuestions.length > 0) { 
+                    questionData = wrongQuestions.shift();
+                } else if (remainingQuestions.length > 0) {
+                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
+                    questionData = remainingQuestions.splice(randomIndex, 1)[0];
+                } else {
+                    remainingQuestions = Phaser.Utils.Array.Shuffle([...allQuestionsData]);
+                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
+                    questionData = remainingQuestions.splice(randomIndex, 1)[0];
+                }
+                
+                if (!questionData) return;
+                
+                // توليد عدة صناديق في صف واحد يغطي المسار
+                const numBoxes = Phaser.Math.Between(3, 5); // 3-5 صناديق في الصف
+                const startY = 430;
+                const endY = 550;
+                const step = (endY - startY) / (numBoxes - 1);
+                
+                for (let i = 0; i < numBoxes; i++) {
+                    const yPos = startY + (step * i);
+                    const box = this.physics.add.sprite(850, yPos, 'questionBoxTexture'); 
+                    box.setScale(0.8);
+                    questionBoxGroup.add(box);
+                    
+                    // نسخ بيانات السؤال لكل صندوق
+                    const questionCopy = JSON.parse(JSON.stringify(questionData));
+                    box.setData('question', questionCopy);
+                    box.setData('used', false);
+                }
+            }
+            
+            hitQuestionBox(player, box) {
+                if (box.getData('used')) return;
+                
+                box.setData('used', true);
+                scrollSpeed = 0;
+                this.physics.pause();
+                
+                activeQuestion = box.getData('question');
+                this.showQuestion(activeQuestion);
+            }
+            
+            showQuestion(questionData) {
+                document.getElementById('questionText').textContent = questionData.q;
+                
+                const optionsContainer = document.getElementById('optionsContainer');
+                optionsContainer.innerHTML = '';
+                
+                questionData.c.forEach((option, index) => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.textContent = `${option}`;
+                    optionElement.dataset.index = index;
+                    
+                    optionElement.onclick = () => {
+                        this.checkAnswer(parseInt(optionElement.dataset.index), questionData.a, optionElement, optionsContainer);
+                    };
+                    
+                    optionsContainer.appendChild(optionElement);
+                });
+                
+                questionUI.style.display = 'block';
+            }
+            
+            checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer) {
+                const allOptions = optionsContainer.querySelectorAll('.option');
+                allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
+                
+                if (selectedIndex === correctIndex) {
+                    // إجابة صحيحة
+                    selectedOptionElement.classList.add('correct');
+                    baseSpeed += 20;
+                    score += 10;
+                    
+                    this.findAndRemoveQuestionBox();
+                    
+                    setTimeout(() => {
+                        this.resumeGame();
+                    }, 1500);
+                } else {
+                    // إجابة خاطئة
+                    selectedOptionElement.classList.add('incorrect');
+                    allOptions[correctIndex].classList.add('correct');
+                    
+                    baseSpeed *= 0.6;
+                    baseSpeed = Math.max(50, baseSpeed);
+                    
+                    if (!wrongQuestions.includes(activeQuestion)) {
+                         wrongQuestions.push(activeQuestion);
+                    }
+                    
+                    this.findAndRemoveQuestionBox();
 
-                // سحب دخانية بعيدة (لإضافة عمق)
-                const fogGraphics = this.add.graphics({ fillStyle: { color: 0x111122, alpha: 0.5 } });
-                for(let i = 0; i < 5; i++) {
-                    fogGraphics.fillRect(i * 200, 300 + Phaser.Math.Between(0, 50), 300, 50);
-                }
-            }
-            
-            createRoad() {
-                const roadGraphics = this.add.graphics();
-                // الطريق الرئيسي (الأسفلت)
-                roadGraphics.fillStyle(0x333333, 1);
-                roadGraphics.fillRect(0, 400, 800, 200); // زيادة ارتفاع الطريق ليشمل منطقة حركة السيارة
+                    // تأثير الشاشة الحمراء
+                    errorOverlay.style.display = 'flex';
+                    errorIcon.style.opacity = 1;
+                    
+                    setTimeout(() => {
+                        errorIcon.style.opacity = 0;
+                        errorOverlay.style.display = 'none';
+                        this.resumeGame();
+                    }, 2000);
+                }
+            }
+            
+            findAndRemoveQuestionBox() {
+                if (questionBoxGroup) {
+                    questionBoxGroup.getChildren().forEach(box => {
+                        if (box.getData('used')) {
+                            this.tweens.add({
+                                targets: box,
+                                y: box.y - 50,
+                                alpha: 0,
+                                duration: 500,
+                                onComplete: () => {
+                                    box.destroy();
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+            
+            resumeGame() {
+                questionUI.style.display = 'none';
+                
+                scrollSpeed = baseSpeed;
+                this.physics.resume();
+                
+                const options = document.querySelectorAll('.option');
+                options.forEach(option => {
+                    option.classList.remove('correct', 'incorrect');
+                    option.style.pointerEvents = 'auto';
+                });
+            }
+        }
 
-                // حدود الطريق
-                roadGraphics.fillStyle(0xf72585, 1);
-                roadGraphics.fillRect(0, 400, 800, 10);
-                roadGraphics.fillRect(0, 590, 800, 10);
+        // إعداد تكوين اللعبة
+        const config = {
+            type: Phaser.AUTO, 
+            width: 800,
+            height: 600,
+            parent: 'gameCanvas',
+            scale: {
+                mode: Phaser.Scale.FIT, 
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: GameScene
+        };
 
-                // خطوط المنتصف (متحركة)
-                this.roadLines = this.add.group();
-                for (let i = 0; i < 10; i++) {
-                    this.roadLines.add(this.add.rectangle(i * 100, 500, 50, 5, 0xffffff));
-                }
-            }
-
-            generateBackgroundObject() {
-                const textures = ['houseTexture', 'treeTexture', 'poleTexture'];
-                const randomTexture = Phaser.Utils.Array.GetRandom(textures);
-                
-                // تحديد مكان ظهور الكائن
-                const x = 850;
-                const y = 350; // فوق الطريق بقليل
-                const scaleFactor = Phaser.Math.FloatBetween(0.8, 1.5); // حجم متغير
-
-                const obj = this.add.sprite(x, y, randomTexture);
-                obj.setOrigin(0.5, 1); // تثبيت الكائن على الأرضية
-                obj.setScale(scaleFactor);
-                obj.setDepth(Phaser.Math.Between(10, 20)); // عمق عشوائي لإحساس 3D
-                this.backgroundObjects.add(obj);
-            }
-            
-            update() {
-                // تحريك خطوط المنتصف
-                this.roadLines.getChildren().forEach(line => {
-                    line.x -= scrollSpeed / 30; // حركة سريعة جدا
-                    if (line.x < -50) {
-                        line.x = 850;
-                    }
-                });
-
-                // تحريك عناصر الخلفية (لإحساس الحركة السريعة للسيارة)
-                this.backgroundObjects.getChildren().forEach(obj => {
-                    // حركة أفقية
-                    obj.x -= scrollSpeed / 50; // حركة أسرع من الصناديق/الخلفية العادية
-
-                    // تأثير المنظور
-                    const distanceFactor = 1 - (obj.y - 350) / 100;
-                    obj.x -= scrollSpeed * distanceFactor * 0.01;
-                    
-                    if (obj.x < -50) {
-                        obj.destroy();
-                    }
-                });
-
-                // تحريك صناديق الأسئلة
-                if (questionBoxGroup) {
-                    questionBoxGroup.getChildren().forEach(box => {
-                        box.x -= scrollSpeed / 60;
-                        if (box.x < -50) {
-                            box.destroy();
-                        }
-                    });
-                }
-                
-                // تحديث السرعة والنقاط
-                document.getElementById('speedValue').textContent = Math.round(baseSpeed);
-                this.scoreText.setText(`النقاط: ${score}`);
-
-                // التحكم في حركة السيارة (لوحة المفاتيح واللمس)
-                const moveAmount = 15;
-                if (scrollSpeed > 0) {
-                    if (this.cursors.up.isDown || this.isMovingUp) {
-                        player.y -= moveAmount;
-                    } else if (this.cursors.down.isDown || this.isMovingDown) {
-                        player.y += moveAmount;
-                    }
-                    // ضمان بقاء السيارة ضمن حدود الطريق
-                    player.y = Phaser.Math.Clamp(player.y, 420, 560); // تعديل حدود الطريق
-                }
-            }
-            
-            generateQuestionBox(questionData = null) {
-                if (questionBoxGroup.getLength() > 0) {
-                    // لا تولد صندوقاً جديداً إذا كان هناك صندوق قيد الحركة (إلزامي)
-                    return;
-                }
-                
-                // 1. سؤال خاطئ أولاً
-                if (wrongQuestions.length > 0) { 
-                    questionData = wrongQuestions.shift();
-                } 
-                // 2. سؤال جديد من القائمة المتبقية
-                else if (remainingQuestions.length > 0) {
-                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
-                    // إزالة السؤال من القائمة المتبقية لضمان عدم تكراره
-                    questionData = remainingQuestions.splice(randomIndex, 1)[0]; 
-                } 
-                // 3. كل الأسئلة تمت الإجابة عليها صحيحاً، نبدأ دورة جديدة بفرز الأسئلة عشوائياً
-                else {
-                    remainingQuestions = Phaser.Utils.Array.Shuffle([...allQuestionsData]);
-                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
-                    questionData = remainingQuestions.splice(randomIndex, 1)[0]; 
-                }
-                
-                // **في حالة انتهاء جميع الأسئلة والصناديق الخاطئة**
-                if (!questionData) {
-                    console.log("جميع الأسئلة تمت الإجابة عليها بشكل صحيح!");
-                    return; // إيقاف توليد الصناديق
-                }
-                
-                const box = this.physics.add.sprite(850, 500, 'questionBoxTexture'); 
-                box.setScale(0.8);
-                questionBoxGroup.add(box);
-                box.setData('question', questionData);
-                box.setData('used', false);
-            }
-            
-            hitQuestionBox(player, box) {
-                if (box.getData('used')) return;
-                
-                box.setData('used', true);
-                // **الإجراء الإلزامي:** إيقاف حركة الخلفية/الصناديق تماماً
-                scrollSpeed = 0;
-                this.physics.pause();
-                
-                activeQuestion = box.getData('question');
-                this.showQuestion(activeQuestion);
-            }
-            
-            showQuestion(questionData) {
-                document.getElementById('questionText').textContent = questionData.q;
-                
-                const optionsContainer = document.getElementById('optionsContainer');
-                optionsContainer.innerHTML = '';
-                
-                questionData.c.forEach((option, index) => {
-                    const optionElement = document.createElement('div');
-                    optionElement.className = 'option';
-                    optionElement.textContent = `${option}`;
-                    optionElement.dataset.index = index;
-                    
-                    optionElement.onclick = () => {
-                        this.checkAnswer(parseInt(optionElement.dataset.index), questionData.a, optionElement, optionsContainer);
-                    };
-                    
-                    optionsContainer.appendChild(optionElement);
-                });
-                
-                questionUI.style.display = 'block';
-            }
-            
-            checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer) {
-                const allOptions = optionsContainer.querySelectorAll('.option');
-                allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
-                
-                if (selectedIndex === correctIndex) {
-                    // إجابة صحيحة
-                    selectedOptionElement.classList.add('correct');
-                    baseSpeed += 20;
-                    score += 10;
-                    
-                    this.findAndRemoveQuestionBox();
-                    
-                    setTimeout(() => {
-                        this.resumeGame();
-                    }, 1500);
-                } else {
-                    // إجابة خاطئة
-                    selectedOptionElement.classList.add('incorrect');
-                    allOptions[correctIndex].classList.add('correct');
-                    
-                    baseSpeed *= 0.6;
-                    baseSpeed = Math.max(50, baseSpeed); 
-                    
-                    // إضافة السؤال إلى قائمة الأسئلة الخاطئة لظهوره لاحقاً
-                    if (!wrongQuestions.includes(activeQuestion)) {
-                         wrongQuestions.push(activeQuestion);
-                    }
-                    
-                    this.findAndRemoveQuestionBox();
-
-                    // **تأثير الشاشة الحمراء**
-                    errorOverlay.style.display = 'flex';
-                    errorIcon.style.opacity = 1;
-                    
-                    setTimeout(() => {
-                        errorIcon.style.opacity = 0;
-                        errorOverlay.style.display = 'none';
-                        this.resumeGame();
-                    }, 2000);
-                }
-            }
-            
-            findAndRemoveQuestionBox() {
-                if (questionBoxGroup) {
-                    questionBoxGroup.getChildren().forEach(box => {
-                        if (box.getData('used')) {
-                            // إزالة الصندوق الأصلي الذي تم الاصطدام به
-                            this.tweens.add({
-                                targets: box,
-                                y: box.y - 50,
-                                alpha: 0,
-                                duration: 500,
-                                onComplete: () => {
-                                    box.destroy();
-                                }
-                            });
-                        }
-                    });
-                }
-            }
-            
-            resumeGame() {
-                questionUI.style.display = 'none';
-                
-                scrollSpeed = baseSpeed;
-                this.physics.resume();
-                
-                const options = document.querySelectorAll('.option');
-                options.forEach(option => {
-                    option.classList.remove('correct', 'incorrect');
-                    option.style.pointerEvents = 'auto';
-                });
-            }
-        }
-
-        // إعداد تكوين اللعبة
-        const config = {
-            type: Phaser.AUTO, 
-            width: 800,
-            height: 600,
-            parent: 'gameCanvas',
-            scale: {
-                mode: Phaser.Scale.FIT, 
-                autoCenter: Phaser.Scale.CENTER_BOTH
-            },
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 0 },
-                    debug: false
-                }
-            },
-            scene: GameScene
-        };
-
-        // إنشاء اللعبة
-        game = new Phaser.Game(config);
-
-    </script>
+        // إنشاء اللعبة
+        game = new Phaser.Game(config);
+    </script>
 </body>
 </html>
