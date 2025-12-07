@@ -10,11 +10,10 @@
   /* === تنسيقات الصفحة العامة === */
   body {
     margin: 0;
-    /* خلفية متدرجة لطيفة مناسبة للأطفال والكبار */
     background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    touch-action: none; /* منع التكبير والتصغير باللمس */
-    overflow: hidden; /* منع التمرير */
+    touch-action: none; 
+    overflow: hidden; 
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -22,11 +21,11 @@
 
   /* === رأس الصفحة (السؤال) === */
   header {
-    background: #2c3e50; /* كحلي هادئ بدلاً من الأسود */
+    background: #2c3e50; 
     color: #fff;
     text-align: center;
     padding: 10px;
-    height: 15vh; /* 15% من الشاشة */
+    height: 20vh; /* 💥 زيادة الارتفاع لإتاحة مساحة أكبر للنص */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -37,40 +36,48 @@
 
   header h3 {
     margin: 0 0 5px 0;
-    font-size: clamp(1rem, 4vw, 1.5rem);
-    color: #ffd700; /* لون ذهبي للنص ليكون جذاباً */
+    font-size: clamp(1rem, 4.5vw, 1.6rem); /* تكبير الخط قليلاً */
+    color: #ffd700;
   }
 
   .answers {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    font-size: clamp(0.9rem, 3.5vw, 1.2rem);
-    background: rgba(255,255,255,0.1);
-    padding: 5px;
-    border-radius: 8px;
+    display: block; /* 💥 جعل كل إجابة في سطر منفصل */
+    text-align: right; /* محاذاة النص لليمين */
+    padding: 5px 15px; /* هوامش داخلية */
+  }
+  
+  .answers span {
+    display: block; /* كل Span يظهر في سطر جديد */
+    font-size: clamp(0.9rem, 3.8vw, 1.3rem); /* خط مناسب للموبايل */
+    margin: 3px 0;
+    padding: 2px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.2);
+  }
+  
+  .answers span:last-child {
+      border-bottom: none;
   }
 
   /* === منطقة اللعبة === */
   main {
-    flex: 1; /* يأخذ باقي المساحة */
+    flex: 1; 
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
   }
 
-  /* الإطار الخارجي للعبة (تم تصغيره ليكون هناك هوامش) */
+  /* الإطار الخارجي للعبة (تم تصغير ارتفاعه لاستيعاب الـ header الأكبر) */
   #game-frame {
-    width: 90vw;  /* عرض 90% فقط من الشاشة */
-    height: 75vh; /* ارتفاع 75% من الشاشة */
-    max-width: 600px; /* لا يزيد عن 600 بكسل في التابلت */
-    background: #f0faff; /* سماوي فاتح جداً */
-    border: 8px solid #34495e; /* إطار سميك لإبراز اللعبة */
+    width: 90vw; 
+    height: 70vh; /* 💥 تقليل الارتفاع */
+    max-width: 600px; 
+    background: #f0faff; 
+    border: 8px solid #34495e; 
     border-radius: 20px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2); /* ظل لإعطاء عمق */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   }
 
   #game-container {
@@ -99,7 +106,7 @@
     width: 150px;
     height: 150px;
     border-radius: 50%;
-    display: none; /* مخفي افتراضياً */
+    display: none; 
     justify-content: center;
     align-items: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.3);
@@ -125,41 +132,41 @@
 
 <script>
 /* ======================
-   1. البيانات (الأسئلة)
+   1. البيانات (الأسئلة)
 ====================== */
 const QUESTIONS = [
-  { q:"ما هو الكوكب الأحمر؟", o:["هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب الزهرة","هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب المريخ","هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب المشتري"], a:1 },
- { q:"كم عدد أرجل القط؟", o:["2","4","6"], a:1 },
- { q:"ناتج 5 + 5؟", o:["9","10","11"], a:1 },
- { q:"عاصمة مصر؟", o:["القاهرة","الاسكندرية","أسوان"], a:0 }
+  { q:"ما هو الكوكب الأحمر؟", o:["هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب الزهرة","هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب المريخ","هل  الكوكب المستهدف من السؤال الحالي كما نراه فوق هو كوكب المشتري"], a:1 },
+ { q:"كم عدد أرجل القط؟", o:["2","4","6"], a:1 },
+ { q:"ناتج 5 + 5؟", o:["9","10","11"], a:1 },
+ { q:"عاصمة مصر؟", o:["القاهرة","الاسكندرية","أسوان"], a:0 }
 ];
 
 /* ======================
-   2. إعدادات اللعبة (Phaser)
+   2. إعدادات اللعبة (Phaser)
 ====================== */
 const config = {
- type: Phaser.AUTO,
- parent: 'game-container', // الربط بالإطار المحدد في HTML
- width: 600,  // العرض الداخلي "المنطقي" للعبة
- height: 800, // الارتفاع الداخلي "المنطقي"
- scale: {
-   mode: Phaser.Scale.FIT, // ملائمة المحتوى داخل الإطار مع الحفاظ على النسب
-   autoCenter: Phaser.Scale.CENTER_BOTH
- },
- physics: {
-   default: 'arcade',
-   arcade: {
-     gravity: { y: 0 },
-     debug: false
-   }
- },
- scene: { preload, create, update }
+ type: Phaser.AUTO,
+ parent: 'game-container', 
+ width: 600,  
+ height: 800, 
+ scale: {
+   mode: Phaser.Scale.FIT, 
+   autoCenter: Phaser.Scale.CENTER_BOTH
+ },
+ physics: {
+   default: 'arcade',
+   arcade: {
+     gravity: { y: 0 },
+     debug: false
+   }
+ },
+ scene: { preload, create, update }
 };
 
 const game = new Phaser.Game(config);
 
 /* ======================
-   3. المتغيرات العامة
+   3. المتغيرات العامة
 ====================== */
 let cannon, bubbles, arrow, invisibleWall;
 let currentQ = 0;
@@ -167,246 +174,208 @@ let canShoot = true;
 let isAiming = false;
 let missedShots = 0;
 
-// ثوابت التصميم
-const BUBBLE_IMG_SIZE = 300; // حجم الصورة الأصلي
+const BUBBLE_IMG_SIZE = 300; 
 
 /* ======================
-   4. التحميل (Preload)
+   4. التحميل (Preload)
 ====================== */
 function preload(){
- // تحميل الصور (تأكد من وجود الملفات في مجلد assets)
- this.load.image('cannon','assets/cannon.png');
- this.load.image('shoot','assets/shoot.png');
- this.load.image('bubble1','assets/bubble1.png');
- this.load.image('bubble2','assets/bubble2.png');
- this.load.image('bubble3','assets/bubble3.png');
- this.load.audio('correct','assets/correct.mp3');
- this.load.audio('wrong','assets/wrong.mp3');
+ this.load.image('cannon','assets/cannon.png');
+ this.load.image('shoot','assets/shoot.png');
+ this.load.image('bubble1','assets/bubble1.png');
+ this.load.image('bubble2','assets/bubble2.png');
+ this.load.image('bubble3','assets/bubble3.png');
+ this.load.audio('correct','assets/correct.mp3');
+ this.load.audio('wrong','assets/wrong.mp3');
 }
 
 /* ======================
-   5. الإنشاء (Create)
+   5. الإنشاء (Create)
 ====================== */
 function create(){
- const width = this.scale.width;
- const height = this.scale.height;
+ const width = this.scale.width;
+ const height = this.scale.height;
 
- // --- إعداد الأصوات ---
- this.correctSound = this.sound.add('correct');
- this.wrongSound = this.sound.add('wrong');
+ this.correctSound = this.sound.add('correct');
+ this.wrongSound = this.sound.add('wrong');
 
- // --- حدود العالم ---
- this.physics.world.setBounds(0, 0, width, height);
+ this.physics.world.setBounds(0, 0, width, height);
 
- // --- الجدار غير المرئي (لمنع الفقاعات من النزول كثيراً) ---
- // نضعه في منتصف الشاشة تقريباً
- invisibleWall = this.add.rectangle(width/2, height * 0.55, width, 20, 0x000000, 0);
- this.physics.add.existing(invisibleWall, true);
+ invisibleWall = this.add.rectangle(width/2, height * 0.55, width, 20, 0x000000, 0);
+ this.physics.add.existing(invisibleWall, true);
 
- // --- المدفع (تصغير الحجم) ---
- // جعلنا المدفع أصغر: 10% من ارتفاع اللعبة بدلاً من 15%
- const cannonHeight = height * 0.10; 
- const cannonScale = cannonHeight / 300; // 300 هو ارتفاع صورة المدفع التقديري
+ const cannonHeight = height * 0.10; 
+ const cannonScale = cannonHeight / 300; 
 
- cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
-   .setScale(cannonScale)
-   .setDepth(1); // لضمان ظهوره فوق الخلفية
+ cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
+   .setScale(cannonScale)
+   .setDepth(1); 
 
- // --- مجموعة الفقاعات ---
- bubbles = this.physics.add.group({
-   collideWorldBounds: true,
-   bounceX: 1,
-   bounceY: 1
- });
- this.physics.add.collider(bubbles, invisibleWall);
+ bubbles = this.physics.add.group({
+   collideWorldBounds: true,
+   bounceX: 1,
+   bounceY: 1
+ });
+ this.physics.add.collider(bubbles, invisibleWall);
 
- // --- سهم التوجيه ---
- arrow = this.add.text(cannon.x, cannon.y - (cannon.displayHeight), '⬆️', {
-   fontSize: '28px',
-   fontFamily: 'Arial'
- }).setOrigin(0.5);
+ arrow = this.add.text(cannon.x, cannon.y - (cannon.displayHeight), '⬆️', {
+   fontSize: '28px',
+   fontFamily: 'Arial'
+ }).setOrigin(0.5);
 
- // --- التحكم (اللمس/الماوس) ---
- this.input.on('pointermove', (pointer) => {
-   // تحويل إحداثيات اللمس من الشاشة إلى إحداثيات اللعبة الداخلية
-   // Phaser.Scale.FIT يقوم بهذا تلقائياً، لكن للتأكد نستخدم clamp
-   let xPos = pointer.x;
-   // تصحيح الموقع إذا كان هناك إزاحة بسبب Scale.FIT (في بعض الحالات المعقدة)
-   // هنا نكتفي بالـ Clamp البسيط
-   cannon.x = Phaser.Math.Clamp(xPos, width * 0.1, width * 0.9);
-   arrow.x = cannon.x;
- });
+ this.input.on('pointermove', (pointer) => {
+   let xPos = pointer.x;
+   cannon.x = Phaser.Math.Clamp(xPos, width * 0.1, width * 0.9);
+   arrow.x = cannon.x;
+ });
 
- this.input.on('pointerdown', () => {
-   if (!isAiming) { isAiming = true; return; }
-   if (canShoot) fire(this);
- });
+ this.input.on('pointerdown', () => {
+   if (!isAiming) { isAiming = true; return; }
+   if (canShoot) fire(this);
+ });
 
- // بدء اللعبة
- showQuestion(this);
+ showQuestion(this);
 }
 
 /* ======================
-   6. التحديث المستمر (Update)
+   6. التحديث المستمر (Update)
 ====================== */
 function update() {
-  // تدوير الفقاعات ببطء لتبدو حيوية
-  bubbles.children.iterate((b) => {
-    if (b) b.rotation += 0.005;
-  });
+  bubbles.children.iterate((b) => {
+    if (b) b.rotation += 0.005;
+  });
 }
 
 /* ======================
-   7. منطق الإطلاق (Fire)
+   7. منطق الإطلاق (Fire)
 ====================== */
 function fire(scene){
- canShoot = false;
- isAiming = false;
- arrow.setVisible(false);
+ canShoot = false;
+ isAiming = false;
+ arrow.setVisible(false);
 
- const width = scene.scale.width;
- 
- // حجم القذيفة (صغير نسبياً)
- const shotScale = (width * 0.12) / 300; 
+ const width = scene.scale.width;
+ const shotScale = (width * 0.12) / 300; 
 
- const shot = scene.physics.add.sprite(
-   cannon.x,
-   cannon.y - cannon.displayHeight/1.5,
-   'shoot'
- ).setScale(shotScale);
+ const shot = scene.physics.add.sprite(
+   cannon.x,
+   cannon.y - cannon.displayHeight/1.5,
+   'shoot'
+ ).setScale(shotScale);
 
- // سرعة القذيفة
- shot.setVelocityY(-800); 
+ shot.setVelocityY(-800); 
 
- // عند اصطدام القذيفة بفقاعة
- scene.physics.add.overlap(shot, bubbles, (s, b) => {
-   s.destroy();
-   missedShots = 0;
-   bubbleHit(scene, b);
- });
+ scene.physics.add.overlap(shot, bubbles, (s, b) => {
+   s.destroy();
+   missedShots = 0;
+   bubbleHit(scene, b);
+ });
 
- shot.setCollideWorldBounds(true);
- shot.body.onWorldBounds = true;
+ shot.setCollideWorldBounds(true);
+ shot.body.onWorldBounds = true;
 
- // عند اصطدام القذيفة بالجدار العلوي (خطأ)
- shot.body.world.on('worldbounds', (body) => {
-   if (body.gameObject === shot) {
-     shot.destroy();
-     missedShots++;
-     if (missedShots >= 2) {
-       missedShots = 0;
-       showQuestion(scene); // تغيير ترتيب الفقاعات
-     }
-   }
- });
+ shot.body.world.on('worldbounds', (body) => {
+   if (body.gameObject === shot) {
+     shot.destroy();
+     missedShots++;
+     if (missedShots >= 2) {
+       missedShots = 0;
+       showQuestion(scene); 
+     }
+   }
+ });
 
- // تنظيف القذيفة بعد فترة
- scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
- 
- // إعادة تفعيل الإطلاق (Cooldown)
- scene.time.delayedCall(800, () => {
-   canShoot = true;
-   arrow.setVisible(true);
- });
+ scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
+ 
+ scene.time.delayedCall(800, () => {
+   canShoot = true;
+   arrow.setVisible(true);
+ });
 }
 
 /* ======================
-   8. منطق الإصابة (Hit)
+   8. منطق الإصابة (Hit)
 ====================== */
 function bubbleHit(scene, bubble){
- const correct = bubble.getData('correct');
- bubble.destroy();
+ const correct = bubble.getData('correct');
+ bubble.destroy();
 
- if(correct){
-   scene.correctSound.play();
-   scene.time.delayedCall(500, () => {
-     currentQ++;
-     showQuestion(scene);
-   });
- } else {
-   // === منطق الخطأ الجديد ===
-   scene.wrongSound.play();
-   
-   // 1. وميض الخلفية الحمراء
-   const flash = document.getElementById('wrongFlash');
-   const mark = document.getElementById('errorMark');
-   
-   flash.style.background = 'rgba(255,0,0,0.4)';
-   
-   // 2. إظهار علامة X
-   mark.style.display = 'flex'; // استخدام flex لتوسيط الـ X داخل الدائرة
-   
-   // إخفاء التأثيرات بعد وقت قصير
-   setTimeout(() => {
-     flash.style.background = 'rgba(255,0,0,0)';
-     mark.style.display = 'none';
-   }, 400); // 400ms
+ if(correct){
+   scene.correctSound.play();
+   scene.time.delayedCall(500, () => {
+     currentQ++;
+     showQuestion(scene);
+   });
+ } else {
+   const flash = document.getElementById('wrongFlash');
+   const mark = document.getElementById('errorMark');
+   
+   scene.wrongSound.play();
+   
+   flash.style.background = 'rgba(255,0,0,0.4)';
+   mark.style.display = 'flex'; 
+   
+   setTimeout(() => {
+     flash.style.background = 'rgba(255,0,0,0)';
+     mark.style.display = 'none';
+   }, 400); 
 
-   // إعادة ترتيب الفقاعات
-   scene.time.delayedCall(600, () => showQuestion(scene));
- }
+   scene.time.delayedCall(600, () => showQuestion(scene));
+ }
 }
 
 /* ======================
-   9. عرض السؤال وتوليد الفقاعات
+   9. عرض السؤال وتوليد الفقاعات
 ====================== */
 function showQuestion(scene){
- const q = QUESTIONS[currentQ];
- 
- // نهاية اللعبة
- if(!q){
-   document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3>';
-   bubbles.clear(true, true);
-   return;
- }
+ const q = QUESTIONS[currentQ];
+ 
+ if(!q){
+   document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3>';
+   bubbles.clear(true, true);
+   return;
+ }
 
- // تحديث HTML السؤال
- document.getElementById('questionHeader').innerHTML = `
-   <h3>${q.q}</h3>
-   <div class="answers">
-     <span style="color:#81d4fa">1: ${q.o[0]}</span>
-     <span style="color:#a5d6a7">2: ${q.o[1]}</span>
-     <span style="color:#ffe082">3: ${q.o[2]}</span>
-   </div>
- `;
+ document.getElementById('questionHeader').innerHTML = `
+   <h3>${q.q}</h3>
+   <div class="answers">
+     <span style="color:#81d4fa">1: ${q.o[0]}</span>
+     <span style="color:#a5d6a7">2: ${q.o[1]}</span>
+     <span style="color:#ffe082">3: ${q.o[2]}</span>
+   </div>
+ `;
 
- bubbles.clear(true, true);
- 
- const width = scene.scale.width;
- const height = scene.scale.height;
+ bubbles.clear(true, true);
+ 
+ const width = scene.scale.width;
+ const height = scene.scale.height;
 
- // حساب حجم الفقاعة الديناميكي (كبير)
- // نريد الفقاعة تأخذ 22% من عرض اللعبة الداخلي
- const bubbleTargetSize = width * 0.22;
- const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
+ // 💥 تصغير حجم الفقاعة من 22% إلى 18% من عرض اللعبة الداخلي
+ const bubbleTargetSize = width * 0.18; 
+ const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
 
- const positions = [0.2, 0.5, 0.8]; // توزيع أفقي متساوي
+ const positions = [0.2, 0.5, 0.8]; 
 
- for(let i=0; i<3; i++){
-   const b = bubbles.create(
-     width * positions[i],
-     height * 0.3, 
-     'bubble' + (i+1)
-   ).setScale(bubbleScale);
+ for(let i=0; i<3; i++){
+   const b = bubbles.create(
+     width * positions[i],
+     height * 0.3, 
+     'bubble' + (i+1)
+   ).setScale(bubbleScale);
 
-   // تحسين منطقة اللمس/التصادم للفقاعة لتكون دائرية
-   // نصف القطر = (العرض الفعلي / 2)
-   // بما أننا قمنا بعمل Scale، نحتاج لضبط نصف القطر بناءً على الصورة الأصلية
-   b.setCircle(130); 
+   b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE))); // تعديل نصف القطر ليتناسب مع الحجم الجديد
 
-   b.setData('correct', i === q.a);
-   
-   // حركة الطفو العشوائية
-   b.setVelocity(
-     Phaser.Math.Between(-50, 50), 
-     Phaser.Math.Between(-30, 30)
-   );
-   
-   b.setBounce(1);
-   b.setCollideWorldBounds(true);
- }
+   b.setData('correct', i === q.a);
+   
+   b.setVelocity(
+     Phaser.Math.Between(-50, 50), 
+     Phaser.Math.Between(-30, 30)
+   );
+   
+   b.setBounce(1);
+   b.setCollideWorldBounds(true);
+ }
 }
 </script>
 </body>
 </html>
-
