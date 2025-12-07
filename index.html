@@ -5,41 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لعبة القطة التعليمية</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+
 <style>
 body {
     margin: 0;
-    padding: 0;
     overflow: hidden;
-    font-family: 'Arial', sans-serif;
-    background-color: #add8e6;
+    background: #add8e6;
+    font-family: Arial;
 }
 
-#game-container {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
+/* صندوق السؤال */
 #questionBox {
     position: fixed;
     top: 0;
-    left: 0;
     width: 100%;
-    z-index: 1000;
-    background-color: rgba(0,0,0,0.8);
-    color: white;
-    padding: 15px;
-    box-sizing: border-box;
+    background: rgba(0,0,0,0.8);
+    color: #fff;
     text-align: center;
+    padding: 15px;
     display: none;
-}
-
-#questionBox h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: clamp(1.2em, 3vw, 1.5em);
+    z-index: 10;
 }
 
 .options-container {
@@ -50,233 +35,183 @@ body {
 }
 
 .option-button {
-    background-color: #3f88c5;
-    color: white;
-    border: 3px solid #285f8f;
-    border-radius: 10px;
+    background: #3f88c5;
+    border: none;
     padding: 10px 15px;
+    color: white;
+    border-radius: 10px;
+    font-size: 18px;
     cursor: pointer;
-    font-size: clamp(1em, 2.5vw, 1.2em);
-    transition: background-color 0.3s, transform 0.1s;
-    flex-grow: 1;
-    max-width: 250px;
 }
 
-.option-button:hover {
-    background-color: #5599d1;
-    transform: scale(1.03);
+/* مؤشر الأخطاء */
+#mistakeIndicator {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    display: none;
+    z-index: 20;
 }
 
-.option-button:active {
-    transform: scale(0.98);
-}
-
+/* فلاش خطأ */
 #wrongFeedback {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(255,0,0,0);
-    z-index: 999;
+    inset: 0;
+    background: rgba(255,0,0,0);
     pointer-events: none;
-    transition: background-color 0.1s;
+    z-index: 5;
 }
 </style>
 </head>
+
 <body>
 
 <div id="wrongFeedback"></div>
 <div id="questionBox"></div>
+<div id="mistakeIndicator"></div>
 <div id="game-container"></div>
 
 <script>
+// ================= البيانات =================
 const QUESTIONS = [
-    {question:"ما هو الكوكب الذي يسمى 'الكوكب الأحمر'؟", options:["الزهرة","المريخ","المشتري"], correctAnswer:"المريخ"},
-    {question:"كم عدد أرجل القطط؟", options:["اثنين","أربعة","ستة"], correctAnswer:"أربعة"},
-    {question:"ما هو أكبر محيط في العالم؟", options:["الأطلسي","الهندي","الهادئ"], correctAnswer:"الهادئ"},
-    {question:"ما هو الشكل الهندسي الذي يحتوي على ثلاثة أضلاع؟", options:["المربع","المثلث","الدائرة"], correctAnswer:"المثلث"}
+ {q:"ما الكوكب الأحمر؟", o:["الزهرة","المريخ","المشتري"], a:"المريخ"},
+ {q:"كم عدد أرجل القطة؟", o:["2","4","6"], a:"4"},
+ {q:"أكبر محيط؟", o:["الهادئ","الهندي","الأطلسي"], a:"الهادئ"},
+ {q:"شكل بثلاثة أضلاع؟", o:["دائرة","مربع","مثلث"], a:"مثلث"},
 ];
 
-let config;
-let game;
-let cat, platforms, platformPositions, currentPlatformIndex=0, isMoving=false;
-let questionBox, wrongFeedbackDiv;
-let correctSound, wrongSound;
-let catBreathingTween;
+// ================= المتغيرات =================
+let cat, platforms;
+let currentPlatformIndex = 0;
+let currentQuestionIndex = 0;
+let mistakeCount = 0;
+let isMoving = false;
+let breathingTween;
 
-function initGame() {
-    config = {
-        type: Phaser.AUTO,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        parent: 'game-container',
-        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-        physics: { default:'arcade', arcade:{gravity:{y:0}, debug:false} },
-        scene: { preload, create, update }
-    };
-    game = new Phaser.Game(config);
-}
+let questionBox = document.getElementById("questionBox");
+let indicator = document.getElementById("mistakeIndicator");
+let wrongFX = document.getElementById("wrongFeedback");
 
-initGame();
-
-function preload() {
-    this.load.image('cat','assets/cat.png');
-    this.load.image('platform','assets/platform.png');
-    this.load.audio('correct','assets/correct.mp3');
-    this.load.audio('wrong','assets/wrong.mp3');
-}
-
-function create() {
-    questionBox = document.getElementById('questionBox');
-    wrongFeedbackDiv = document.getElementById('wrongFeedback');
-
-    correctSound = this.sound.add('correct');
-    wrongSound = this.sound.add('wrong');
-
-    platforms = this.physics.add.staticGroup();
-    const { width, height } = this.scale;
-
-    // تحديد حجم ديناميكي للقطة والمنصات حسب الشاشة
-    const catScale = Phaser.Math.Clamp(width/800*0.15,0.1,0.25);
-    const platformScaleX = Phaser.Math.Clamp(width/800*0.2,0.15,0.25);
-    const platformScaleY = Phaser.Math.Clamp(height/600*0.05,0.03,0.07);
-
-    platformPositions = [
-        { x: width*0.2, y: height*0.8 },
-        { x: width*0.8, y: height*0.65 },
-        { x: width*0.35, y: height*0.5 },
-        { x: width*0.65, y: height*0.35 }
-    ];
-
-    platformPositions.forEach(pos=>{
-        let p = platforms.create(pos.x,pos.y,'platform');
-        p.setScale(platformScaleX,platformScaleY).refreshBody();
-        p.setImmovable(true);
-    });
-
-    const startPlatform = platforms.getChildren()[0];
-    cat = this.physics.add.sprite(startPlatform.x, startPlatform.y,'cat');
-    cat.setScale(catScale);
-    cat.body.allowGravity=false;
-    cat.setDepth(1);
-
-    // ضبط القطة لتقف على المنصة بدقة
-    const startY = startPlatform.y - startPlatform.displayHeight/2 - cat.displayHeight/2;
-    cat.y = startY;
-
-    this.physics.add.collider(cat, platforms, ()=>{cat.setVelocity(0); isMoving=false;});
-
-    // حركة تنفس القطة
-    catBreathingTween = this.tweens.add({targets:cat, y:startY-5, duration:1000, yoyo:true, repeat:-1, ease:'Sine.easeInOut'});
-
-    showQuestion(0);
-}
-
-function update(){}
-
-function showQuestion(index){
-    const currentQ = QUESTIONS[index];
-    if(!currentQ){
-        questionBox.innerHTML='<h3>أحسنت! لقد أنهيت اللعبة بنجاح!</h3>';
-        questionBox.style.display='block';
-        return;
-    }
-    questionBox.style.display='block';
-    let html = `<h3>${currentQ.question}</h3><div class="options-container">`;
-    currentQ.options.forEach(opt=>{
-        html+=`<button class="option-button">${opt}</button>`;
-    });
-    html+=`</div>`;
-    questionBox.innerHTML = html;
-
-    document.querySelectorAll('.option-button').forEach(btn=>{
-        btn.onclick = ()=>checkAnswer(btn, btn.textContent, index);
-    });
-}
-
-function checkAnswer(button, selectedAnswer, questionIndex){
-    const currentQ = QUESTIONS[questionIndex];
-    const scene = game.scene.getScene('default');
-
-    document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=true);
-
-    if(selectedAnswer===currentQ.correctAnswer){
-        correctSound.play();
-        questionBox.style.display='none';
-        let nextIndex = questionIndex+1;
-        if(nextIndex<platformPositions.length){
-            currentPlatformIndex=nextIndex;
-            moveCat(scene,nextIndex,true);
-        } else { showQuestion(nextIndex); }
-    } else {
-        wrongSound.play();
-        wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0.5)';
-        scene.time.delayedCall(400, ()=>{
-            wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0)';
-            document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
-        });
-
-        if(questionIndex>0){
-            let prevIndex=questionIndex-1;
-            currentPlatformIndex=prevIndex;
-            moveCat(scene,prevIndex,false);
-            scene.time.delayedCall(1500,()=>{showQuestion(prevIndex);});
-        } else {
-            document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
-        }
-    }
-}
-
-function moveCat(scene,targetIndex,isCorrect){
-    if(isMoving) return;
-    isMoving=true;
-
-    if(catBreathingTween) catBreathingTween.pause();
-
-    const targetPlatform = platforms.getChildren()[targetIndex];
-    const startX = cat.x;
-    const startY = cat.y;
-    const targetX = targetPlatform.x;
-    const targetY = targetPlatform.y - targetPlatform.displayHeight/2 - cat.displayHeight/2;
-
-    const distance = Phaser.Math.Distance.Between(startX,startY,targetX,targetY);
-    const duration = distance*3;
-    const apexY = Math.min(startY,targetY)-70;
-
-    scene.tweens.add({
-        targets: cat,
-        duration: duration,
-        ease: 'Linear',
-        x: targetX,
-        onUpdate: (tween,target)=>{
-            const progress=tween.progress;
-            const factor=1-Math.pow(2*progress-1,2);
-            const linearY=Phaser.Math.Interpolation.Linear([startY,targetY],progress);
-            target.y=linearY-(startY-apexY)*factor;
-        },
-        onComplete: ()=>{
-            cat.x=targetX;
-            cat.y=targetY;
-            isMoving=false;
-            cat.setVelocity(0);
-
-            // إعادة تنفس القطة
-            if(catBreathingTween){
-                catBreathingTween.remove();
-                catBreathingTween = scene.tweens.add({targets:cat,y:targetY-5,duration:1000,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
-            }
-
-            if(isCorrect) showQuestion(currentPlatformIndex);
-            if(!isCorrect) document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
-        }
-    });
-}
-
-// إعادة ضبط اللعبة عند تغيير حجم الشاشة
-window.addEventListener('resize',()=>{
-    game.scale.resize(window.innerWidth, window.innerHeight);
+// ================= إعداد Phaser =================
+const game = new Phaser.Game({
+ type: Phaser.AUTO,
+ width: innerWidth,
+ height: innerHeight,
+ parent: "game-container",
+ physics: { default:"arcade", arcade:{gravity:{y:0}} },
+ scene: { preload, create }
 });
+
+// ================= تحميل =================
+function preload(){
+ this.load.image("cat","assets/cat.png");
+ this.load.image("platform","assets/platform.png");
+}
+
+// ================= إنشاء =================
+function create(){
+ const w=this.scale.width, h=this.scale.height;
+
+ platforms = this.physics.add.staticGroup();
+
+ QUESTIONS.forEach((_,i)=>{
+   let x = w*( i%2?0.7:0.3 );
+   let y = h*(0.8 - i*0.13);
+   let p = platforms.create(x,y,"platform");
+   p.setScale(w/800*0.22, h/600*0.05).refreshBody();
+ });
+
+ let first = platforms.getChildren()[0];
+ cat = this.physics.add.sprite(first.x, first.y, "cat");
+ cat.setScale(w/800*0.18);
+ cat.body.allowGravity=false;
+
+ placeCatOnPlatform(0);
+
+ breathingTween = this.tweens.add({
+   targets:cat, y:cat.y-6, yoyo:true, repeat:-1, duration:900
+ });
+
+ showQuestion();
+}
+
+// ================= دوال =================
+function placeCatOnPlatform(i){
+ let p = platforms.getChildren()[i];
+ cat.x = p.x;
+ cat.y = p.y - p.displayHeight/2 - cat.displayHeight/2;
+}
+
+function updateIndicator(){
+ if(mistakeCount==0){
+   indicator.style.display="none";
+   return;
+ }
+ indicator.style.display="block";
+ indicator.innerHTML = "⛔".repeat(mistakeCount)+"⭐";
+}
+
+function showQuestion(){
+ let q = QUESTIONS[currentQuestionIndex];
+ questionBox.innerHTML = `
+  <h3>${q.q}</h3>
+  <div class="options-container">
+    ${q.o.map(o=>`<button class="option-button" onclick="answer('${o}')">${o}</button>`).join("")}
+  </div>`;
+ questionBox.style.display="block";
+ updateIndicator();
+}
+
+window.answer = function(selected){
+ let correct = QUESTIONS[currentQuestionIndex].a;
+ questionBox.style.display="none";
+
+ if(selected===correct){
+   if(mistakeCount>0){
+     mistakeCount--;
+     currentPlatformIndex++;
+   }else{
+     currentPlatformIndex++;
+     currentQuestionIndex++;
+   }
+ }else{
+   mistakeCount++;
+   if(currentPlatformIndex>0) currentPlatformIndex--;
+   flashError();
+ }
+
+ updateIndicator();
+ moveCat();
+}
+
+// ================= حركة القطة =================
+function moveCat(){
+ if(isMoving) return;
+ isMoving=true;
+ breathingTween.pause();
+
+ let target = platforms.getChildren()[currentPlatformIndex];
+ let ty = target.y - target.displayHeight/2 - cat.displayHeight/2;
+
+ game.scene.scenes[0].tweens.add({
+   targets: cat,
+   x: target.x,
+   y: ty,
+   duration: 800,
+   onComplete:()=>{
+     breathingTween.resume();
+     isMoving=false;
+     setTimeout(showQuestion,500);
+   }
+ });
+}
+
+function flashError(){
+ wrongFX.style.background="rgba(255,0,0,0.4)";
+ setTimeout(()=>wrongFX.style.background="rgba(255,0,0,0)",300);
+}
 </script>
 </body>
 </html>
