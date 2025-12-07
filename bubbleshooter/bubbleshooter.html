@@ -3,47 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لعبة المدفع والفقاعات</title>
+<title>لعبة المدفع والفقاعات التعليمية</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 
 <style>
-body { margin:0; background:#add8e6; overflow:hidden; }
-#game-container { width:100vw; height:100vh; }
-#questionBox {
-    position:fixed; top:0; width:100%;
-    background:rgba(0,0,0,.8);
-    color:white; text-align:center; padding:15px; z-index:10;
+body {
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background:#add8e6;
+    font-family:Arial;
 }
-#wrongFeedback {
-    position:fixed; inset:0;
+
+#game-container { width:100vw; height:100vh; }
+
+#questionBox {
+    position:fixed;
+    top:0;
+    width:100%;
+    background:rgba(0,0,0,.8);
+    color:#fff;
+    text-align:center;
+    padding:12px;
+    z-index:10;
+}
+
+#wrongFlash {
+    position:fixed;
+    inset:0;
     background:rgba(255,0,0,0);
     pointer-events:none;
-}
-#errorIndicator {
-    position:fixed; inset:0;
-    display:flex; justify-content:center; align-items:center;
-    font-size:8em; opacity:0; pointer-events:none;
+    transition:background .2s;
+    z-index:9;
 }
 </style>
 </head>
 
 <body>
-<div id="wrongFeedback"></div>
-<div id="errorIndicator">⛔</div>
+<div id="wrongFlash"></div>
 <div id="questionBox"></div>
 <div id="game-container"></div>
 
 <script>
+/* =======================
+   الأسئلة
+======================= */
 const QUESTIONS = [
- {question:"الكوكب الأحمر؟", options:["الزهرة","المريخ","المشتري"], correctAnswer:"المريخ"},
- {question:"عدد أرجل القط؟", options:["٢","٤","٦"], correctAnswer:"٤"}
+ {
+   q:"ما هو الكوكب الأحمر؟",
+   o:["الزهرة","المريخ","المشتري"],
+   a:1
+ },
+ {
+   q:"كم عدد أرجل القط؟",
+   o:["2","4","6"],
+   a:1
+ }
 ];
 
+/* =======================
+   إعداد Phaser
+======================= */
 const config = {
  type: Phaser.AUTO,
+ width: 800,
+ height: 1200,
  parent:'game-container',
- width:800,
- height:1200,
+ scale:{
+   mode:Phaser.Scale.FIT,
+   autoCenter:Phaser.Scale.CENTER_BOTH
+ },
  physics:{
    default:'arcade',
    arcade:{ gravity:{y:0}, debug:false }
@@ -53,90 +82,144 @@ const config = {
 
 new Phaser.Game(config);
 
-let cannon, bubblesGroup;
-let questionIndex = 0;
+let cannon, bubbles;
+let currentQ = 0;
+let canShoot = true;
 
 function preload(){
  this.load.image('cannon','assets/cannon.png');
  this.load.image('shoot','assets/shoot.png');
- this.load.image('bubble','assets/bubble1.png');
+ this.load.image('bubble1','assets/bubble1.png');
+ this.load.image('bubble2','assets/bubble2.png');
+ this.load.image('bubble3','assets/bubble3.png');
+ this.load.audio('correct','assets/correct.mp3');
+ this.load.audio('wrong','assets/wrong.mp3');
 }
 
+/* =======================
+   إنشاء المشهد
+======================= */
 function create(){
  const {width,height} = this.scale;
 
- cannon = this.add.sprite(width/2, height*0.9,'cannon').setScale(0.4);
+ this.correctSound = this.sound.add('correct');
+ this.wrongSound   = this.sound.add('wrong');
 
- bubblesGroup = this.physics.add.group();
+ cannon = this.add.sprite(width/2, height*0.9,'cannon')
+   .setScale(0.28);
 
- this.physics.add.overlap(
-   bubblesGroup,
-   this.physics.add.group(),
-   ()=>{},
-   null,
-   this
- );
+ bubbles = this.physics.add.group();
 
  this.input.on('pointermove', p=>{
-   cannon.x = Phaser.Math.Clamp(p.x,50,width-50);
+   cannon.x = Phaser.Math.Clamp(p.x,60,width-60);
  });
 
  this.input.on('pointerdown', ()=>{
-   fire(this);
+   if(canShoot) fire(this);
  });
 
  showQuestion(this);
 }
 
+/* =======================
+   إطلاق القذيفة
+======================= */
 function fire(scene){
- // ✅ إنشاء القذيفة فعليًا
+ canShoot = false;
+
  const shot = scene.physics.add.sprite(
    cannon.x,
-   cannon.y - 60,
+   cannon.y - 50,
    'shoot'
  );
 
- shot.setScale(0.25);
  shot.setVelocityY(-900);
 
- // ✅ جسم تصادم مظبوط
- const r = shot.displayWidth/2;
+ const r = shot.displayWidth / 2;
  shot.body.setCircle(r);
  shot.body.setOffset(
    shot.width/2 - r,
    shot.height/2 - r
  );
 
- // ✅ تصادم مع الفقاعات
- scene.physics.add.overlap(shot, bubblesGroup, (s,b)=>{
-   s.destroy();
-   b.destroy();
- }, null, scene);
+ scene.physics.add.overlap(
+   shot,
+   bubbles,
+   (s,b)=> hitBubble(scene,s,b),
+   null,
+   scene
+ );
 
- // حذف القذيفة خارج الشاشة
- scene.time.delayedCall(1500, ()=>shot.destroy());
+ scene.time.delayedCall(1500,()=> shot.destroy());
 }
 
+/* =======================
+   عند ضرب فقاعة
+======================= */
+function hitBubble(scene, shot, bubble){
+ shot.destroy();
+ const correct = bubble.getData('correct');
+
+ bubble.destroy();
+
+ if(correct){
+   scene.correctSound.play();
+   scene.time.delayedCall(600, ()=>{
+     currentQ++;
+     showQuestion(scene);
+     canShoot = true;
+   });
+ } else {
+   scene.wrongSound.play();
+   document.getElementById('wrongFlash').style.background='rgba(255,0,0,.5)';
+   scene.time.delayedCall(300,()=>{
+     document.getElementById('wrongFlash').style.background='rgba(255,0,0,0)';
+   });
+
+   scene.time.delayedCall(700, ()=>{
+     showQuestion(scene);
+     canShoot = true;
+   });
+ }
+}
+
+/* =======================
+   عرض السؤال + الفقاعات
+======================= */
 function showQuestion(scene){
+ if(!QUESTIONS[currentQ]){
+   document.getElementById('questionBox').innerHTML =
+     "<h3>أحسنت ✅ انتهت اللعبة</h3>";
+   bubbles.clear(true,true);
+   return;
+ }
+
+ const q = QUESTIONS[currentQ];
  document.getElementById('questionBox').innerHTML =
- `<h3>${QUESTIONS[questionIndex].question}</h3>`;
+   `<h3>${q.q}</h3>
+    <div>1️⃣ ${q.o[0]} &nbsp;&nbsp; 2️⃣ ${q.o[1]} &nbsp;&nbsp; 3️⃣ ${q.o[2]}</div>`;
 
- bubblesGroup.clear(true,true);
+ bubbles.clear(true,true);
 
- QUESTIONS[questionIndex].options.forEach((opt,i)=>{
-   const b = bubblesGroup.create(
-     150 + i*250,
-     300,
-     'bubble'
-   ).setScale(0.2);
+ const images = ['bubble1','bubble2','bubble3'];
+ const posX   = [200,400,600];
+
+ for(let i=0;i<3;i++){
+   const b = bubbles.create(
+     posX[i],
+     350,
+     images[i]
+   ).setScale(0.18);
+
+   b.setData('correct', i === q.a);
 
    b.setVelocity(
-     Phaser.Math.Between(-100,100),
-     Phaser.Math.Between(50,150)
+     Phaser.Math.Between(-80,80),
+     Phaser.Math.Between(40,120)
    );
    b.setBounce(1);
    b.setCollideWorldBounds(true);
- });
+ }
 }
 </script>
 </body>
