@@ -3,462 +3,410 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>متسابق المعرفة</title>
+<title>متسابق المعرفة (نسخة مبسطة)</title>
 <style>
-  html,body { height:100%; margin:0; font-family: "Tahoma", "Arial", sans-serif; background:#cfeefc; }
-  #game-container { width:100%; height:100vh; overflow:hidden; position:relative; }
-  /* واجهة السؤال (overlay) */
-  #questionModal {
-    display:none;
-    position:absolute;
-    inset:10% 10% 15% 10%;
-    background:rgba(255,255,255,0.97);
-    border-radius:12px;
-    box-shadow:0 8px 30px rgba(0,0,0,0.25);
-    padding:18px;
-    z-index:1000;
-    direction:rtl;
-  }
-  #questionModal h2 { margin:0 0 8px 0; font-size:20px; color:#1b4f72; }
-  #questionText { font-size:18px; margin-bottom:12px; color:#063047; }
-  .optionBtn {
-    display:block;
-    width:100%;
-    padding:10px;
-    margin:8px 0;
-    border-radius:8px;
-    border:2px solid #1b4f72;
-    background:#fff;
-    font-size:16px;
-    cursor:pointer;
-    text-align:center;
-  }
-  .optionBtn:hover { background:#f0f8ff; }
-  #closeInfo { margin-top:10px; font-size:14px; color:#666; text-align:center; }
-  /* زوايا UI صغيرة لعرض السرعة */
-  #hud {
-    position:absolute;
-    top:10px; left:10px; z-index:900;
-    background:rgba(255,255,255,0.9);
-    padding:8px 12px; border-radius:10px; font-size:14px; color:#033047;
-    box-shadow:0 4px 12px rgba(0,0,0,0.12);
-    direction:rtl;
-  }
-  #instr {
-    position:absolute;
-    bottom:10px; left:10px; z-index:900;
-    background:rgba(255,255,255,0.9);
-    padding:8px 12px; border-radius:10px; font-size:13px; color:#033047;
-    box-shadow:0 4px 12px rgba(0,0,0,0.12);
-    direction:rtl;
-  }
+    /* ------------------------------------------------------------
+       تنسيقات الواجهة (كما هي، مع التركيز على RTL)
+       ------------------------------------------------------------ */
+  html,body { height:100%; margin:0; font-family: "Tahoma", "Arial", sans-serif; background:#cfeefc; }
+  #game-container { width:100%; height:100vh; overflow:hidden; position:relative; }
+  /* واجهة السؤال (overlay) */
+  #questionModal {
+    display:none;
+    position:absolute;
+    inset:10% 10% 15% 10%;
+    background:rgba(255,255,255,0.97);
+    border-radius:12px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.25);
+    padding:18px;
+    z-index:1000;
+    direction:rtl;
+  }
+  #questionModal h2 { margin:0 0 8px 0; font-size:20px; color:#1b4f72; }
+  #questionText { font-size:18px; margin-bottom:12px; color:#063047; }
+  .optionBtn {
+    display:block;
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:8px;
+    border:2px solid #1b4f72;
+    background:#fff;
+    font-size:16px;
+    cursor:pointer;
+    text-align:center;
+    transition: background 0.1s;
+  }
+  .optionBtn:hover { background:#f0f8ff; }
+  #closeInfo { margin-top:10px; font-size:14px; color:#666; text-align:center; }
+  /* زوايا UI صغيرة لعرض السرعة */
+  #hud {
+    position:absolute;
+    top:10px; left:10px; z-index:900;
+    background:rgba(255,255,255,0.9);
+    padding:8px 12px; border-radius:10px; font-size:14px; color:#033047;
+    box-shadow:0 4px 12px rgba(0,0,0,0.12);
+    direction:rtl;
+  }
+  #instr {
+    position:absolute;
+    bottom:10px; left:10px; z-index:900;
+    background:rgba(255,255,255,0.9);
+    padding:8px 12px; border-radius:10px; font-size:13px; color:#033047;
+    box-shadow:0 4px 12px rgba(0,0,0,0.12);
+    direction:rtl;
+  }
 </style>
 </head>
 <body>
 <div id="game-container"></div>
 
-<!-- واجهة السؤال -->
 <div id="questionModal" role="dialog" aria-modal="true">
-  <h2>سؤال</h2>
-  <div id="questionText"></div>
-  <div id="options"></div>
-  <div id="closeInfo">اضغط على اختيار للإجابة — الإجابة الصحيحة تزيد السرعة، الخاطئة تقللها وتعيد السؤال لاحقاً.</div>
+  <h2>سؤال</h2>
+  <div id="questionText"></div>
+  <div id="options"></div>
+  <div id="closeInfo">اضغط على اختيار للإجابة — الإجابة الصحيحة تزيد السرعة، الخاطئة تقللها وتعيد السؤال لاحقاً.</div>
 </div>
 
 <div id="hud">السرعة الأساسية: <span id="vbase">200</span> px/s</div>
 <div id="instr">المسافة ستتولد تلقائياً. اضغط ↑ للقفز.</div>
 
-<!-- phaser -->
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
 /* ------------------------------------------------------------
-   بيانات الأسئلة كما طلبت
-   ------------------------------------------------------------ */
+   بيانات الأسئلة
+   ------------------------------------------------------------ */
 const allQuestions = [
+    {
+        "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:",
+        "c": [
+            "أوراق عريضة تطفو على الماء",
+            "جذور قصيرة ضعيفة",
+            "جذور طويلة وقوية لمقاومة الأمواج"
+        ],
+        "a": 2
+    },
+    {
+        "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟",
+        "c": [
+            "تخزين كميات كبيرة من الماء",
+            "امتصاص الضوء من سطح الماء",
+            "الصمود أمام الأمواج القوية"
+        ],
+        "a": 2
+    },
     {
-        "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:",
+        "q": "ما هو التكيف السلوكي الذي تقوم به سحلية العُرف لحماية نفسها؟",
         "c": [
-            "أوراق عريضة تطفو على الماء",
-            "جذور قصيرة ضعيفة",
-            "جذور طويلة وقوية لمقاومة الأمواج"
+            "تغيير لونها حسب البيئة",
+            "نفخ جسمها لتبدو أكبر",
+            "تدفن نفسها في الرمال"
         ],
-        "a": 2
+        "a": 1
     },
-    {
-        "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟",
-        "c": [
-            "تخزين كميات كبيرة من الماء",
-            "امتصاص الضوء من سطح الماء",
-            "الصمود أمام الأمواج القوية"
-        ],
-        "a": 2
-    },
-    // يمكنك إضافة أسئلة إضافية هنا
 ];
 
 /* ------------------------------------------------------------
-   إعدادات اللعبة والسرعات
-   ------------------------------------------------------------ */
-let V_base = 200;         // السرعة الأساسية (px/s)
-let V_scroll = V_base;    // سرعة التمرير الحالية (تساوي V_base عندما لا تكون متوقفة)
-const SPAWN_BOX_INTERVAL = 2000; // محاولة إنشاء صندوق كل 2 ثانية (قابلة للتعديل)
+   إعدادات اللعبة والسرعات
+   ------------------------------------------------------------ */
+let V_base = 200;         // السرعة الأساسية (px/s)
+let V_scroll = V_base;    // سرعة التمرير الحالية
+const SPAWN_BOX_INTERVAL = 2000; // محاولة إنشاء صندوق كل 2 ثانية
 const RETRY_DELAY = 5000; // إعادة سؤال خاطئ بعد 5000 مللي ثانية
 const GAME_WIDTH = window.innerWidth;
 const GAME_HEIGHT = window.innerHeight;
 
-/* ------------------------------------------------------------
-   إدارة قائمة الأسئلة (pool) وQueue للأسئلة الخاطئة التي ستعاد
-   ------------------------------------------------------------ */
-let activeQuestionPool = [];   // مصفوفة فهارس الأسئلة المتاحة للاستخدام
-let retryQueue = [];           // عناصر { qIndex, spawnAt } مع توقيت لاحق للأولوية
+// *** التبسيط: مستوى ثابت للأرض (سطح الأرض) ***
+const GROUND_SURFACE_Y = GAME_HEIGHT * 0.8; 
+const TERRAIN_TILE_WIDTH = 500; // عرض كبير لقطعة الأرض الواحدة
 
-// نهيئ pool ببساطة بعناصر 0..n-1
+/* ------------------------------------------------------------
+   إدارة قائمة الأسئلة (pool) وQueue للأسئلة الخاطئة
+   ------------------------------------------------------------ */
+let activeQuestionPool = [];   
+let retryQueue = [];           
+
 for (let i=0;i<allQuestions.length;i++) activeQuestionPool.push(i);
 
 /* ------------------------------------------------------------
-   عناصر DOM واجهة السؤال
-   ------------------------------------------------------------ */
+   عناصر DOM واجهة السؤال
+   ------------------------------------------------------------ */
 const qModal = document.getElementById('questionModal');
 const qTextEl = document.getElementById('questionText');
 const optionsEl = document.getElementById('options');
 const vbaseEl = document.getElementById('vbase');
 
 /* ------------------------------------------------------------
-   إعداد Phaser 3
-   ------------------------------------------------------------ */
+   إعداد Phaser 3
+   ------------------------------------------------------------ */
 const config = {
-  type: Phaser.AUTO,
-  parent: 'game-container',
-  width: GAME_WIDTH,
-  height: GAME_HEIGHT,
-  backgroundColor: 0xcfeefc,
-  physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 1000 },
-      debug: false
-    }
-  },
-  scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH
-  },
-  scene: {
-    preload: preload,
-    create: create,
-    update: update
-  }
+  type: Phaser.AUTO,
+  parent: 'game-container',
+  width: GAME_WIDTH,
+  height: GAME_HEIGHT,
+  backgroundColor: 0xcfeefc,
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 1000 },
+      debug: false // اجعلها true لرؤية حدود الفيزياء
+    }
+  },
+  scale: {
+    mode: Phaser.Scale.RESIZE,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  scene: {
+    preload: preload,
+    create: create,
+    update: update
+  }
 };
 const game = new Phaser.Game(config);
 
 /* عناصر عالم اللعبة */
 let player;
-let groundGroup;     // قطع الأرض المتحركة (تضاريس متعرجة)
-let boxesGroup;      // صناديق الأسئلة
-let spawnTimer;      // حدث التوليد الدوري
+let groundGroup;     // قطع الأرض المتحركة
+let boxesGroup;      // صناديق الأسئلة
+let spawnTimer;      
 let isPausedForQuestion = false;
-let lastSpawnTime = 0;
-let terrainTileWidth = 160; // عرض كل قطعة أرض
-let terrainMinY = GAME_HEIGHT * 0.45;
-let terrainMaxY = GAME_HEIGHT * 0.75;
-let cameraSpeed = 0; // not used directly; we're moving objects manually
 
 function preload() {
-  // نصنع نسيج للصندوق والسيارة والارض باستعمال graphics ثم generate texture
-  this.load.image('dummy', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
+  // تحميل صور وهمية (سيتم إنشاء ال textures لاحقًا)
+  this.load.image('dummy', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
 }
 
 function create() {
-  const scene = this;
+  const scene = this;
 
-  // إنشاء مجموعات فيزيائية
-  groundGroup = this.physics.add.group({ allowGravity: false, immovable: true });
-  boxesGroup = this.physics.add.group({ allowGravity: false, immovable: true });
+  // إنشاء مجموعات فيزيائية
+  groundGroup = this.physics.add.group({ allowGravity: false, immovable: true });
+  boxesGroup = this.physics.add.group({ allowGravity: false, immovable: true });
 
-  // نولّد نسيج السيارة (مظهر بسيط)
-  const gfx = this.add.graphics();
-  gfx.fillStyle(0xff3b3b, 1);
-  gfx.fillRoundedRect(0, 0, 140, 60, 12);
-  gfx.lineStyle(4, 0x000000, 0.4);
-  gfx.strokeRoundedRect(0, 0, 140, 60, 12);
-  gfx.fillStyle(0x111111, 1);
-  gfx.fillCircle(28, 66, 18);
-  gfx.fillCircle(112, 66, 18);
-  gfx.generateTexture('carTex', 140, 90);
-  gfx.clear();
+  // نولّد نسيج السيارة
+  const gfx = this.add.graphics();
+  gfx.fillStyle(0xff3b3b, 1);
+  gfx.fillRoundedRect(0, 0, 140, 60, 12);
+  gfx.lineStyle(4, 0x000000, 0.4);
+  gfx.strokeRoundedRect(0, 0, 140, 60, 12);
+  gfx.fillStyle(0x111111, 1);
+  gfx.fillCircle(28, 66, 18);
+  gfx.fillCircle(112, 66, 18);
+  gfx.generateTexture('carTex', 140, 90);
+  gfx.clear();
 
-  // نسيج صندوق السؤال
-  const g2 = this.add.graphics();
-  g2.fillStyle(0x1b4f72, 1);
-  g2.fillRoundedRect(0,0,64,64,8);
-  g2.lineStyle(3,0xffffff,1);
-  g2.strokeRoundedRect(0,0,64,64,8);
-  g2.fillStyle(0xffffff,1);
-  g2.fillRect(10,26,44,8);
-  g2.generateTexture('qbox', 64,64);
-  g2.clear();
+  // نسيج صندوق السؤال
+  const g2 = this.add.graphics();
+  g2.fillStyle(0x1b4f72, 1);
+  g2.fillRoundedRect(0,0,64,64,8);
+  g2.lineStyle(3,0xffffff,1);
+  g2.strokeRoundedRect(0,0,64,64,8);
+  g2.fillStyle(0xffffff,1);
+  g2.fillRect(10,26,44,8);
+  g2.generateTexture('qbox', 64,64);
+  g2.clear();
 
-  // نولّد التضاريس المبدئية: مجموعة من قطع أرض تمتد إلى ما بعد الشاشة
-  const tilesNeeded = Math.ceil((GAME_WIDTH*2) / terrainTileWidth) + 4;
-  let x = 0;
-  for (let i=0;i<tilesNeeded;i++){
-    let h = Phaser.Math.Between(terrainMinY, terrainMaxY);
-    createGroundTile.call(this, x, h);
-    x += terrainTileWidth;
-  }
+  // *** التبسيط: توليد الأرضية المستوية ***
+  let x = 0;
+  const tilesNeeded = Math.ceil(GAME_WIDTH / TERRAIN_TILE_WIDTH) + 2;
+  for (let i=0;i<tilesNeeded;i++){
+    createGroundTile.call(this, x, GROUND_SURFACE_Y);
+    x += TERRAIN_TILE_WIDTH;
+  }
 
-  // إنشاء اللاعب (سيارة ثابتة أفقيًا، تتحرك منصات الأرض)
-  player = this.physics.add.sprite(180, GAME_HEIGHT*0.4, 'carTex');
-  player.setOrigin(0.5, 1);
-  player.setCollideWorldBounds(true);
-  player.setBodySize(120,50).setOffset(10,40);
-  player.setBounce(0.02);
+  // إنشاء اللاعب (تم تعديل موضع Y ليتطابق مع سطح الأرض)
+  const playerStartX = 180;
+  player = this.physics.add.sprite(playerStartX, GROUND_SURFACE_Y, 'carTex');
+  player.setOrigin(0.5, 1); // الـ Origin (0.5, 1) تعني أسفل مركز العنصر
+  player.setCollideWorldBounds(true);
+  player.setBodySize(120,50).setOffset(10,40);
+  player.setBounce(0.02);
 
-  // اصطدام مع الأرض
-  this.physics.add.collider(player, groundGroup);
+  // اصطدام مع الأرض
+  this.physics.add.collider(player, groundGroup);
 
-  // اصطدام / تداخل مع صناديق الأسئلة
-  this.physics.add.overlap(player, boxesGroup, handleBoxCollision, null, this);
+  // اصطدام / تداخل مع صناديق الأسئلة
+  this.physics.add.overlap(player, boxesGroup, handleBoxCollision, null, this);
 
-  // تحكمات القفز
-  this.input.keyboard.on('keydown-UP', () => {
-    if (player.body.touching.down) player.setVelocityY(-520);
-  });
+  // تحكمات القفز
+  this.input.keyboard.on('keydown-UP', () => {
+    if (player.body.touching.down) player.setVelocityY(-520);
+  });
 
-  // مؤقت توليد صناديق الأسئلة
-  spawnTimer = this.time.addEvent({
-    delay: SPAWN_BOX_INTERVAL,
-    loop: true,
-    callback: () => {
-      if (!isPausedForQuestion) attemptSpawnBox.call(scene);
-    }
-  });
+  // مؤقت توليد صناديق الأسئلة
+  spawnTimer = this.time.addEvent({
+    delay: SPAWN_BOX_INTERVAL,
+    loop: true,
+    callback: () => {
+      if (!isPausedForQuestion) attemptSpawnBox.call(scene);
+    }
+  });
 
-  // تحديث نص السرعة
-  vbaseEl.textContent = Math.round(V_base);
-
-  // نص بسيط أعلى يسار
-  // ضبط حجم الكاميرا/إعادة حساب عند تغيير حجم النافذة
-  this.scale.on('resize', (gameSize) => {
-    // nothing complicated needed; physics objects will still work
-  });
+  // تحديث نص السرعة
+  vbaseEl.textContent = Math.round(V_base);
 }
 
 /* ------------------------------------------------------------
-   وظائف المساعدة: إنشاء قطعة أرض، صندوق سؤال، اختيار سؤال
-   ------------------------------------------------------------ */
+   وظائف المساعدة
+   ------------------------------------------------------------ */
+// *** تم تبسيط إنشاء قطعة الأرض لتكون مستوية على ارتفاع ثابت ***
 function createGroundTile(x, y) {
-  // نستخدم مستطيل كقطعة أرض بارتفاع يملأ الشاشه أسفل y
-  const scene = game.scene.scenes[0];
-  const g = scene.add.graphics();
-  g.fillStyle(0x2d8f54,1);
-  const tileW = terrainTileWidth;
-  const tileH = GAME_HEIGHT - y;
-  // rectangle drawn relative to 0,0 then generate texture for efficiency
-  g.fillRect(0,0,tileW,tileH);
-  const key = 'ground_' + Phaser.Math.RND.uuid().substring(0,8);
-  g.generateTexture(key, tileW, tileH);
-  g.destroy();
+  // y هنا هي سطح الأرض
+  const scene = game.scene.scenes[0];
+  const g = scene.add.graphics();
+  g.fillStyle(0x2d8f54,1);
+  const tileW = TERRAIN_TILE_WIDTH;
+  const tileH = GAME_HEIGHT - y; // الارتفاع يملأ الشاشة أسفل y
+  
+  g.fillRect(0,0,tileW,tileH);
+  const key = 'ground_' + Phaser.Math.RND.uuid().substring(0,8);
+  g.generateTexture(key, tileW, tileH);
+  g.destroy();
 
-  const img = scene.physics.add.image(x + tileW/2, y + tileH/2, key);
-  img.setOrigin(0.5);
-  img.setImmovable(true);
-  img.body.allowGravity = false;
-  img.setVelocityX(-V_scroll); // initial scroll velocity
-  groundGroup.add(img);
-  return img;
+  // مركز الصورة سيكون في منتصف العرض وعلى منتصف الارتفاع (y + tileH/2)
+  const img = scene.physics.add.image(x + tileW/2, y + tileH/2, key);
+  img.setOrigin(0.5);
+  img.setImmovable(true);
+  img.body.allowGravity = false;
+  img.setVelocityX(-V_scroll);
+  groundGroup.add(img);
+  return img;
 }
 
 function attemptSpawnBox() {
-  const scene = game.scene.scenes[0];
-  const now = scene.time.now;
+  const scene = game.scene.scenes[0];
+  const now = scene.time.now;
 
-  // أولاً: هل توجد أسئلة مجدولة في retryQueue جاهزة؟ اختر أقدم واحد spawnAt <= now
-  let chosenQIndex = null;
-  for (let i=0;i<retryQueue.length;i++){
-    if (retryQueue[i].spawnAt <= now){
-      chosenQIndex = retryQueue[i].qIndex;
-      retryQueue.splice(i,1);
-      break;
-    }
-  }
+  // اختيار السؤال (من retryQueue أو active pool) - نفس المنطق السليم
+  let chosenQIndex = null;
+  for (let i=0;i<retryQueue.length;i++){
+    if (retryQueue[i].spawnAt <= now){
+      chosenQIndex = retryQueue[i].qIndex;
+      retryQueue.splice(i,1);
+      break;
+    }
+  }
+  if (chosenQIndex === null) {
+    if (activeQuestionPool.length === 0) return;
+    const idx = Phaser.Math.Between(0, activeQuestionPool.length-1);
+    chosenQIndex = activeQuestionPool[idx];
+  }
 
-  // إذا لم يوجد عنصر في queue الجاهز، نختار سؤال عشوائي من active pool
-  if (chosenQIndex === null) {
-    if (activeQuestionPool.length === 0) return; // لا مزيد من الأسئلة
-    const idx = Phaser.Math.Between(0, activeQuestionPool.length-1);
-    chosenQIndex = activeQuestionPool[idx];
-    // ملاحظة: لا نحذفه الآن لأن اللاعب قد يخطئ ونريد إمكانية إعادة طرحه (حسب منطقك)
-    // إذا أردت منعه من التكرار بعد الإجابة الصحيحة، سنزيله عند الإجابة الصحيحة.
-  }
-
-  // توليد صندوق على مسافة أمام السيارة
-  const spawnX = GAME_WIDTH + 120;
-  // نضعه على ارتفاع يساوي منتصف القطع الأرضية (نبحث عن ارتفاع الأرض الأقرب على اليمين)
-  let groundY = Phaser.Math.Between(terrainMinY - 50, terrainMaxY - 100);
-  // create box sprite
-  const box = scene.physics.add.image(spawnX, groundY, 'qbox');
-  box.setImmovable(true);
-  box.body.allowGravity = false;
-  box.setData('qIndex', chosenQIndex);
-  box.setVelocityX(-V_scroll);
-  boxesGroup.add(box);
-  lastSpawnTime = now;
+  // توليد صندوق على ارتفاع ثابت فوق الأرضية
+  const spawnX = GAME_WIDTH + 120;
+  const boxHeight = 64; // ارتفاع الصندوق
+  const boxY = GROUND_SURFACE_Y - (boxHeight / 2) - 10; // 10px فوق الأرض
+  
+  const box = scene.physics.add.image(spawnX, boxY, 'qbox');
+  box.setImmovable(true);
+  box.body.allowGravity = false;
+  box.setData('qIndex', chosenQIndex);
+  box.setVelocityX(-V_scroll);
+  boxesGroup.add(box);
 }
 
 /* ------------------------------------------------------------
-   عند اصطدام السيارة بصندوق سؤال
-   ------------------------------------------------------------ */
+   منطق الاصطدام، عرض الأسئلة، والتحقق من الإجابة (كما هي)
+   ------------------------------------------------------------ */
 function handleBoxCollision(playerObj, boxObj) {
-  if (isPausedForQuestion) return;
-  isPausedForQuestion = true;
+  if (isPausedForQuestion) return;
+  isPausedForQuestion = true;
 
-  // نوقف المشهد فعلياً: V_scroll = 0 ، ونوقف كل velocities لمجموعات الأرض والصناديق
-  V_scroll = 0;
-  updateAllMovingObjectsVelocity(0);
+  V_scroll = 0;
+  updateAllMovingObjectsVelocity(0);
 
-  // جلب السؤال المرتبط
-  const qIndex = boxObj.getData('qIndex');
-  // نحفظ مرجع الصندوق ليتم إزالته عندما ينتهي التفاعل (أو الآن)
-  // إظهار واجهة السؤال
-  showQuestionModal(qIndex, () => {
-    // callback بعد إغلاق الmodal (سيتم استئناف اللعب داخل checkAnswer)
-  });
+  const qIndex = boxObj.getData('qIndex');
+  showQuestionModal(qIndex, () => {});
 
-  // نزيل الصندوق فوراً حتى لا تتكرر الاصطدامات أثناء الواجهة
-  boxObj.destroy();
+  boxObj.destroy();
 }
 
-/* ------------------------------------------------------------
-   عرض واجهة السؤال (HTML modal) بالعربية
-   ------------------------------------------------------------ */
 function showQuestionModal(qIndex, onShown) {
-  const q = allQuestions[qIndex];
-  qTextEl.textContent = q.q;
-  optionsEl.innerHTML = '';
+  const q = allQuestions[qIndex];
+  qTextEl.textContent = q.q;
+  optionsEl.innerHTML = '';
 
-  q.c.forEach((opt, idx) => {
-    const btn = document.createElement('button');
-    btn.className = 'optionBtn';
-    btn.textContent = `${idx + 1}. ${opt}`;
-    btn.onclick = () => {
-      // استدعاء الدالة checkAnswer
-      checkAnswer(qIndex, idx);
-    };
-    optionsEl.appendChild(btn);
-  });
+  q.c.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'optionBtn';
+    btn.textContent = `${idx + 1}. ${opt}`;
+    btn.onclick = () => {
+      checkAnswer(qIndex, idx);
+    };
+    optionsEl.appendChild(btn);
+  });
 
-  qModal.style.display = 'block';
-  if (onShown) onShown();
+  qModal.style.display = 'block';
+  if (onShown) onShown();
 }
 
-/* ------------------------------------------------------------
-   إخفاء واجهة السؤال
-   ------------------------------------------------------------ */
 function hideQuestionModal() {
-  qModal.style.display = 'none';
+  qModal.style.display = 'none';
 }
 
-/* ------------------------------------------------------------
-   دالة التحقق من الإجابة: تطابق مع متطلباتك لتعديل V_base
-   ------------------------------------------------------------ */
 function checkAnswer(qIndex, selectedOptionIndex) {
-  const correctIndex = allQuestions[qIndex].a;
-  const scene = game.scene.scenes[0];
-  const now = scene.time.now;
+  const correctIndex = allQuestions[qIndex].a;
+  const scene = game.scene.scenes[0];
+  const now = scene.time.now;
 
-  if (selectedOptionIndex === correctIndex) {
-    // إجابة صحيحة: زيادة V_base بمقدار 20 دائمًا
-    V_base = V_base + 20;
-    // نزيل السؤال من active pool ليقل تكراره مستقبلاً (اختياري ومناسب)
-    const pos = activeQuestionPool.indexOf(qIndex);
-    if (pos !== -1) activeQuestionPool.splice(pos,1);
-  } else {
-    // إجابة خاطئة: خفض V_base بنسبة 40% (V_base * 0.6)
-    V_base = V_base * 0.6;
-    // نضيف السؤال إلى retryQueue مع توقيت مستقبلية بعد RETRY_DELAY
-    retryQueue.push({ qIndex: qIndex, spawnAt: now + RETRY_DELAY });
-    // نضمن أن يبقى السؤال في active pool (إن لم يكن موجودًا)
-    if (!activeQuestionPool.includes(qIndex)) activeQuestionPool.push(qIndex);
-  }
+  if (selectedOptionIndex === correctIndex) {
+    // إجابة صحيحة
+    V_base = V_base + 20;
+    const pos = activeQuestionPool.indexOf(qIndex);
+    if (pos !== -1) activeQuestionPool.splice(pos,1);
+  } else {
+    // إجابة خاطئة
+    V_base = V_base * 0.6;
+    retryQueue.push({ qIndex: qIndex, spawnAt: now + RETRY_DELAY });
+    if (!activeQuestionPool.includes(qIndex)) activeQuestionPool.push(qIndex);
+  }
 
-  // تحديث HUD
-  vbaseEl.textContent = Math.round(V_base);
+  vbaseEl.textContent = Math.round(V_base);
 
-  // إخفاء الmodal واستئناف الحركة
-  hideQuestionModal();
-  isPausedForQuestion = false;
-  resumeScrollingWithVbase();
+  hideQuestionModal();
+  isPausedForQuestion = false;
+  resumeScrollingWithVbase();
 }
 
-/* ------------------------------------------------------------
-   استئناف الحركة: تعيين V_scroll = V_base ثم تحديث السرعات لكل الأجسام المتحركة
-   ------------------------------------------------------------ */
 function resumeScrollingWithVbase() {
-  V_scroll = V_base;
-  updateAllMovingObjectsVelocity(-V_scroll);
+  V_scroll = V_base;
+  updateAllMovingObjectsVelocity(-V_scroll);
 }
 
-/* ------------------------------------------------------------
-   مساعدة: تحديث السرعات الأفقية لجميع قطع الأرض / الصناديق
-   ------------------------------------------------------------ */
 function updateAllMovingObjectsVelocity(velX) {
-  // velX: قيمة velocity.x (عادة سلبية تحرك الأشياء لليسار)
-  groundGroup.getChildren().forEach(g => {
-    g.setVelocityX(velX);
-  });
-  boxesGroup.getChildren().forEach(b => {
-    b.setVelocityX(velX);
-  });
+  groundGroup.getChildren().forEach(g => {
+    g.setVelocityX(velX);
+  });
+  boxesGroup.getChildren().forEach(b => {
+    b.setVelocityX(velX);
+  });
 }
 
 /* ------------------------------------------------------------
-   تحديث دوري: ننشئ أرض جديدة عندما تحتاج، ونزيل العناصر خارج الشاشة
-   ------------------------------------------------------------ */
+   تحديث دوري: نستخدم منطق تدوير (Recycling) لقطع الأرض لتبسيط الكود
+   ------------------------------------------------------------ */
 function update(time, delta) {
-  // في كل فريم، V_scroll يجب أن يساوي V_base ما لم تكن اللعبة متوقفة
-  if (!isPausedForQuestion) V_scroll = V_base;
+  // تحديث سرعة جميع العناصر المتحركة في كل إطار
+  if (!isPausedForQuestion) {
+    V_scroll = V_base;
+    updateAllMovingObjectsVelocity(-V_scroll);
+  }
+  
+  // تدوير قطع الأرض (Recycling): عندما تخرج القطعة من الشاشة، انقلها إلى اليمين
+  groundGroup.getChildren().forEach(g => {
+    if (g.x + g.displayWidth / 2 < 0) {
+      // انقلها إلى يمين آخر قطعة
+      const maxX = groundGroup.getChildren().reduce((max, tile) => Math.max(max, tile.x + tile.displayWidth/2), 0);
+      g.x = maxX + g.displayWidth/2;
+      g.setVelocityX(-V_scroll); // أعد ضبط السرعة
+    }
+  });
 
-  // إن لم تكن متوقفة، اضبط سرعة كل العناصر إلى -V_scroll
-  if (!isPausedForQuestion) updateAllMovingObjectsVelocity(-V_scroll);
-
-  // إزالة قطع الأرض والصناديق التي خرجت من الشاشة (x < -width)
-  groundGroup.getChildren().forEach(g => {
-    if (g.x + g.displayWidth/2 < -100) {
-      g.destroy();
-    }
-  });
-  boxesGroup.getChildren().forEach(b => {
-    if (b.x + b.displayWidth/2 < -100) b.destroy();
-  });
-
-  // ضمان وجود دائماً قطع أرض تغطي الشاشة: إذا كانت أقصى x للقطع أقل من عرض الشاشة*1.5 نولد جديد
-  let maxX = -Infinity;
-  groundGroup.getChildren().forEach(g => { if (g.x > maxX) maxX = g.x; });
-  if (maxX === -Infinity) maxX = 0;
-  while (maxX < GAME_WIDTH * 1.5) {
-    // نولد قطعة أرض جديدة على يمين آخر واحدة مع تغيير ارتفاع طفيف لصنع تلال
-    const nextX = maxX + terrainTileWidth;
-    // جعل التغيير في الارتفاع تدريجيًا
-    const prevY = groundGroup.getChildren().length ? groundGroup.getChildren()[groundGroup.getChildren().length-1].y - (groundGroup.getChildren()[groundGroup.getChildren().length-1].displayHeight/2) : terrainMinY;
-    let newY = Phaser.Math.Clamp(prevY + Phaser.Math.Between(-40, 40), terrainMinY-80, terrainMaxY);
-    const newTile = createGroundTile.call(this, nextX, newY);
-    maxX = newTile.x + newTile.displayWidth/2;
-  }
-
-  // إن كان هناك عناصر في retryQueue مع موعد spawn قريب جداً (تأمين منطق التوليد الفوري)
-  // (لن نقوم بإنشائها هنا لأن spawnTimer يتعامل مع create attempts دورياً)
+  // إزالة الصناديق التي خرجت من الشاشة
+  boxesGroup.getChildren().forEach(b => {
+    if (b.x + b.displayWidth / 2 < 0) b.destroy();
+  });
 }
-
-/* ------------------------------------------------------------
-   ملاحظات:
-   - السيارة نفسها ثابتة أفقياً (محاذاة لليسار)، بينما الأرض/الصناديق تتحرك لليسار بسرعة -V_scroll
-   - عند الاصطدام نصفر V_scroll ونوقف الحركة، ثم نعرض السؤال
-   - checkAnswer يقوم بتعديل V_base حسب المطلوب: +20 عند الصحيح، *0.6 عند الخطأ
-   - الأسئلة الخاطئة تحفظ في retryQueue وتُعطى أولوية لإنشائها بعد 5 ثوانٍ
-   - يمكن تعديل ثوابت SPAWN_BOX_INTERVAL, RETRY_DELAY, V_base الأولية بسهولة أعلى
-   ------------------------------------------------------------ */
-
 </script>
 </body>
 </html>
