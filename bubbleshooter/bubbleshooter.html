@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة المدفع والفقاعات التعليمية</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        /* 🎨 CSS التصميم */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; 
+            font-family: 'Arial', sans-serif;
+            direction: rtl; 
+            background-color: #add8e6; 
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* مربع السؤال */
+        #questionBox {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000; 
+            background-color: rgba(0, 0, 0, 0.8); 
+            color: white;
+            padding: 15px;
+            box-sizing: border-box;
+            text-align: center;
+            /* سنعرضه دائماً، لكن سنغير محتواه */
+        }
+
+        #questionBox h3 {
+            margin: 0;
+            font-size: clamp(1.2em, 3vw, 1.5em); 
+        }
+
+        /* فيدباك خطأ (اللون الأحمر) */
+        #wrongFeedback {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(255, 0, 0, 0); 
+            z-index: 999; 
+            pointer-events: none;
+            transition: background-color 0.1s; 
+        }
+        
+        /* مؤشر الخطأ البصري (⛔) */
+        #errorIndicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10em; 
+            color: white;
+            z-index: 1001; 
+            opacity: 0; 
+            pointer-events: none;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            transition: opacity 0.1s;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="wrongFeedback"></div>
+    <div id="errorIndicator">⛔</div>
+    <div id="questionBox"></div>
+    <div id="game-container"></div>
+
+<script>
+    // 💾 مصفوفة الأسئلة (تم إضافة حقل "index" مؤقت لتحديد الفقاعة الصحيحة)
+    const QUESTIONS = [
+        {question:"ما هو الكوكب الذي يسمى 'الكوكب الأحمر'؟", options:["الزهرة","المريخ","المشتري"], correctAnswer:"المريخ"},
+        {question:"كم عدد أرجل القطط؟", options:["اثنين","أربعة","ستة"], correctAnswer:"أربعة"},
+        {question:"ما هو أكبر محيط في العالم؟", options:["الأطلسي","الهندي","الهادئ"], correctAnswer:"الهادئ"},
+        {question:"ما هو الشكل الهندسي الذي يحتوي على ثلاثة أضلاع؟", options:["المربع","المثلث","الدائرة"], correctAnswer:"المثلث"}
+    ];
+
+    // 🖼️ إعدادات اللعبة
+    const config = {
+        type: Phaser.AUTO,
+        width: 800, // حجم افتراضي (سيتم تعديله بالـ scale)
+        height: 1200, // تصميم عمودي للهواتف
+        parent: 'game-container',
+        scale: { 
+            mode: Phaser.Scale.FIT, 
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+            parent: 'game-container',
+            // الإعدادات التي تجعلها ديناميكية ومتوافقة مع الهواتف:
+            width: 800,
+            height: 1200
+        },
+        physics: { 
+            default:'arcade', 
+            arcade:{ 
+                gravity:{y:0}, 
+                debug:false // غيرها لـ true للتصحيح
+            } 
+        },
+        scene: { preload, create, update }
+    };
+
+    let game = new Phaser.Game(config);
+
+    // متغيرات المشهد العامة
+    let cannon, projectileGroup, bubblesGroup;
+    let questionBox, wrongFeedbackDiv, errorIndicator;
+    let correctSound, wrongSound;
+    let currentQuestionIndex = 0;
+    let questionToRepeat = null; // السؤال الذي يتم تكراره عند الخطأ
+    let originalQuestionIndexBeforeError = 0; // مؤشر السؤال الذي أخطأنا عنده لأول مرة
+
+    const BUBBLE_TYPES = ['bubble1', 'bubble2', 'bubble3'];
+    const BUBBLE_SCALE = 0.4; // لضمان الحجم المناسب على الهاتف
+    let FIRE_DELAY = 300; // تأخير إطلاق القذيفة بالملي ثانية
+    let lastFired = 0;
+
+    function preload() {
+        // ⚠️ تأكد من توفر هذه الصور في مجلد assets/
+        this.load.image('cannon', 'assets/cannon.png');
+        this.load.image('shoot', 'assets/shoot.png');
+        this.load.image('bubble1', 'assets/bubble1.png');
+        this.load.image('bubble2', 'assets/bubble2.png');
+        this.load.image('bubble3', 'assets/bubble3.png');
+        // ⚠️ تأكد من توفر الأصوات
+        this.load.audio('correct','assets/correct.mp3'); 
+        this.load.audio('wrong','assets/wrong.mp3');
+        this.load.audio('fire','assets/fire.mp3'); // صوت إطلاق المدفع
+    }
+
+    function create() {
+        const { width, height } = this.scale;
+        
+        // 1. إعداد عناصر HTML
+        questionBox = document.getElementById('questionBox');
+        wrongFeedbackDiv = document.getElementById('wrongFeedback');
+        errorIndicator = document.getElementById('errorIndicator');
+
+        // 2. إعداد الأصوات
+        correctSound = this.sound.add('correct');
+        wrongSound = this.sound.add('wrong');
+        this.fireSound = this.sound.add('fire');
+
+        // 3. إعداد المدفع (Cannon)
+        cannon = this.add.sprite(width / 2, height * 0.95, 'cannon').setScale(0.5);
+        cannon.setDepth(10);
+        
+        // 4. مجموعات الفيزياء (Physics Groups)
+        projectileGroup = this.physics.add.group({
+            defaultKey: 'shoot',
+            maxSize: 10,
+            runChildUpdate: true
+        });
+
+        bubblesGroup = this.physics.add.group({
+            key: BUBBLE_TYPES,
+            immovable: false,
+            runChildUpdate: true
+        });
+
+        // 5. تفاعلات الاصطدام
+        this.physics.add.overlap(projectileGroup, bubblesGroup, hitBubble, null, this);
+
+        // 6. التحكم بالإدخال (المدفع يتبع حركة المؤشر)
+        this.input.on('pointermove', pointer => {
+            // المدفع يتحرك أفقياً فقط
+            cannon.x = Phaser.Math.Clamp(pointer.x, width * 0.1, width * 0.9);
+        });
+
+        // 7. إطلاق القذيفة عند النقر
+        this.input.on('pointerdown', pointer => {
+            fireProjectile(this);
+        });
+
+        // 8. بدء اللعبة
+        showQuestion(currentQuestionIndex);
+    }
+
+    function update(time, delta) {
+        // المدفع يجب أن ينظر إلى مؤشر الفأرة (اختياري، يضيف لمسة جمالية)
+        // const pointer = this.input.activePointer;
+        // cannon.rotation = Phaser.Math.Angle.Between(cannon.x, cannon.y, pointer.x, pointer.y) + Math.PI / 2;
+    }
+
+    // --- منطق المدفع والقذائف ---
+
+    function fireProjectile(scene) {
+        if (scene.time.now > lastFired + FIRE_DELAY) {
+            this.fireSound.play();
+            const projectile = projectileGroup.get(cannon.x, cannon.y - cannon.displayHeight/2);
+            
+            if (projectile) {
+                projectile.setActive(true).setVisible(true).setScale(0.2);
+                projectile.body.setCircle(projectile.width/2);
+                projectile.body.setMass(1);
+                
+                // إطلاق القذيفة للأعلى
+                projectile.setVelocityY(-1000); 
+                lastFired = scene.time.now;
+
+                // إزالة القذيفة عند خروجها من الشاشة
+                scene.time.delayedCall(1500, () => {
+                    projectile.destroy();
+                });
+            }
+        }
+    }
+
+    function hitBubble(projectile, bubble) {
+        // توقف القذيفة وإزالتها
+        projectile.destroy();
+
+        // استخراج بيانات الفقاعة (الإجابة الصحيحة)
+        const bubbleData = bubble.getData('data');
+
+        if (!bubbleData) {
+            bubble.destroy(); // فقاعة بدون بيانات (للتنظيف فقط)
+            return;
+        }
+
+        checkAnswer(bubble, bubbleData.answer);
+    }
+
+    // --- منطق الفقاعات والأسئلة ---
+
+    // دالة إنشاء الفقاعات
+    function createBubbles(scene, questionData) {
+        bubblesGroup.clear(true, true); // إزالة جميع الفقاعات القديمة
+
+        const { width, height } = scene.scale;
+        const options = questionData.options;
+        const bubbleRadius = 60 * BUBBLE_SCALE * 800/width; // تقدير نصف قطر الفقاعة
+
+        // حساب المسافات المتاحة في الجزء العلوي (مثلاً الثلث الأوسط من الشاشة)
+        const startY = height * 0.1;
+        const endY = height * 0.5;
+
+        // خلط الخيارات لضمان التوزيع العشوائي للإجابة الصحيحة
+        Phaser.Utils.Array.Shuffle(options); 
+        
+        options.forEach((opt, index) => {
+            const bubbleType = BUBBLE_TYPES[index % BUBBLE_TYPES.length];
+            
+            // اختيار موقع عشوائي في الجزء العلوي من الشاشة
+            const x = Phaser.Math.Between(width * 0.1, width * 0.9);
+            const y = Phaser.Math.Between(startY, endY);
+            
+            const bubble = bubblesGroup.create(x, y, bubbleType).setScale(BUBBLE_SCALE);
+            bubble.body.setCircle(bubble.width/2); // لجعل الاصطدام دائري
+
+            // تعيين بيانات الإجابة على الفقاعة
+            bubble.setData('data', {
+                answer: opt,
+                index: index + 1
+            });
+
+            // 1. إضافة النص (رقم الفقاعة)
+            const numberText = scene.add.text(x, y - 25, (index + 1).toString(), {
+                fontFamily: 'Arial',
+                fontSize: 30,
+                color: '#fff',
+                stroke: '#000',
+                strokeThickness: 5
+            }).setOrigin(0.5);
+
+            // 2. إضافة نص الإجابة
+            const answerText = scene.add.text(x, y + 25, opt, {
+                fontFamily: 'Arial',
+                fontSize: 18,
+                color: '#000',
+                wordWrap: { width: bubble.displayWidth - 20 }
+            }).setOrigin(0.5);
+
+            // جعل النصوص تابعة للفقاعة
+            bubble.setDepth(2);
+            numberText.setDepth(3);
+            answerText.setDepth(3);
+            
+            // ربط تحديث موقع النص بحركة الفقاعة
+            bubble.on('destroy', () => { numberText.destroy(); answerText.destroy(); });
+            bubble.on('postupdate', () => { 
+                numberText.x = bubble.x; 
+                numberText.y = bubble.y - 25;
+                answerText.x = bubble.x;
+                answerText.y = bubble.y + 25;
+            });
+            
+            // حركة عشوائية للفقاعة (بطيئة)
+            const speed = 100;
+            bubble.setVelocity(
+                Phaser.Math.Between(-speed / 2, speed / 2),
+                Phaser.Math.Between(-speed / 2, speed / 2)
+            );
+            
+            // ضبط الارتداد (Bounce) والاصطدام بحدود العالم
+            bubble.setBounce(1);
+            bubble.setCollideWorldBounds(true);
+            bubble.body.onWorldBounds = true;
+
+            // ضبط حدود الحركة لتبقى الفقاعات في الجزء العلوي
+            bubble.body.setBoundsRectangle(new Phaser.Geom.Rectangle(0, startY, width, endY - startY));
+
+            bubble.body.world.on('worldbounds', (body) => {
+                if (body.gameObject === bubble) {
+                    // عكس الحركة عند الاصطدام بالحدود العلوية/السفلية/الجانبية
+                    bubble.setVelocity(
+                        bubble.body.velocity.x * (body.blocked.left || body.blocked.right ? -1 : 1),
+                        bubble.body.velocity.y * (body.blocked.up || body.blocked.down ? -1 : 1)
+                    );
+                }
+            });
+        });
+        
+    }
+
+    // دالة عرض السؤال
+    function showQuestion(index){
+        const isReviewing = questionToRepeat !== null;
+        const q = isReviewing ? questionToRepeat : QUESTIONS[index];
+        const scene = game.scene.getScene('default');
+
+        if(!q){
+            questionBox.innerHTML='<h3>أحسنت! لقد أنهيت اللعبة بنجاح!</h3>';
+            bubblesGroup.clear(true, true); // إزالة الفقاعات
+            return;
+        }
+
+        // تحديث نص السؤال في مربع HTML
+        questionBox.innerHTML = `<h3>السؤال ${isReviewing ? "(مراجعة)" : index + 1}: ${q.question}</h3>`;
+
+        // إنشاء الفقاعات الجديدة للإجابات
+        createBubbles(scene, q);
+    }
+
+    // دالة التحقق من الإجابة (تُستدعى عند اصطدام القذيفة بفقاعة)
+    function checkAnswer(bubble, selectedAnswer){
+        const scene = game.scene.getScene('default');
+        
+        const isReviewing = questionToRepeat !== null;
+        // نحدد السؤال الذي يتم الإجابة عليه
+        const currentQ = isReviewing ? 
+                                questionToRepeat : 
+                                QUESTIONS[currentQuestionIndex];
+
+        // تعطيل المدفع مؤقتاً أثناء معالجة الإجابة
+        scene.input.enabled = false;
+
+        if(selectedAnswer === currentQ.correctAnswer){
+            // ✅ الإجابة الصحيحة
+            correctSound.play();
+            
+            // تأثير انفجار الفقاعة
+            bubble.destroy(); 
+
+            scene.time.delayedCall(500, ()=>{
+                // إعادة تمكين الإدخال
+                scene.input.enabled = true;
+                
+                if(isReviewing){
+                    // حالة المراجعة: الإجابة الصحيحة على سؤال الخطأ المكرر
+                    
+                    // 1. التقدم سؤال واحد فقط
+                    let nextIndex = currentQuestionIndex + 1; 
+                    
+                    // 2. إذا وصلنا إلى السؤال الذي أخطأنا عليه أول مرة، نمسح السؤال المكرر (Mastered)
+                    if (nextIndex === originalQuestionIndexBeforeError) {
+                        questionToRepeat = null; // إتقان السؤال
+                        // ونستمر في التقدم للسؤال التالي بعد نقطة العودة
+                        currentQuestionIndex = nextIndex; 
+                        showQuestion(currentQuestionIndex);
+                    } else if (nextIndex < QUESTIONS.length) {
+                        // نستمر في مراجعة الأسئلة حتى نصل لنقطة العودة
+                        currentQuestionIndex = nextIndex;
+                        showQuestion(currentQuestionIndex);
+                    } else {
+                        // أنهينا المراجعة وأنهينا اللعبة
+                        showQuestion(QUESTIONS.length);
+                    }
+                    
+                } else {
+                    // التقدم الطبيعي (سؤال جديد)
+                    let nextIndex = currentQuestionIndex + 1;
+                    
+                    if(nextIndex < QUESTIONS.length){
+                        currentQuestionIndex = nextIndex;
+                        showQuestion(currentQuestionIndex);
+                    } else { 
+                        showQuestion(nextIndex); // نهاية اللعبة 
+                    }
+                }
+            });
+
+        } else {
+            // ❌ الإجابة الخاطئة
+            wrongSound.play();
+            
+            // تأثير الخطأ الأحمر
+            wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0.5)';
+            errorIndicator.style.opacity = 1;
+
+            scene.time.delayedCall(400, ()=>{
+                wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0)';
+                errorIndicator.style.opacity = 0;
+            });
+            
+            // منطق الإتقان: الرجوع للسؤال السابق
+            if(currentQuestionIndex > 0){
+                
+                // 1. تحديد السؤال الحالي (سؤال الخطأ) للتكرار
+                if(!isReviewing) {
+                   questionToRepeat = currentQ;
+                   // تسجيل مؤشر السؤال الذي كان يجب أن نتقدم إليه (نقطة العودة)
+                   originalQuestionIndexBeforeError = currentQuestionIndex + 1; 
+                }
+
+                // 2. الرجوع للسؤال السابق
+                let prevIndex = currentQuestionIndex - 1;
+                currentQuestionIndex = prevIndex;
+                
+                scene.time.delayedCall(1500, ()=>{
+                    // إعادة تمكين الإدخال
+                    scene.input.enabled = true;
+                    // showQuestion سيعرض questionToRepeat
+                    showQuestion(currentQuestionIndex); 
+                });
+                
+            } else {
+                // الخطأ على السؤال الأول: البقاء في المكان حتى الإجابة الصحيحة
+                scene.time.delayedCall(500, ()=>{
+                    scene.input.enabled = true;
+                    // إعادة تحميل الفقاعات لترتيب جديد (اختياري)
+                    showQuestion(currentQuestionIndex); 
+                });
+            }
+        }
+    }
+</script>
+</body>
+</html>
