@@ -13,33 +13,49 @@ body {
   font-family:Arial;
 }
 
+/* ===== رأس السؤال ===== */
 header {
-  background:rgba(0,0,0,.85);
+  background:rgba(0,0,0,.9);
   color:#fff;
-  padding:.6em;
+  padding:1em .5em;
   text-align:center;
 }
 
 header h3 {
   margin:0;
-  font-size:clamp(1rem,4vw,1.6rem);
+  font-size:clamp(1.4rem,5vw,2rem);
 }
 
 .answers {
   display:flex;
   justify-content:center;
-  gap:1em;
-  margin-top:.4em;
-  font-size:clamp(.85rem,3.5vw,1.2rem);
+  gap:1.2em;
+  margin-top:.6em;
+  font-size:clamp(1.1rem,4.5vw,1.6rem);
 }
 
+/* ===== إطار اللعبة ===== */
 main {
   display:flex;
-  height:calc(100vh - 90px);
+  justify-content:center;
+  align-items:center;
+  padding:1em 0;
+}
+
+#game-frame {
+  width:95vw;
+  max-width:520px;
+  aspect-ratio:3/5;
+  background:#e9f7ff;
+  border:6px solid #333;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
 }
 
 #game-container {
-  flex:1;
+  width:100%;
+  height:100%;
 }
 
 #wrongFlash {
@@ -58,7 +74,9 @@ main {
 <header id="questionHeader"></header>
 
 <main>
-  <section id="game-container"></section>
+  <section id="game-frame">
+    <div id="game-container"></div>
+  </section>
 </main>
 
 <div id="wrongFlash"></div>
@@ -77,10 +95,10 @@ const QUESTIONS = [
 ====================== */
 const config = {
  type: Phaser.AUTO,
- width:800,
- height:1200,
+ width:600,
+ height:900,
  parent:'game-container',
- scale:{ mode:Phaser.Scale.FIT, autoCenter:Phaser.Scale.CENTER_BOTH },
+ scale:{ mode:Phaser.Scale.RESIZE },
  physics:{ default:'arcade', arcade:{ gravity:{y:0}, debug:false } },
  scene:{ preload, create }
 };
@@ -115,9 +133,13 @@ function create(){
  this.correctSound = this.sound.add('correct');
  this.wrongSound = this.sound.add('wrong');
 
- /* أحجام ديناميكية */
- this.cannonScale = height * 0.00022;
- this.bubbleScale = width * 0.00018;
+ /* أحجام أصغر + ديناميكية */
+ this.cannonScale = height * 0.00016;
+ this.bubbleScale = width * 0.00012;
+ this.shotScale   = width * 0.00008;
+
+ /* إطار اللعبة الفيزيائي */
+ this.physics.world.setBounds(0,0,width,height);
 
  cannon = this.add.sprite(width/2, height*0.92, 'cannon')
    .setScale(this.cannonScale);
@@ -126,18 +148,18 @@ function create(){
 
  arrow = this.add.text(
    cannon.x,
-   cannon.y - cannon.displayHeight,
+   cannon.y - cannon.displayHeight - 10,
    '⬆️',
-   { fontSize:'28px' }
- ).setOrigin(0.5).setDepth(10);
+   { fontSize:'24px' }
+ ).setOrigin(0.5);
 
- /* تحريك المدفع فقط */
+ /* تحريك المدفع داخل الإطار */
  this.input.on('pointermove', p=>{
-   cannon.x = Phaser.Math.Clamp(p.x, width*0.15, width*0.85);
+   cannon.x = Phaser.Math.Clamp(p.x, width*0.12, width*0.88);
    arrow.x = cannon.x;
  });
 
- /* منطق الموبايل: تصويب ثم ضرب */
+ /* موبايل: تصويب ثم إطلاق */
  this.input.on('pointerdown', ()=>{
    if(!isAiming){
      isAiming = true;
@@ -161,19 +183,18 @@ function fire(scene){
 
  const shot = scene.physics.add.sprite(
    cannon.x,
-   cannon.y - cannon.displayHeight/1.2,
+   cannon.y - cannon.displayHeight,
    'shoot'
- );
+ ).setScale(scene.shotScale);
 
- shot.setVelocityY(-scene.scale.height*0.9);
+ shot.setVelocityY(-scene.scale.height * 0.8);
 
  scene.physics.add.overlap(shot, bubbles, (s,b)=>{
    s.destroy();
    bubbleHit(scene,b);
  });
 
- scene.time.delayedCall(1400, ()=>shot.destroy());
-
+ scene.time.delayedCall(1200, ()=>shot.destroy());
  scene.time.delayedCall(cooldown, ()=>{
    canShoot = true;
    arrow.setVisible(true);
@@ -181,7 +202,7 @@ function fire(scene){
 }
 
 /* ======================
-   عند إصابة فقاعة
+   إصابة
 ====================== */
 function bubbleHit(scene,bubble){
  const correct = bubble.getData('correct');
@@ -189,35 +210,27 @@ function bubbleHit(scene,bubble){
 
  if(correct){
    scene.correctSound.play();
-   scene.time.delayedCall(500, ()=>{
-     currentQ++;
-     showQuestion(scene);
-   });
+   scene.time.delayedCall(500, ()=>{ currentQ++; showQuestion(scene); });
  } else {
    scene.wrongSound.play();
-   document.getElementById('wrongFlash').style.background='rgba(255,0,0,.5)';
-   setTimeout(()=>{
-     document.getElementById('wrongFlash').style.background='rgba(255,0,0,0)';
-   },250);
-
+   document.getElementById('wrongFlash').style.background='rgba(255,0,0,.45)';
+   setTimeout(()=>document.getElementById('wrongFlash').style.background='rgba(255,0,0,0)',250);
    scene.time.delayedCall(700, ()=>showQuestion(scene));
  }
 }
 
 /* ======================
-   عرض السؤال والفقاعات
+   السؤال
 ====================== */
 function showQuestion(scene){
  const q = QUESTIONS[currentQ];
-
  if(!q){
-   document.getElementById('questionHeader').innerHTML =
-     '<h3>أحسنت ✅ انتهت اللعبة</h3>';
+   document.getElementById('questionHeader').innerHTML='<h3>أحسنت ✅ انتهت اللعبة</h3>';
    bubbles.clear(true,true);
    return;
  }
 
- document.getElementById('questionHeader').innerHTML = `
+ document.getElementById('questionHeader').innerHTML=`
    <h3>${q.q}</h3>
    <div class="answers">
      <span>1️⃣ ${q.o[0]}</span>
@@ -227,31 +240,24 @@ function showQuestion(scene){
  `;
 
  bubbles.clear(true,true);
-
- const xs = [0.25,0.5,0.75];
+ const xs=[0.25,0.5,0.75];
 
  for(let i=0;i<3;i++){
-   const b = bubbles.create(
-     scene.scale.width * xs[i],
-     scene.scale.height * 0.25,
+   const b=bubbles.create(
+     scene.scale.width*xs[i],
+     scene.scale.height*0.22,
      'bubble'+(i+1)
    ).setScale(scene.bubbleScale);
 
-   b.setData('correct', i === q.a);
-
-   b.setVelocity(
-     Phaser.Math.Between(-60,60),
-     Phaser.Math.Between(40,120)
-   );
+   b.setData('correct', i===q.a);
+   b.setVelocity(Phaser.Math.Between(-50,50),Phaser.Math.Between(40,90));
    b.setBounce(1);
 
-   /* مجال حركة علوي فقط */
    b.body.setBoundsRectangle(
      new Phaser.Geom.Rectangle(
-       0,
-       scene.scale.height*0.12,
+       0, scene.scale.height*0.12,
        scene.scale.width,
-       scene.scale.height*0.45
+       scene.scale.height*0.42
      )
    );
  }
