@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>لعبة تعليمية - Phaser + Supabase</title>
+<title>لعبة تعليمية - Phaser</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
 <style>
 body { margin:0; background:#ccf2ff; overflow:hidden; }
@@ -23,23 +23,17 @@ body { margin:0; background:#ccf2ff; overflow:hidden; }
 <body>
 <div id="questionBox"></div>
 
-<!-- استدعاء Supabase كـ ES Module -->
-<script type="module">
-import { createClient } from 'https://unpkg.com/@supabase/supabase-js@2/dist/supabase.js';
+<script>
+// =====================
+// أسئلة مؤقتة للتجربة
+// =====================
+let questions = [
+  { q: "ما لون السماء؟", c: ["أزرق","أخضر","أصفر"], a: 0 },
+  { q: "كم عدد أرجل القط؟", c: ["2","4","6"], a: 1 },
+  { q: "ما الحيوان الذي يطير؟", c: ["نحلة","حصان","سمكة"], a: 0 }
+];
 
-// ==============================================
-// مفاتيح Supabase (استبدلها بمفاتيحك الفعلية)
-// ==============================================
-const SUPABASE_URL = 'https://zjacblvmrhmakxynffay.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqYWNibHZtcmhtYWt4eW5mZmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNjY2NjQsImV4cCI6MjA4MDY0MjY2NH0.FjxNgBK7HRxs3gWlBNocH1ypcKlz-DA3MY2ltIY491o';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ==============================================
-// متغيرات اللعبة
-// ==============================================
-let questions = []; 
-let currentQuestion=0, currentPlatformIndex=0;
+let currentQuestion = 0, currentPlatformIndex = 0;
 const PLATFORM_SCALE_X = 0.2;
 const PLATFORM_SCALE_Y = 0.05;
 
@@ -51,11 +45,8 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-let player, platforms, sceneRef, redOverlay, correctSound, wrongSound;
+let player, platforms, sceneRef, redOverlay;
 
-// ==============================================
-// تحميل الصور والأصوات
-// ==============================================
 function preload() {
   this.load.image('player','assets/cat.png'); 
   this.load.image('platform','assets/platform.png'); 
@@ -63,9 +54,6 @@ function preload() {
   this.load.audio('wrong','assets/wrong.mp3');
 }
 
-// ==============================================
-// إنشاء المشهد
-// ==============================================
 function create() {
   sceneRef = this;
   platforms = this.physics.add.staticGroup();
@@ -87,51 +75,16 @@ function create() {
   redOverlay = this.add.rectangle(300,300,600,600,0xff0000,0);
   redOverlay.setDepth(1000);
 
+  // أصوات
   correctSound = this.sound.add('correct');
   wrongSound = this.sound.add('wrong');
 
-  // البدء في جلب الأسئلة عند تحميل المشهد
-  getQuestionsFromSupabase(); 
+  // عرض السؤال الأول
+  showQuestion(); 
 }
 
-// ==============================================
-// جلب الأسئلة من Supabase
-// ==============================================
-async function getQuestionsFromSupabase() {
-    document.getElementById("questionBox").innerHTML = "<h2>جارٍ تحميل الأسئلة... الرجاء الانتظار</h2>";
-    
-    let { data, error } = await supabase
-        .from('questions')
-        .select('text, options, answer_index'); 
-
-    if (error) {
-        console.error('Error fetching questions:', error);
-        document.getElementById("questionBox").innerHTML = "<h2>❌ خطأ في الاتصال. راجع المفاتيح وقواعد الأمان.</h2>";
-        return;
-    }
-
-    if (data && data.length > 0) {
-        // تحويل البيانات المسترجعة إلى الهيكل المطلوب
-        questions = data.map(q => ({
-            q: q.text,
-            c: q.options, 
-            a: q.answer_index,
-        }));
-        
-        console.log(`Successfully loaded ${questions.length} questions.`);
-        
-        // عرض السؤال الأول
-        showQuestion(); 
-    } else {
-         document.getElementById("questionBox").innerHTML = "<h2>لم يتم العثور على أسئلة في قاعدة البيانات.</h2>";
-    }
-}
-
-// ==============================================
-// عرض السؤال الحالي
-// ==============================================
 function showQuestion(){
-  if(currentQuestion>=questions.length){
+  if(currentQuestion >= questions.length){
     document.getElementById("questionBox").innerHTML="<h2>أحسنت! لقد أنهيت جميع التحديات!</h2>";
     return;
   }
@@ -144,37 +97,27 @@ function showQuestion(){
   box.innerHTML = html;
 }
 
-// ==============================================
-// التحقق من الإجابة وتحريك اللاعب
-// ==============================================
 function answer(selected){
-  if(currentQuestion>=questions.length) return;
+  if(currentQuestion >= questions.length) return;
   const q = questions[currentQuestion];
   
   if (sceneRef.tweens.isTweening(player)) return; 
 
-  if(selected===q.a){
-    currentPlatformIndex = Math.min(currentPlatformIndex+1, platforms.getChildren().length-1);
+  if(selected === q.a){
+    currentPlatformIndex = Math.min(currentPlatformIndex + 1, platforms.getChildren().length - 1);
     currentQuestion++;
     correctSound.play();
   } else {
-    if(currentPlatformIndex>0) currentPlatformIndex--;
+    if(currentPlatformIndex > 0) currentPlatformIndex--;
     
     redOverlay.alpha = 0.5;
-    sceneRef.tweens.add({
-      targets:redOverlay,
-      alpha:0,
-      duration:300
-    });
+    sceneRef.tweens.add({ targets:redOverlay, alpha:0, duration:300 });
     wrongSound.play();
   }
   movePlayerToPlatform(currentPlatformIndex);
   setTimeout(showQuestion,500); 
 }
 
-// ==============================================
-// تحريك اللاعب إلى منصة معينة
-// ==============================================
 function movePlayerToPlatform(index){
   const target = platforms.getChildren()[index];
   const startY = player.y;
@@ -183,7 +126,7 @@ function movePlayerToPlatform(index){
   const peak = Math.min(startY, endY) - 70; 
   
   player.body.setAllowGravity(false);
-  player.body.setVelocity(0, 0); 
+  player.body.setVelocity(0,0); 
   
   sceneRef.tweens.timeline({
     targets:player,
@@ -191,13 +134,7 @@ function movePlayerToPlatform(index){
     tweens:[
       { y:peak, duration:200 }, 
       { x:endX, duration:400 }, 
-      { 
-        y:endY, 
-        duration:200,
-        onComplete: () => {
-          player.body.setAllowGravity(true);
-        }
-      }  
+      { y:endY, duration:200, onComplete:()=>{ player.body.setAllowGravity(true); } }  
     ]
   });
 }
