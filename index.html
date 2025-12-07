@@ -308,52 +308,61 @@
         }
 
         // 4. دالة حركة القطة بين المنصات
+      // 4. دالة حركة القطة بين المنصات - الكود المعدل
         function moveCat(scene, targetIndex, isCorrect) {
             if (isMoving) return;
             isMoving = true;
 
             const targetPlatform = platforms.getChildren()[targetIndex];
-            const targetX = targetPlatform.x;
+            const startY = cat.y;
+            // الموقع الدقيق لقمة المنصة الجديدة
             const targetY = targetPlatform.y - targetPlatform.displayHeight / 2;
+            const targetX = targetPlatform.x;
             
-            // حساب المسافة (لتقدير مدة الحركة)
+            // حساب المسافة ومدة الحركة (كما كان)
             const distance = Phaser.Math.Distance.Between(cat.x, cat.y, targetX, targetY);
-            const duration = distance * 2.5; // سرعة ثابتة تقريباً
+            const duration = distance * 2.5; 
+            
+            // ارتفاع القفزة (أعلى نقطة ستصل إليها القطة)
+            const jumpHeight = 60 + Math.abs(startY - targetY) * 0.3;
+            
+            // تحديد النقاط التي ستمر بها القطة في Y لتحقيق القفزة الواقعية:
+            // 1. ارتفاع (قفز)
+            // 2. هبوط (على المنصة الجديدة)
+            
+            const jumpYPoint = Math.min(startY, targetY) - jumpHeight; // أدنى ارتفاع مشترك - ارتفاع القفزة
 
-            // تحديد ارتفاع القفزة بناءً على فرق الـ Y
-            const jumpHeight = 60 + Math.abs(cat.y - targetY) * 0.5;
-
-            // 4. الحركة الأفقية والقفزة الرأسية (Tween)
             scene.tweens.add({
                 targets: cat,
-                x: targetX, // الحركة الأفقية السلسة
-                y: targetY, // الهدف النهائي
+                x: targetX,
+                // نستخدم مصفوفة قيم للـ Y لتحقيق حركة القفز الطبيعية (Parabolic Jump)
+                y: [jumpYPoint, targetY], // ستتحرك Y أولاً إلى jumpYPoint ثم إلى targetY
+                
                 duration: duration,
-                ease: 'Linear', // حركة أفقية ثابتة
-
-                // القفزة الواقعية (ترتفع ثم تهبط)
-                onUpdate: (tween, target) => {
-                    const progress = tween.progress;
-                    const parabolaY = 1 - Math.pow(2 * progress - 1, 2); // دالة قطع مكافئ (للإرتفاع والإنخفاض)
-                    cat.y = Phaser.Math.Interpolation.Linear([cat.y, targetY], progress) - jumpHeight * parabolaY;
-                },
+                ease: 'Sine.easeOut', // إبطاء الحركة الرأسية عند الصعود
+                
+                yoyo: false,
+                repeat: 0,
 
                 onComplete: () => {
+                    // **الخطوة الحاسمة:** تثبيت القطة على الموقع النهائي لضمان عدم وجود "شفافية"
+                    cat.x = targetX;
+                    cat.y = targetY; 
+                    
                     isMoving = false;
-                    cat.setVelocity(0); // تأكيد التوقف
+                    cat.setVelocity(0); 
 
-                    // 3. إظهار السؤال الجديد فقط عند الإجابة الصحيحة
+                    // باقي منطق اللعبة
                     if (isCorrect) {
                         showQuestion(scene, currentPlatformIndex);
                     }
-                    
-                    // إعادة تفعيل الأزرار إذا لم يكن هناك سؤال جديد
                     if (!isCorrect) {
                         document.querySelectorAll('.option-button').forEach(btn => btn.disabled = false);
                     }
                 }
             });
-        }
+        } 
     </script>
 </body>
 </html>
+
