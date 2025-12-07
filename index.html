@@ -106,7 +106,8 @@
 <body>
 
     <div id="wrongFeedback"></div>
-    <div id="errorIndicator">⛔</div> <div id="questionBox"></div>
+    <div id="errorIndicator">⛔</div>
+    <div id="questionBox"></div>
     <div id="game-container"></div>
 
 <script>
@@ -116,7 +117,6 @@
         {question:"كم عدد أرجل القطط؟", options:["اثنين","أربعة","ستة"], correctAnswer:"أربعة"},
         {question:"ما هو أكبر محيط في العالم؟", options:["الأطلسي","الهندي","الهادئ"], correctAnswer:"الهادئ"},
         {question:"ما هو الشكل الهندسي الذي يحتوي على ثلاثة أضلاع؟", options:["المربع","المثلث","الدائرة"], correctAnswer:"المثلث"}
-        // يمكن إضافة المزيد من الأسئلة هنا
     ];
 
     // 🖼️ إعدادات اللعبة
@@ -137,13 +137,12 @@
     let questionBox, wrongFeedbackDiv, errorIndicator;
     let correctSound, wrongSound;
     let catBreathingTween;
-    let questionToRepeat = null; // السؤال الذي يتم تكراره عند الرجوع
-    let currentQuestionIndex = 0; // مؤشر السؤال في مصفوفة QUESTIONS
+    let questionsToReview = []; // المصفوفة الجديدة للأسئلة المكررة
+    let currentQuestionIndex = 0; 
 
     function preload() {
         this.load.image('cat','assets/cat.png');
         this.load.image('platform','assets/platform.png');
-        // تأكد من وجود ملفات الصوت في مجلد assets/
         this.load.audio('correct','assets/correct.mp3'); 
         this.load.audio('wrong','assets/wrong.mp3');
     }
@@ -159,7 +158,6 @@
         platforms = this.physics.add.staticGroup();
         const { width, height } = this.scale;
 
-        // المواقع المرجعية للمنصات (لضمان توزيع جيد)
         const PLATFORM_LOCATIONS_POOL = [
             { x: width*0.2, y: height*0.8 },
             { x: width*0.8, y: height*0.65 },
@@ -169,12 +167,12 @@
             { x: width*0.9, y: height*0.4 }
         ];
         
-        // بناء المنصات: عدد المنصات = عدد الأسئلة (QUESTIONS.length)
+        // بناء المنصات بناءً على عدد الأسئلة
         platformPositions = PLATFORM_LOCATIONS_POOL.slice(0, QUESTIONS.length); 
 
         platformPositions.forEach(pos=>{
             let p = platforms.create(pos.x,pos.y,'platform');
-            p.setScale(0.2,0.05).refreshBody(); // مقياس المنصة
+            p.setScale(0.2,0.05).refreshBody();
             p.setImmovable(true);
         });
 
@@ -184,13 +182,11 @@
         cat.body.allowGravity=false;
         cat.setDepth(1);
 
-        // حساب موقع القطة ليقف مركزها فوق حافة المنصة تماماً
         const startY = startPlatform.y - startPlatform.displayHeight/2 - cat.displayHeight/2;
         cat.y = startY;
 
         this.physics.add.collider(cat, platforms, ()=>{cat.setVelocity(0); isMoving=false;});
 
-        // حركة تنفس القطة
         catBreathingTween = this.tweens.add({targets:cat, y:startY-5, duration:1000, yoyo:true, repeat:-1, ease:'Sine.easeInOut'});
 
         showQuestion(0);
@@ -198,21 +194,20 @@
 
     function update(){}
 
-    // دالة عرض السؤال (المعدلة لدعم تكرار السؤال)
+    // دالة عرض السؤال (المعدلة لدعم الأسئلة المكررة)
     function showQuestion(index){
-        // تحديد السؤال المعروض: إذا كان هناك سؤال مُعاد، يعرضه. وإلا يعرض السؤال التالي.
-        const q = questionToRepeat !== null ? 
-                                 questionToRepeat : 
-                                 QUESTIONS[index];
+        
+        // الأولوية للسؤال المكرر، وإلا السؤال من الترتيب الأصلي
+        const q = questionsToReview.length > 0 ? questionsToReview[0] : QUESTIONS[index];
         
         if(!q){
-            questionBox.innerHTML='<h3>أحسنت! لقد أنهيت اللعبة بنجاح!</h3>';
+            questionBox.innerHTML='<h3>أحسنت! لقد أنهيت الجولة بنجاح!</h3>';
             questionBox.style.display='block';
             return;
         }
 
         questionBox.style.display='block';
-        currentQuestionIndex = index; // تحديد مؤشر المنصة الحالية
+        currentQuestionIndex = index;
 
         let html = `<h3>${q.question}</h3><div class="options-container">`;
         q.options.forEach(opt=>{
@@ -221,17 +216,16 @@
         html+=`</div>`;
         questionBox.innerHTML = html;
 
-        // ربط الأحداث
         document.querySelectorAll('.option-button').forEach(btn=>{
-            // نمرر الـ index للمنصة الحالية لتعرفه دالة checkAnswer
             btn.onclick = ()=>checkAnswer(btn, btn.textContent, currentQuestionIndex);
         });
     }
 
-    // دالة التحقق من الإجابة (منطق الإتقان)
-    function checkAnswer(button, selectedAnswer, originalQuestionIndex){
-        // تحديد السؤال الذي تمت الإجابة عليه (سواء كان مكرراً أو جديداً)
-        const currentQ = questionToRepeat !== null ? questionToRepeat : QUESTIONS[originalQuestionIndex];
+    // دالة التحقق من الإجابة (منطق الإتقان النهائي)
+    function checkAnswer(button, selectedAnswer, originalPlatformIndex){
+        
+        const isReviewing = questionsToReview.length > 0;
+        const currentQ = isReviewing ? questionsToReview[0] : QUESTIONS[originalPlatformIndex];
         const scene = game.scene.getScene('default');
 
         document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=true);
@@ -241,17 +235,35 @@
             correctSound.play();
             questionBox.style.display='none';
             
-            // مسح سجل السؤال المكرر بعد الإجابة الصحيحة
-            if(questionToRepeat !== null){
-                questionToRepeat = null;
-            }
+            if(isReviewing){
+                // 1. إزالة السؤال من قائمة المراجعة
+                questionsToReview.shift();
+                
+                // 2. إذا لم يتبق أسئلة مراجعة، نتقدم
+                if(questionsToReview.length === 0){
+                    let nextIndex = originalPlatformIndex + 1;
+                    if(nextIndex < platformPositions.length){
+                        currentPlatformIndex = nextIndex;
+                        moveCat(scene, nextIndex, true); 
+                    } else { showQuestion(nextIndex); }
+                    return;
+                }
+                
+                // 3. إذا كان هناك أسئلة مراجعة أخرى، نبقى في المكان ونعرض السؤال التالي للمراجعة
+                 scene.time.delayedCall(1500, ()=>{
+                    document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
+                    showQuestion(originalPlatformIndex); 
+                });
+                return;
 
-            // التقدم للمنصة التالية
-            let nextIndex = originalQuestionIndex + 1;
-            if(nextIndex<platformPositions.length){
-                currentPlatformIndex=nextIndex;
-                moveCat(scene,nextIndex,true);
-            } else { showQuestion(nextIndex); }
+            } else {
+                // التقدم الطبيعي للمنصة التالية
+                let nextIndex = originalPlatformIndex + 1;
+                if(nextIndex<platformPositions.length){
+                    currentPlatformIndex=nextIndex;
+                    moveCat(scene,nextIndex,true);
+                } else { showQuestion(nextIndex); }
+            }
 
         } else {
             // ❌ الإجابة الخاطئة
@@ -263,26 +275,24 @@
             
             scene.time.delayedCall(400, ()=>{
                 wrongFeedbackDiv.style.backgroundColor='rgba(255,0,0,0)';
-                errorIndicator.style.opacity = 0; // إخفاء المؤشر مع اللون الأحمر
+                errorIndicator.style.opacity = 0;
             });
 
-            // منطق الإتقان: الرجوع للمنصة السابقة
-            if(originalQuestionIndex > 0){
-                
-                // 1. تحديد السؤال الحالي (سؤال الخطأ) للتكرار
-                questionToRepeat = currentQ;
+            // 1. إضافة السؤال الخاطئ إلى مصفوفة المراجعة (إذا لم يكن موجوداً بالفعل)
+            if (!isReviewing) {
+                 questionsToReview.push(currentQ);
+            }
 
-                // 2. الرجوع للمنصة السابقة
-                let prevIndex = originalQuestionIndex - 1;
+            // 2. الرجوع للمنصة السابقة
+            if(originalPlatformIndex > 0){
+                let prevIndex = originalPlatformIndex - 1;
                 currentPlatformIndex = prevIndex;
                 
-                // 3. حركة القطة
                 moveCat(scene, prevIndex, false);
                 
-                // 4. إعادة تمكين الأزرار وعرض السؤال المكرر
+                // 3. عرض السؤال المكرر (الذي تم إضافته للتو) على المنصة السابقة
                 scene.time.delayedCall(1500, ()=>{
                     document.querySelectorAll('.option-button').forEach(btn=>btn.disabled=false);
-                    // عرض السؤال على المنصة السابقة (prevIndex). showQuestion سيعرض questionToRepeat.
                     showQuestion(prevIndex); 
                 });
                 
@@ -293,7 +303,7 @@
         }
     }
 
-    // دالة حركة القطة (للقفز الواقعي والتثبيت)
+    // دالة حركة القطة
     function moveCat(scene,targetIndex,isCorrect){
         if(isMoving) return;
         isMoving=true;
@@ -304,13 +314,11 @@
         const startX = cat.x;
         const startY = cat.y;
         const targetX = targetPlatform.x;
-        // الموقع الدقيق لمركز القطة فوق حافة المنصة
         const targetY = targetPlatform.y - targetPlatform.displayHeight/2 - cat.displayHeight/2;
 
         const distance = Phaser.Math.Distance.Between(startX,startY,targetX,targetY);
         const duration = distance*3;
 
-        // ارتفاع القفزة
         const apexY = Math.min(startY,targetY)-70;
 
         scene.tweens.add({
@@ -320,18 +328,16 @@
             x: targetX,
             onUpdate: (tween,target)=>{
                 const progress=tween.progress;
-                const factor=1-Math.pow(2*progress-1,2); // دالة القطع المكافئ
+                const factor=1-Math.pow(2*progress-1,2);
                 const linearY=Phaser.Math.Interpolation.Linear([startY,targetY],progress);
                 target.y=linearY-(startY-apexY)*factor;
             },
             onComplete: ()=>{
-                // التثبيت اليدوي للموقع النهائي لضمان الوقوف
                 cat.x=targetX;
                 cat.y=targetY;
                 isMoving=false;
                 cat.setVelocity(0);
 
-                // إعادة تشغيل حركة التنفس
                 if(catBreathingTween){
                     catBreathingTween.remove();
                     catBreathingTween = scene.tweens.add({targets:cat,y:targetY-5,duration:1000,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
