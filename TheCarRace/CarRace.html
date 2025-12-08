@@ -401,14 +401,14 @@
                     fontStyle: 'bold'
                 }).setScrollFactor(0).setDepth(100);
 
-                // مؤقت لتوليد صناديق الأسئلة
-                this.time.addEvent({
-                    delay: 4000, 
-                    callback: this.generateQuestionBox,
-                    callbackScope: this,
-                    loop: true
-                });
-
+               // مؤقت لتوليد صناديق الأسئلة (سيتم إيقافه تلقائياً عند انتهاء الأسئلة)
+                this.boxSpawnTimer = this.time.addEvent({
+                    delay: 4000, 
+                    callback: this.generateQuestionBox,
+                    callbackScope: this,
+                    loop: true
+                });
+                
                 // مؤقت لتوليد عناصر الخلفية
                 this.time.addEvent({
                     delay: 500,
@@ -565,24 +565,56 @@
                 }
             }
             
-            generateQuestionBox(questionData = null) {
-                if (questionBoxGroup.getLength() > 0) {
-                    return;
-                }
-                
-                // اختيار سؤال
-                if (wrongQuestions.length > 0) { 
-                    questionData = wrongQuestions.shift();
-                } else if (remainingQuestions.length > 0) {
-                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
-                    questionData = remainingQuestions.splice(randomIndex, 1)[0];
-                } else {
-                    remainingQuestions = Phaser.Utils.Array.Shuffle([...allQuestionsData]);
-                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
-                    questionData = remainingQuestions.splice(randomIndex, 1)[0];
-                }
-                
-                if (!questionData) return;
+// المنطقة الجديدة (الدالة generateQuestionBox بالكامل)
+            generateQuestionBox() {
+                // 1. التحقق من وجود صندوق قيد الظهور حالياً لتجنب التكرار
+                if (questionBoxGroup.getLength() > 0) {
+                    return;
+                }
+                
+                let questionData = null;
+                
+                // 2. منطق اختيار السؤال (يعطي الأولوية للأسئلة الخاطئة)
+                if (wrongQuestions.length > 0) { 
+                    // سحب السؤال الخاطئ الأول
+                    questionData = wrongQuestions.shift();
+                } else if (remainingQuestions.length > 0) {
+                    // سحب سؤال جديد من الأسئلة المتبقية
+                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
+                    questionData = remainingQuestions.splice(randomIndex, 1)[0];
+                } else {
+                    // إذا لم تتبق أسئلة جديدة أو خاطئة: إيقاف مؤقت التوليد
+                    if (this.boxSpawnTimer) {
+                        this.boxSpawnTimer.paused = true;
+                        console.log("تم الانتهاء من جميع الأسئلة.");
+                    }
+                    return;
+                }
+                
+                // 3. إنشاء الصندوق (بقية الكود تبقى كما هي)
+                // إنشاء صندوق عريض يغطي المسار
+                const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture'); 
+                
+                // جعل الصندوق عريضًا وطويلًا لتغطية المسار
+                box.setDisplaySize(250, 150); // جعل الصندوق أكبر
+                
+                // جعل الجسم الفيزيائي يغطي مساحة كبيرة
+                box.body.setSize(250, 150);
+                
+                questionBoxGroup.add(box);
+                box.setData('question', questionData);
+                box.setData('used', false);
+                
+                // إضافة حركة خفيفة للصندوق لجذب الانتباه
+                this.tweens.add({
+                    targets: box,
+                    y: 480,
+                    duration: 1000,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+            }
                 
                 // إنشاء صندوق عريض يغطي المسار
                 // الصندوق سيظهر في منتصف المسار رأسيًا (y=500)
@@ -746,4 +778,5 @@
     </script>
 </body>
 </html>
+
 
