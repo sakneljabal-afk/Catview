@@ -200,11 +200,116 @@
     }
   }
 
+  /* === تنسيقات شاشة التقديم الجديدة === */
+  #introScreen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); /* خلفية خضراء جذابة */
+      z-index: 1000; /* أعلى من كل شيء */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: white;
+      text-align: center;
+      transition: opacity 0.5s ease;
+      opacity: 1;
+  }
+  
+  #introScreen.hidden {
+      opacity: 0;
+      pointer-events: none;
+  }
+
+  .intro-content {
+      background: rgba(255, 255, 255, 0.95);
+      color: #2c3e50;
+      padding: 30px 20px;
+      border-radius: 20px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .intro-content h2 {
+      color: #FF8C42;
+      font-size: clamp(2rem, 6vw, 3rem);
+      margin-top: 0;
+      border-bottom: 3px solid #FF8C42;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+  }
+
+  .intro-content p {
+      font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+      line-height: 1.6;
+      margin-bottom: 15px;
+      text-align: right;
+  }
+  
+  .intro-content ul {
+      list-style-type: none;
+      padding: 0;
+      text-align: right;
+  }
+  
+  .intro-content ul li {
+      background: #e8f5e9;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      font-weight: 600;
+      border-right: 4px solid #3498db;
+      text-align: right;
+  }
+
+  #startButton {
+      background: #FF8C42;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      margin-top: 25px;
+      box-shadow: 0 5px 0 #d35400;
+      transition: all 0.1s ease;
+  }
+
+  #startButton:active {
+      transform: translateY(5px);
+      box-shadow: 0 0 0 #d35400;
+  }
 </style>
 </head>
 
 <body>
 
+<div id="introScreen">
+    <div class="intro-content">
+        <h2>🚀 لعبة المدفع والفقاعات</h2>
+        <p>مرحباً أيها البطل! هل أنت مستعد لاختبار معلوماتك العلمية في تحدي ممتع؟</p>
+        
+        <h3>🏆 الهدف من اللعبة</h3>
+        <ul>
+            <li>**التعلم والمراجعة:** مراجعة معلوماتك عن تكيف الكائنات الحية.</li>
+            <li>**التركيز والدقة:** تطوير مهارات التصويب والتركيز أثناء اللعب.</li>
+            <li>**الاستمتاع:** قضاء وقت ممتع ومسلي!</li>
+        </ul>
+        
+        <h3>🎯 طريقة اللعب</h3>
+        <ul>
+            <li>**الإجابة أولاً:** اقرأ السؤال وخيارات الإجابة في المنطقة العلوية.</li>
+            <li>**التصويب:** حرّك المؤشر (بالماوس أو اللمس) لتوجيه المدفع نحو الفقاعة التي تحمل الإجابة الصحيحة.</li>
+            <li>**الإطلاق:** اضغط أو انقر للإطلاق وتفجير الفقاعة الصحيحة.</li>
+            <li>**تجنب الخطأ:** لديك محاولتان خطأ قبل أن يتغير السؤال.</li>
+        </ul>
+        
+        <button id="startButton">ابدأ اللعب الآن!</button>
+    </div>
+</div>
 <header id="questionHeader"></header>
 
 <main>
@@ -324,8 +429,28 @@ let canShoot = true;
 let missedShots = 0;
 let shootAngle = -90; // متغير لتخزين الزاوية
 let aimLine; // كائن خط التوجيه
+let startSound; // متغير لصوت البداية
 
 const BUBBLE_IMG_SIZE = 300;
+
+
+/* ======================
+    * منطق شاشة التقديم (Intro Screen Logic)
+====================== */
+
+// دالة لإخفاء شاشة التقديم وبدء اللعبة
+function hideIntroScreen() {
+    const introScreen = document.getElementById('introScreen');
+    introScreen.classList.add('hidden');
+    // تشغيل صوت البداية
+    if (startSound) startSound.play();
+    // بدء المشهد الرئيسي للعبة Phaser
+    game.scene.start('default');
+}
+
+// إضافة المستمع لزر "ابدأ اللعب"
+document.getElementById('startButton').addEventListener('click', hideIntroScreen);
+
 
 /* ======================
     4. التحميل (Preload)
@@ -337,13 +462,16 @@ function preload(){
     this.load.image('bubble1','assets/bubble1.png');
     this.load.image('bubble2','assets/bubble2.png');
     this.load.image('bubble3','assets/bubble3.png');
-  this.load.audio('correct','../assets/correct.mp3');
-  this.load.audio('wrong','../assets/wrong.mp3');
-  this.load.audio('win','../assets/win.mp3');
+    this.load.audio('correct','../assets/correct.mp3');
+    this.load.audio('wrong','../assets/wrong.mp3');
+    this.load.audio('win','../assets/win.mp3');
+    // إضافة صوت جديد لبداية اللعب
+    this.load.audio('start','../assets/start.mp3'); // يجب توفير ملف start.mp3
 }
 
 /* ======================
     5. الإنشاء (Create)
+    * ملاحظة: هذه الدالة لن تُنفذ إلا بعد الضغط على زر "ابدأ اللعب"
 ====================== */
 function create(){
     // 🌟 التعديل الأول: خلط مصفوفة الأسئلة عند بدء اللعبة
@@ -351,11 +479,12 @@ function create(){
 
     const width = this.scale.width;
     const height = this.scale.height;
-// ... (داخل دالة function create())
 
+    // تهيئة الأصوات
     this.correctSound = this.sound.add('correct');
     this.wrongSound = this.sound.add('wrong');
-    this.winSound = this.sound.add('win'); // ✅ تم إزالة التعليق وإضافة التهيئة
+    this.winSound = this.sound.add('win');
+    startSound = this.sound.add('start'); // تعيين صوت البداية للمتغير العام
 
     this.physics.world.setBounds(0, 0, width, height);
 
@@ -377,15 +506,14 @@ function create(){
     });
     this.physics.add.collider(bubbles, invisibleWall);
     
-// ... (باقي دالة create())
     aimLine = this.add.graphics({ lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } }).setDepth(2);
 
     this.input.on('pointermove', (pointer) => {
         updateAimLine(this, pointer);
     });
 
-    this.input.on('pointerdown', () => {
-        if (canShoot) updateAimLine(this, this.input.activePointer);
+    this.input.on('pointerdown', (pointer) => {
+        if (canShoot) updateAimLine(this, pointer);
     });
 
     this.input.on('pointerup', () => {
@@ -532,7 +660,7 @@ function showQuestion(scene){
     if(!q){
         document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
         bubbles.clear(true, true);
-        if (scene.winSound) scene.winSound.play(); // ✅ تم إزالة التعليق والتحقق من وجود الصوت
+        if (scene.winSound) scene.winSound.play();
         return;
     }
 
@@ -598,5 +726,3 @@ function showQuestion(scene){
 </script>
 </body>
 </html>
-
-
