@@ -437,7 +437,7 @@ player.setDepth(100); // جعلنا السيارة في طبقة عليا جدا
                // المنطقة الجديدة (داخل GameScene -> create)
                 // مؤقت لتوليد صناديق الأسئلة (سيتم إيقافه تلقائياً عند انتهاء الأسئلة)
                 this.boxSpawnTimer = this.time.addEvent({
-                    delay: 4000, 
+                    delay: 1000, 
                     callback: this.generateQuestionBox,
                     callbackScope: this,
                     loop: true
@@ -934,3 +934,4 @@ showWinScreen() {
     </script>
 </body>
 </html>
+
