@@ -581,9 +581,8 @@ spawnFinishLine() {
         finishLine.setDisplaySize(250, 50); 
         finishLine.body.setSize(250, 50);
         
-        // التعديلات الجديدة هنا:
-        finishLine.setAngle(0); // ضبط الزاوية للتأكد من أنه ليس مقلوباً
-        finishLine.setDepth(10); // جعل الخط في طبقة أقل من السيارة (السيارة 100)
+        finishLine.setAngle(0); 
+        finishLine.setDepth(10); 
 
         // إضافة نص 'خط النهاية'
         finishLine.addText = this.add.text(
@@ -598,9 +597,8 @@ spawnFinishLine() {
             }
         ).setOrigin(0.5).setDepth(10);
         
-        // تغيير مهم: استخدام overlap بدلاً من collider
-        // هذا يسمح للسيارة بالمرور "فوق" الخط وتشغيل دالة الفوز
-        this.physics.add.overlap(player, finishLine, this.gameOver, null, this);
+        // التغيير هنا: استدعاء دالة onCrossFinishLine بدلاً من gameOver مباشرة
+        this.physics.add.overlap(player, finishLine, this.onCrossFinishLine, null, this);
     }
 }
 
@@ -821,17 +819,38 @@ if (finishLine && !gameFinished) {
                 });
             }
 
+onCrossFinishLine(player, finishLine) {
+    // التأكد من أن هذه الدالة تعمل مرة واحدة فقط
+    if (this.isFinishing) return;
+    this.isFinishing = true;
+
+    console.log("تم عبور خط النهاية.. الانتظار قبل إيقاف اللعبة");
+
+    // تعطيل الجسم الفيزيائي لخط النهاية حتى لا يستمر في احتساب التلامس
+    // (true: تعطيل الجسم، false: إبقاء الشكل ظاهراً)
+    finishLine.body.enable = false; 
+
+    // انتظار لمدة 2000 ملي ثانية (ثانيتين) ثم إنهاء اللعبة
+    this.time.delayedCall(2000, () => {
+        this.gameOver(player, finishLine);
+    }, [], this);
+}
+
+
 // المنطقة الجديدة (داخل GameScene)
 gameOver(player, finishLine) {
     if (gameFinished) return;
     
     gameFinished = true;
-    scrollSpeed = 0;
-    this.physics.pause();
-    player.setAcceleration(0);
+    scrollSpeed = 0; // إيقاف تحرك الطريق
+    this.physics.pause(); // إيقاف الفيزياء تماماً
+    
+    // إيقاف تسارع السيارة (لضمان توقفها)
+    if(player.body) player.setAcceleration(0);
+    if(player.body) player.setVelocity(0);
 
-    // إيقاف جميع التوينز (Tweens) لخط النهاية للتثبيت في مكانه
-    this.tweens.killTweensOf(finishLine);
+    // إيقاف جميع الحركات (Tweens)
+    if(finishLine) this.tweens.killTweensOf(finishLine);
     
     // إظهار لوحة الفوز
     this.showWinScreen();
