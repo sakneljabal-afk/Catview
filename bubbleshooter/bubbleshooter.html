@@ -209,344 +209,376 @@
 
 <script>
 /* ======================
-   1. البيانات (الأسئلة)
+    0. دالة خلط المصفوفة (Shuffle Function)
+====================== */
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+/* ======================
+    1. البيانات (الأسئلة) - *الصيغة الأصلية بدون تغيير*
 ====================== */
 const QUESTIONS = [
-  {
-    "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:",
-    "o": [
-      "أوراق عريضة تطفو على الماء",
-      "جذور قصيرة ضعيفة",
-      "جذور طويلة وقوية لمقاومة الأمواج"
-    ],
-    "a": 2
-  },
-  {
-    "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟",
-    "o": [
-      "تخزين كميات كبيرة من الماء",
-      "امتصاص الضوء من سطح الماء",
-      "الصمود أمام الأمواج القوية"
-    ],
-    "a": 2
-  },
-  {
-    "q": "البيئة التي ينمو فيها نبات زنبق الماء (اللوتس) هي المستنقعات، وتتميز هذه البيئة بـ:",
-    "o": [
-      "مياه مالحة وأمواج قوية",
-      "تربة جافة ودرجات حرارة مرتفعة",
-      "مياه راكدة وكميات كبيرة من الطين"
-    ],
-    "a": 2
-  },
-  {
-    "q": "يمتلك نبات زنبق الماء أوراقاً عريضة تطفو على سطح الماء، وهذا التكيف التركيبي يساعده على:",
-    "o": [
-      "مقاومة التيارات المائية",
-      "تخزين الماء الزائد",
-      "امتصاص قدر كبير من ضوء الشمس"
-    ],
-    "a": 2
-  },
-  {
-    "q": "ما هي البيئة التي تتكيف شجرة الصنوبر للعيش فيها؟",
-    "o": [
-      "المستنقعات المائية",
-      "الصحاري الجافة",
-      "المناطق الثلجية شديدة البرودة"
-    ],
-    "a": 2
-  },
-  {
-    "q": "تنمو شجرة الصنوبر على شكل مثلث، وهذا التكيف التركيبي يسمح بـ:",
-    "o": [
-      "جذب المزيد من ضوء الشمس",
-      "زيادة سرعة نمو الأغصان",
-      "سهولة انزلاق الثلج من عليها دون كسر الفروع"
-    ],
-    "a": 2
-  }
+    {
+        "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:",
+        "o": [
+            "أوراق عريضة تطفو على الماء",
+            "جذور قصيرة ضعيفة",
+            "جذور طويلة وقوية لمقاومة الأمواج"
+        ],
+        "a": 2 // الفهرس (Index) الأصلي للإجابة الصحيحة
+    },
+    {
+        "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟",
+        "o": [
+            "تخزين كميات كبيرة من الماء",
+            "امتصاص الضوء من سطح الماء",
+            "الصمود أمام الأمواج القوية"
+        ],
+        "a": 2
+    },
+    {
+        "q": "البيئة التي ينمو فيها نبات زنبق الماء (اللوتس) هي المستنقعات، وتتميز هذه البيئة بـ:",
+        "o": [
+            "مياه مالحة وأمواج قوية",
+            "تربة جافة ودرجات حرارة مرتفعة",
+            "مياه راكدة وكميات كبيرة من الطين"
+        ],
+        "a": 2
+    },
+    {
+        "q": "يمتلك نبات زنبق الماء أوراقاً عريضة تطفو على سطح الماء، وهذا التكيف التركيبي يساعده على:",
+        "o": [
+            "مقاومة التيارات المائية",
+            "تخزين الماء الزائد",
+            "امتصاص قدر كبير من ضوء الشمس"
+        ],
+        "a": 2
+    },
+    {
+        "q": "ما هي البيئة التي تتكيف شجرة الصنوبر للعيش فيها؟",
+        "o": [
+            "المستنقعات المائية",
+            "الصحاري الجافة",
+            "المناطق الثلجية شديدة البرودة"
+        ],
+        "a": 2
+    },
+    {
+        "q": "تنمو شجرة الصنوبر على شكل مثلث، وهذا التكيف التركيبي يسمح بـ:",
+        "o": [
+            "جذب المزيد من ضوء الشمس",
+            "زيادة سرعة نمو الأغصان",
+            "سهولة انزلاق الثلج من عليها دون كسر الفروع"
+        ],
+        "a": 2
+    }
 ];
 
 /* ======================
-   2. إعدادات اللعبة (Phaser)
+    2. إعدادات اللعبة (Phaser)
 ====================== */
 const config = {
-  type: Phaser.AUTO,
-  parent: 'game-container', 
-  width: 600,  
-  height: 800, 
-  // لون خلفية برتقالي خفيف ومناسب للأطفال
-  backgroundColor: '#E8F5E9', 
-  scale: {
-    mode: Phaser.Scale.FIT, 
-    autoCenter: Phaser.Scale.CENTER_BOTH
-  },
-  physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 0 },
-      debug: false
-    }
-  },
-  scene: { preload, create, update }
+    type: Phaser.AUTO,
+    parent: 'game-container',
+    width: 600,
+    height: 800,
+    // لون خلفية برتقالي خفيف ومناسب للأطفال
+    backgroundColor: '#E8F5E9',
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 0 },
+            debug: false
+        }
+    },
+    scene: { preload, create, update }
 };
 
 const game = new Phaser.Game(config);
 
 /* ======================
-   3. المتغيرات العامة
+    3. المتغيرات العامة
 ====================== */
 let cannon, bubbles, invisibleWall;
 let currentQ = 0;
 let canShoot = true;
 let missedShots = 0;
-let shootAngle = -90; // متغير لتخزين الزاوية 
-let aimLine; // كائن خط التوجيه 
+let shootAngle = -90; // متغير لتخزين الزاوية
+let aimLine; // كائن خط التوجيه
 
-const BUBBLE_IMG_SIZE = 300; 
+const BUBBLE_IMG_SIZE = 300;
 
 /* ======================
-   4. التحميل (Preload)
+    4. التحميل (Preload)
 ====================== */
 function preload(){
-  // ملاحظة: تأكد من وجود المجلد 'assets' وملفات الصور والصوت فيه
-   this.load.image('cannon','assets/cannon.png');
-  this.load.image('shoot','assets/shoot.png');
-  this.load.image('bubble1','assets/bubble1.png');
-  this.load.image('bubble2','assets/bubble2.png');
-  this.load.image('bubble3','assets/bubble3.png');
-  this.load.audio('correct','../assets/correct.mp3');
-  this.load.audio('wrong','../assets/wrong.mp3');
-  this.load.audio('wrong','../assets/win.mp3');
+    // ملاحظة: تم تعديل المسار هنا إلى 'assets/' ليتوافق مع التحميلات الأخرى في الكود الأصلي
+    this.load.image('cannon','assets/cannon.png');
+    this.load.image('shoot','assets/shoot.png');
+    this.load.image('bubble1','assets/bubble1.png');
+    this.load.image('bubble2','assets/bubble2.png');
+    this.load.image('bubble3','assets/bubble3.png');
+    this.load.audio('correct','assets/correct.mp3');
+    this.load.audio('wrong','assets/wrong.mp3');
+    this.load.audio('win','assets/win.mp3'); 
 }
 
 /* ======================
-   5. الإنشاء (Create)
+    5. الإنشاء (Create)
 ====================== */
 function create(){
-  const width = this.scale.width;
-  const height = this.scale.height;
+    // 🌟 التعديل الأول: خلط مصفوفة الأسئلة عند بدء اللعبة
+    shuffleArray(QUESTIONS);
 
-  this.correctSound = this.sound.add('correct');
-  this.wrongSound = this.sound.add('wrong');
-  // يمكنك إضافة صوت الفوز هنا: this.winSound = this.sound.add('win');
+    const width = this.scale.width;
+    const height = this.scale.height;
 
-  this.physics.world.setBounds(0, 0, width, height);
+    this.correctSound = this.sound.add('correct');
+    this.wrongSound = this.sound.add('wrong');
+    // يمكنك إضافة صوت الفوز هنا: this.winSound = this.sound.add('win');
 
-  invisibleWall = this.add.rectangle(width/2, height * 0.55, width, 20, 0x000000, 0);
-  this.physics.add.existing(invisibleWall, true);
+    this.physics.world.setBounds(0, 0, width, height);
 
-  const cannonHeight = height * 0.10; 
-  const cannonScale = cannonHeight / 300; 
+    invisibleWall = this.add.rectangle(width/2, height * 0.55, width, 20, 0x000000, 0);
+    this.physics.add.existing(invisibleWall, true);
 
-  cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
-    .setScale(cannonScale)
-    .setDepth(1); 
+    const cannonHeight = height * 0.10;
+    const cannonScale = cannonHeight / 300;
 
-  bubbles = this.physics.add.group({
-    collideWorldBounds: true,
-    bounceX: 1,
-    bounceY: 1
-  });
-  this.physics.add.collider(bubbles, invisibleWall);
+    cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
+        .setScale(cannonScale)
+        .setDepth(1);
 
-  // 🌟 الحل: تم تصحيح بناء الجملة (Syntax) هنا
-  aimLine = this.add.graphics({ lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } }).setDepth(2);
-  
-  this.input.on('pointermove', (pointer) => { 
-    updateAimLine(this, pointer); 
-  });
-  
-  this.input.on('pointerdown', () => { 
-    if (canShoot) updateAimLine(this, this.input.activePointer); 
-  });
-  
-  this.input.on('pointerup', () => { 
-    if (canShoot) fire(this); 
-  });
+    bubbles = this.physics.add.group({
+        collideWorldBounds: true,
+        bounceX: 1,
+        bounceY: 1
+    });
+    this.physics.add.collider(bubbles, invisibleWall);
 
-  showQuestion(this);
+    aimLine = this.add.graphics({ lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } }).setDepth(2);
+
+    this.input.on('pointermove', (pointer) => {
+        updateAimLine(this, pointer);
+    });
+
+    this.input.on('pointerdown', () => {
+        if (canShoot) updateAimLine(this, this.input.activePointer);
+    });
+
+    this.input.on('pointerup', () => {
+        if (canShoot) fire(this);
+    });
+
+    showQuestion(this);
 }
 
 /* ======================
-   6. التحديث المستمر (Update)
+    6. التحديث المستمر (Update)
 ====================== */
 function update() {
-  bubbles.children.iterate((b) => {
-    if (b) b.rotation += 0.005;
-  });
+    bubbles.children.iterate((b) => {
+        if (b) b.rotation += 0.005;
+    });
 }
 
 
 /* ======================
-   * دالة رسم خط التوجيه
+    * دالة رسم خط التوجيه
 ====================== */
 function updateAimLine(scene, pointer) {
-  // موقع إطلاق المقذوف
-  const cannonX = cannon.x;
-  const cannonY = cannon.y - cannon.displayHeight / 2;
-  
-  const pointerX = pointer.x;
-  const pointerY = pointer.y;
+    // موقع إطلاق المقذوف
+    const cannonX = cannon.x;
+    const cannonY = cannon.y - cannon.displayHeight / 2;
 
-  // حساب الزاوية بين المدفع ونقطة اللمس
-  shootAngle = Phaser.Math.Angle.Between(cannonX, cannonY, pointerX, pointerY);
+    const pointerX = pointer.x;
+    const pointerY = pointer.y;
 
-  // لضمان الإطلاق للأعلى فقط
-  // إذا كانت الزاوية موجبة (تدل على الإطلاق للأسفل)، نجعلها قريبة من الصفر أو -180
-  if (shootAngle > 0) {
-    if (pointerX < cannonX) {
-        shootAngle = Phaser.Math.DegToRad(-179); // لليسار
-    } else {
-        shootAngle = Phaser.Math.DegToRad(-1); // لليمين
+    // حساب الزاوية بين المدفع ونقطة اللمس
+    shootAngle = Phaser.Math.Angle.Between(cannonX, cannonY, pointerX, pointerY);
+
+    // لضمان الإطلاق للأعلى فقط
+    // إذا كانت الزاوية موجبة (تدل على الإطلاق للأسفل)، نجعلها قريبة من الصفر أو -180
+    if (shootAngle > 0) {
+        if (pointerX < cannonX) {
+             shootAngle = Phaser.Math.DegToRad(-179); // لليسار
+        } else {
+             shootAngle = Phaser.Math.DegToRad(-1); // لليمين
+        }
     }
-  }
 
-  // رسم الخط المنقط 
-  aimLine.clear();
-  aimLine.lineStyle(4, 0xFF5722, 0.8); 
-  
-  // طول كبير للخط ليمتد حتى نهاية الشاشة
-  const lineLength = 1000; 
-  const endX = cannonX + Math.cos(shootAngle) * lineLength;
-  const endY = cannonY + Math.sin(shootAngle) * lineLength;
+    // رسم الخط المنقط
+    aimLine.clear();
+    aimLine.lineStyle(4, 0xFF5722, 0.8);
 
-  aimLine.beginPath();
-  aimLine.moveTo(cannonX, cannonY);
-  aimLine.lineTo(endX, endY);
-  aimLine.strokePath(); 
+    // طول كبير للخط ليمتد حتى نهاية الشاشة
+    const lineLength = 1000;
+    const endX = cannonX + Math.cos(shootAngle) * lineLength;
+    const endY = cannonY + Math.sin(shootAngle) * lineLength;
+
+    aimLine.beginPath();
+    aimLine.moveTo(cannonX, cannonY);
+    aimLine.lineTo(endX, endY);
+    aimLine.strokePath();
 }
 
 /* ======================
-   7. منطق الإطلاق (Fire)
+    7. منطق الإطلاق (Fire)
 ====================== */
-function fire(scene){ 
-  canShoot = false;
-  aimLine.clear(); // إخفاء خط التوجيه فور الإطلاق 
+function fire(scene){
+    canShoot = false;
+    aimLine.clear(); // إخفاء خط التوجيه فور الإطلاق
 
-  const width = scene.scale.width;
-  const shotScale = (width * 0.12) / 300; 
+    const width = scene.scale.width;
+    const shotScale = (width * 0.12) / 300;
 
-  const shot = scene.physics.add.sprite(
-    cannon.x,
-    cannon.y - cannon.displayHeight/1.5,
-    'shoot'
-  ).setScale(shotScale);
+    const shot = scene.physics.add.sprite(
+        cannon.x,
+        cannon.y - cannon.displayHeight/1.5,
+        'shoot'
+    ).setScale(shotScale);
 
-  // تطبيق السرعة باستخدام الزاوية المحسوبة 
-  const speed = 800; // سرعة الإطلاق 
-  const velocityX = Math.cos(shootAngle) * speed; 
-  const velocityY = Math.sin(shootAngle) * speed; 
-  shot.setVelocity(velocityX, velocityY);
+    // تطبيق السرعة باستخدام الزاوية المحسوبة
+    const speed = 800; // سرعة الإطلاق
+    const velocityX = Math.cos(shootAngle) * speed;
+    const velocityY = Math.sin(shootAngle) * speed;
+    shot.setVelocity(velocityX, velocityY);
 
-  scene.physics.add.overlap(shot, bubbles, (s, b) => {
-    s.destroy();
-    missedShots = 0;
-    bubbleHit(scene, b);
-  });
-
-  shot.setCollideWorldBounds(true);
-  shot.body.onWorldBounds = true;
-
-  shot.body.world.on('worldbounds', (body) => {
-    if (body.gameObject === shot) {
-      shot.destroy();
-      missedShots++;
-      if (missedShots >= 2) {
+    scene.physics.add.overlap(shot, bubbles, (s, b) => {
+        s.destroy();
         missedShots = 0;
-        showQuestion(scene); 
-      }
-    }
-  });
+        bubbleHit(scene, b);
+    });
 
-  scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
-  
-  scene.time.delayedCall(800, () => { canShoot = true; });
+    shot.setCollideWorldBounds(true);
+    shot.body.onWorldBounds = true;
+
+    shot.body.world.on('worldbounds', (body) => {
+        if (body.gameObject === shot) {
+            shot.destroy();
+            missedShots++;
+            if (missedShots >= 2) {
+                missedShots = 0;
+                showQuestion(scene);
+            }
+        }
+    });
+
+    scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
+
+    scene.time.delayedCall(800, () => { canShoot = true; });
 }
 
 /* ======================
-   8. منطق الإصابة (Hit)
+    8. منطق الإصابة (Hit)
 ====================== */
 function bubbleHit(scene, bubble){
-  const correct = bubble.getData('correct');
-  bubble.destroy();
+    // 🌟 التحقق من الإجابة الصحيحة
+    const isCorrect = bubble.getData('isCorrect');
+    bubble.destroy();
 
-  if(correct){
-    scene.correctSound.play();
-    scene.time.delayedCall(500, () => {
-      currentQ++;
-      showQuestion(scene);
-    });
-  } else {
-    const flash = document.getElementById('wrongFlash');
-    const mark = document.getElementById('errorMark');
-    
-    scene.wrongSound.play();
-    
-    flash.style.background = 'rgba(255,0,0,0.4)';
-    mark.style.display = 'flex'; 
-    
-    setTimeout(() => {
-      flash.style.background = 'rgba(255,0,0,0)';
-      mark.style.display = 'none';
-    }, 400); 
+    if(isCorrect){
+        scene.correctSound.play();
+        scene.time.delayedCall(500, () => {
+            currentQ++;
+            showQuestion(scene);
+        });
+    } else {
+        const flash = document.getElementById('wrongFlash');
+        const mark = document.getElementById('errorMark');
 
-    scene.time.delayedCall(600, () => showQuestion(scene));
-  }
+        scene.wrongSound.play();
+
+        flash.style.background = 'rgba(255,0,0,0.4)';
+        mark.style.display = 'flex';
+
+        setTimeout(() => {
+            flash.style.background = 'rgba(255,0,0,0)';
+            mark.style.display = 'none';
+        }, 400);
+
+        scene.time.delayedCall(600, () => showQuestion(scene));
+    }
 }
 
 /* ======================
-   9. عرض السؤال وتوليد الفقاعات
+    9. عرض السؤال وتوليد الفقاعات
 ====================== */
 function showQuestion(scene){
-  const q = QUESTIONS[currentQ];
-  
-  if(!q){
-    document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
+    const q = QUESTIONS[currentQ];
+
+    if(!q){
+        document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
+        bubbles.clear(true, true);
+        // يمكنك تشغيل صوت الفوز هنا: scene.winSound.play();
+        return;
+    }
+
+    // 🌟 التعديل الثاني: خلط الخيارات مع حفظ النص الصحيح قبل الخلط
+    const correctOptionText = q.o[q.a]; // نحفظ نص الإجابة الصحيحة باستخدام الفهرس الأصلي
+    const optionsToShuffle = [...q.o]; // ننسخ المصفوفة للخلط
+    
+    // نخلط الخيارات
+    const shuffledOptions = shuffleArray(optionsToShuffle); 
+
+    // 🌟 التعديل الثالث: إيجاد الفهرس الجديد للإجابة الصحيحة بعد الخلط
+    const newCorrectIndex = shuffledOptions.indexOf(correctOptionText);
+
+    // ألوان لتمييز الخيارات
+    const colors = ['#81d4fa', '#a5d6a7', '#ffe082'];
+
+    // بناء محتوى الخيارات في الـ HTML (يستخدم الترتيب العشوائي)
+    let answersHtml = '';
+    for(let i = 0; i < shuffledOptions.length; i++) {
+        answersHtml += `<span style="color:${colors[i]}">${i + 1}: ${shuffledOptions[i]}</span>`;
+    }
+
+    document.getElementById('questionHeader').innerHTML = `
+        <h3>${q.q}</h3>
+        <div class="answers">
+            ${answersHtml}
+        </div>
+    `;
+
     bubbles.clear(true, true);
-    // يمكنك تشغيل صوت الفوز هنا: scene.winSound.play();
-    return;
-  }
 
-  document.getElementById('questionHeader').innerHTML = `
-    <h3>${q.q}</h3>
-    <div class="answers">
-      <span style="color:#81d4fa">1: ${q.o[0]}</span>
-      <span style="color:#a5d6a7">2: ${q.o[1]}</span>
-      <span style="color:#ffe082">3: ${q.o[2]}</span>
-    </div>
-  `;
+    const width = scene.scale.width;
+    const height = scene.scale.height;
 
-  bubbles.clear(true, true);
-  
-  const width = scene.scale.width;
-  const height = scene.scale.height;
+    const bubbleTargetSize = width * 0.18;
+    const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
 
-  const bubbleTargetSize = width * 0.18; 
-  const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
+    const positions = [0.2, 0.5, 0.8]; // مواقع الفقاعات
 
-  const positions = [0.2, 0.5, 0.8]; 
+    for(let i=0; i<3; i++){
+        const b = bubbles.create(
+            width * positions[i],
+            height * 0.3,
+            'bubble' + (i+1)
+        ).setScale(bubbleScale);
 
-  for(let i=0; i<3; i++){
-    const b = bubbles.create(
-      width * positions[i],
-      height * 0.3, 
-      'bubble' + (i+1)
-    ).setScale(bubbleScale);
+        b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE)));
 
-    b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE))); 
+        // 🌟 التعديل الرابع: تخزين حالة الإجابة الصحيحة في الفقاعة باستخدام الفهرس الجديد
+        b.setData('isCorrect', i === newCorrectIndex);
 
-    b.setData('correct', i === q.a);
-    
-    b.setVelocity(
-      Phaser.Math.Between(-50, 50), 
-      Phaser.Math.Between(-30, 30)
-    );
-    
-    b.setBounce(1);
-    b.setCollideWorldBounds(true);
-  }
+        b.setVelocity(
+            Phaser.Math.Between(-50, 50),
+            Phaser.Math.Between(-30, 30)
+        );
+
+        b.setBounce(1);
+        b.setCollideWorldBounds(true);
+    }
 }
 </script>
 </body>
