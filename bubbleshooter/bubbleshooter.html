@@ -329,7 +329,7 @@ function preload(){
     this.load.image('bubble3','assets/bubble3.png');
   this.load.audio('correct','../assets/correct.mp3');
   this.load.audio('wrong','../assets/wrong.mp3');
-  this.load.audio('wrong','../assets/win.mp3');
+  this.load.audio('win','../assets/win.mp3');
 }
 
 /* ======================
@@ -344,7 +344,7 @@ function create(){
 
     this.correctSound = this.sound.add('correct');
     this.wrongSound = this.sound.add('wrong');
-    // يمكنك إضافة صوت الفوز هنا: this.winSound = this.sound.add('win');
+this.winSound = this.sound.add('win'); // ✅ تم إزالة التعليق وإضافة التهيئة
 
     this.physics.world.setBounds(0, 0, width, height);
 
@@ -519,7 +519,7 @@ function showQuestion(scene){
     if(!q){
         document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
         bubbles.clear(true, true);
-        // يمكنك تشغيل صوت الفوز هنا: scene.winSound.play();
+        if (scene.winSound) scene.winSound.play(); // ✅ تم إزالة التعليق والتحقق من وجود الصوت
         return;
     }
 
