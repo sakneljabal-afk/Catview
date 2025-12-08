@@ -789,8 +789,8 @@ checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer
     const allOptions = optionsContainer.querySelectorAll('.option');
     allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
     
-    // ⬇️⬇️ منطق تتبع فقدان النقاط ⬇️⬇️
-    // تهيئة خاصية التتبع إذا لم تكن موجودة
+    // 1. تهيئة متغير تتبع فقدان النقاط (isScoreLost) لكل سؤال
+    // هذا يضمن أن يتم تتبع حالة النقاط بشكل دائم لهذا السؤال تحديدًا
     if (typeof activeQuestion.isScoreLost === 'undefined') {
         activeQuestion.isScoreLost = false;
     }
@@ -798,26 +798,16 @@ checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer
     if (selectedIndex === correctIndex) {
         // إجابة صحيحة
         selectedOptionElement.classList.add('correct');
-
-        // 1. زيادة السرعة
         baseSpeed += 20;
-        baseSpeed = Math.min(600, baseSpeed); // للحماية
         
-        // 2. منح النقاط: يتم منح النقاط فقط إذا لم تُفقد مسبقاً (عند أول إجابة خاطئة)
+        // ⬇️⬇️ التعديل المطلوب لـ منح النقاط ⬇️⬇️
+        // يتم إضافة النقاط فقط إذا لم يُسجل خطأ سابقًا في هذا السؤال
         if (activeQuestion.isScoreLost !== true) {
              score += 10;
         }
+        // ⬆️⬆️ نهاية التعديل ⬆️⬆️
         
-        // 3. إزالة السؤال من قائمة المراجعة (wrongQuestions) إذا تم حله الآن
-        const wrongIndex = wrongQuestions.findIndex(q => q === activeQuestion);
-        if (wrongIndex > -1) {
-            wrongQuestions.splice(wrongIndex, 1);
-        }
-
         this.findAndRemoveQuestionBox();
-        
-        // تحديث عرض السرعة
-        this.speedText.setText('السرعة: ' + baseSpeed); 
         
         setTimeout(() => {
             this.resumeGame();
@@ -827,23 +817,20 @@ checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer
         selectedOptionElement.classList.add('incorrect');
         allOptions[correctIndex].classList.add('correct');
         
-        // 1. فقدان النقاط بشكل دائم لهذا السؤال
-        activeQuestion.isScoreLost = true; 
+        // ⬇️⬇️ التعديل المطلوب لفقدان النقاط ⬇️⬇️
+        // بمجرد الخطأ، يتم وسم السؤال بفقدان النقاط بشكل دائم
+        activeQuestion.isScoreLost = true;
+        // ⬆️⬆️ نهاية التعديل ⬆️⬆️
         
-        // 2. عقوبة السرعة
         baseSpeed *= 0.8;
         baseSpeed = Math.max(100, baseSpeed);
         
-        // 3. إضافة السؤال لقائمة المراجعة (wrongQuestions)
         if (!wrongQuestions.includes(activeQuestion)) {
-            wrongQuestions.push(activeQuestion);
+             wrongQuestions.push(activeQuestion);
         }
         
         this.findAndRemoveQuestionBox();
-        
-        // تحديث عرض السرعة
-        this.speedText.setText('السرعة: ' + baseSpeed);
-        
+
         // تأثير الشاشة الحمراء
         errorOverlay.style.display = 'flex';
         errorIcon.style.opacity = 1;
