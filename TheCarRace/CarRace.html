@@ -266,7 +266,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
     <div class="question-box" id="questionBox">
         <div class="question-header">
             <div>❓ سؤال تعليمي</div>
-            <button class="close-btn" id="closeQuestion">✕</button>
+
         </div>
         <div class="question-text" id="questionText"></div>
         <div class="options-container" id="optionsContainer"></div>
@@ -479,8 +479,7 @@ player.setDepth(100); // جعلنا السيارة في طبقة عليا جدا
                 
                 // إعداد واجهة الأسئلة في DOM
                 questionUI = document.getElementById('questionBox');
-                document.getElementById('closeQuestion').addEventListener('click', () => {
-                    this.resumeGame();
+               
                 });
                 
                 // إعداد مدخلات لوحة المفاتيح
@@ -804,7 +803,7 @@ generateQuestionBox() {
                         errorIcon.style.opacity = 0;
                         errorOverlay.style.display = 'none';
                         this.resumeGame();
-                    }, 2000);
+                    }, 4000);
                 }
             }
             
