@@ -15,6 +15,7 @@
         }
         
         body {
+            /* تعديلات لضمان التوسيط والملء في الوضع الأفقي */
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #fff;
             width: 100vw;
@@ -22,61 +23,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        
-        #rotateMessage {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.95);
-            color: white;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            font-size: 1.8rem;
-            text-align: center;
-            padding: 20px;
-            flex-direction: column;
-        }
-        
-        #rotateMessage span {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            animation: rotateAnimation 2s infinite;
-        }
-        
-        @keyframes rotateAnimation {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(90deg); }
-            100% { transform: rotate(0deg); }
+            justify-content: center; /* توسيط محتوى اللعبة بالكامل */
+            overflow: hidden; 
         }
         
         .header {
-            text-align: center;
-            width: 100%;
-            max-width: 800px;
-            display: none;
-        }
-        
-        h1 {
-            color: #4cc9f0;
-            font-size: 2.2rem;
-            margin-bottom: 5px;
-            text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
-        }
-        
-        .subtitle {
-            color: #b8b8d1;
-            font-size: 1rem;
-            margin-bottom: 15px;
+            /* إخفاء العنوان لتوفير مساحة في الوضع الأفقي */
+            display: none; 
         }
         
         .game-container {
+            /* يسمح للعبة بملء المساحة وتوسيطها من قبل الـ body */
             width: 100%;
             height: 100%;
             max-width: none;
@@ -85,16 +42,73 @@
             overflow: hidden;
             box-shadow: none;
             position: relative;
-            aspect-ratio: auto;
         }
         
         #gameCanvas {
             display: block;
-            width: 100%;
-            height: 100%;
             background-color: #0d1117;
+            /* Phaser سيتولى ضبط الحجم والتوسيط هنا */
         }
 
+        /* تنسيق النافذة المنبثقة (المودال) */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center; /* توسيط أفقي */
+            align-items: center; /* توسيط عمودي */
+            z-index: 5000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 3px solid #4cc9f0;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #fff;
+        }
+        
+        /* تنسيق صندوق الأسئلة ليظهر في منتصف شاشة Phaser */
+        .question-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* التوسيط الدقيق */
+            width: 95%;
+            max-width: 600px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border: 3px solid #4cc9f0;
+            z-index: 4000; 
+            display: none;
+        }
+
+        .modal-btn {
+            display: block;
+            width: 80%;
+            margin: 20px auto 0;
+            padding: 15px 20px;
+            background-color: #f72585;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        
         #errorOverlay {
             position: absolute;
             top: 0;
@@ -116,265 +130,11 @@
             transition: opacity 0.2s;
             text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
         }
-        
-        .speed-display {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 1rem;
-            border: 2px solid #4cc9f0;
-            z-index: 10;
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 5000;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-            border: 3px solid #4cc9f0;
-            width: 90%;
-            max-width: 700px;
-            max-height: 90vh;
-            overflow-y: auto;
-            color: #fff;
-        }
-
-        .modal-content h2 {
-            font-size: 1.5rem;
-            color: #4cc9f0;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #4cc9f0;
-            padding-bottom: 10px;
-            text-align: center;
-        }
-
-        .modal-content ul {
-            list-style-type: none;
-            padding-right: 0;
-        }
-
-        .modal-content li {
-            margin-bottom: 10px;
-            line-height: 1.6;
-            padding-right: 20px;
-            position: relative;
-        }
-
-        .modal-content li::before {
-            content: '🔹';
-            position: absolute;
-            right: 0;
-            color: #f72585;
-            font-weight: bold;
-        }
-        
-        .modal-btn {
-            display: block;
-            width: 80%;
-            margin: 20px auto 0;
-            padding: 15px 20px;
-            background-color: #f72585;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.4rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-
-        .modal-btn:hover {
-            background-color: #d11c70;
-        }
-
-        .question-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 95%;
-            max-width: 600px;
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            border: 3px solid #4cc9f0;
-            z-index: 4000;
-            display: none;
-        }
-
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #4cc9f0;
-            padding-bottom: 10px;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .close-btn:hover {
-            color: #f72585;
-        }
-
-        .question-text {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            text-align: right;
-        }
-        
-        .option {
-            padding: 12px;
-            font-size: 1rem;
-            background-color: #2c3e50;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            text-align: right;
-        }
-
-        .option:hover {
-            background-color: #34495e;
-        }
-
-        .option.correct {
-            background-color: #2ecc71;
-            color: #fff;
-            font-weight: bold;
-        }
-
-        .option.incorrect {
-            background-color: #e74c3c;
-            color: #fff;
-            font-weight: bold;
-        }
-
-        .highlight {
-            color: #f72585;
-            font-weight: bold;
-        }
-        
-        .controls {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            z-index: 50;
-        }
-
-        .control-btn {
-            background: rgba(76, 201, 240, 0.7);
-            color: #1a1a2e;
-            border: 2px solid #fff;
-            padding: 15px 30px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
-            flex-grow: 1;
-            margin: 0 5px;
-            text-align: center;
-        }
-        
-        .control-btn:active {
-            background: #4cc9f0;
-            transform: scale(0.98);
-        }
-        
-        .footer {
-            display: none;
-        }
-
-        /* استعلامات وسائط للوضع الأفقي */
-        @media (orientation: landscape) {
-            .game-container {
-                aspect-ratio: 16/9;
-            }
-            
-            .question-box {
-                max-width: 70vw;
-                max-height: 70vh;
-            }
-            
-            .modal-content {
-                max-width: 80vw;
-            }
-            
-            .controls {
-                bottom: 20px;
-                left: 20px;
-                right: 20px;
-            }
-            
-            .control-btn {
-                padding: 20px 40px;
-                font-size: 2rem;
-            }
-            
-            .question-text {
-                font-size: 1.4rem;
-            }
-            
-            .option {
-                font-size: 1.2rem;
-                padding: 15px;
-            }
-        }
-
-        /* إخفاء الأزرار على الشاشات الكبيرة */
-        @media (min-width: 769px) {
-            .controls {
-                display: none;
-            }
-        }
-        
-        @media (orientation: landscape) and (min-width: 1024px) {
-            .modal-btn {
-                width: 60%;
-                padding: 20px 30px;
-                font-size: 1.6rem;
-            }
-        }
     </style>
-</head>
+    </head>
 <body>
-    <div id="rotateMessage">
-        <span>📱</span>
-        ⚠️ الرجاء تدوير الجهاز للوضع الأفقي للحصول على أفضل تجربة لعب
-    </div>
-    
     <div class="header">
         <h1>🚗 سيارة المسار السريع</h1>
-        <p class="subtitle">لعبة تعليمية - أجب على الأسئلة لزيادة سرعة سيارتك</p>
     </div>
     
     <div class="modal" id="introModal">
@@ -401,15 +161,14 @@
 
         <div class="speed-display">السرعة : <span id="speedValue">200</span></div>
         <div id="gameCanvas"></div>
-    </div>
-    
-    <div class="question-box" id="questionBox">
-        <div class="question-header">
-            <div>❓ سؤال تعليمي</div>
-            <button class="close-btn">✕</button>
+        
+        <div class="question-box" id="questionBox">
+            <div class="question-header">
+                <div>❓ سؤال تعليمي</div>
+            </div>
+            <div class="question-text" id="questionText"></div>
+            <div class="options-container" id="optionsContainer"></div>
         </div>
-        <div class="question-text" id="questionText"></div>
-        <div class="options-container" id="optionsContainer"></div>
     </div>
     
     <div class="footer">
@@ -417,7 +176,7 @@
     </div>
 
     <script>
-        // بيانات الأسئلة
+        // ... (بقية بيانات الأسئلة والمتغيرات)
         const allQuestionsData = [
             { "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:", "c": ["أوراق عريضة تطفو على الماء", "جذور قصيرة ضعيفة", "جذور طويلة وقوية لمقاومة الأمواج"], "a": 2, "id": 1 },
             { "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟", "c": ["تخزين كميات كبيرة من الماء", "امتصاص الضوء من سطح الماء", "الصمود أمام الأمواج القوية"], "a": 2, "id": 2 },
@@ -428,7 +187,6 @@
             { "q": "ما هو التهديد الرئيسي لأشجار المانجروف؟", "c": ["الحيوانات البرية", "التلوث والقطع الجائر والتنمية الساحلية", "زيادة هطول الأمطار"], "a": 1, "id": 7 }
         ];
 
-        // متغيرات اللعبة
         let game;
         let baseSpeed = 200;
         let scrollSpeed = 200;
@@ -441,78 +199,20 @@
         let scoreText;
         let wrongQuestions = [];
         let remainingQuestions = [...allQuestionsData];
-        let finishLine;
-        let gameFinished = false;
-        let lastDisplayedSpeed = 0;
+        let finishLine; 
+        let gameFinished = false; 
+        let isFinishing = false; 
 
-        // عناصر DOM
         const errorOverlay = document.getElementById('errorOverlay');
         const errorIcon = document.getElementById('errorIcon');
-        const introModal = document.getElementById('introModal');
-        const startBtn = document.getElementById('startBtn');
-        const rotateMessage = document.getElementById('rotateMessage');
-        const questionBoxCloseBtn = document.querySelector('.close-btn');
-
-        // التحقق من الاتجاه
-        let isLandscapeMode = window.innerWidth > window.innerHeight;
-
-        // دالة الحصول على حجم اللعبة ديناميكياً
-        const getGameSize = () => {
-            const isLandscape = window.innerWidth > window.innerHeight;
-            
-            if (isLandscape) {
-                // في الوضع الأفقي، استخدم معظم الشاشة
-                return {
-                    width: window.innerWidth * 0.98,
-                    height: window.innerHeight * 0.98
-                };
-            } else {
-                // في الوضع الرأسي، استخدم أبعاد مناسبة
-                return {
-                    width: Math.min(window.innerWidth, 800),
-                    height: Math.min(window.innerHeight, 600)
-                };
-            }
-        };
-
-        // التحقق من الاتجاه وإظهار الرسالة
-        const checkOrientation = () => {
-            const newIsLandscape = window.innerWidth > window.innerHeight;
-            
-            if (newIsLandscape !== isLandscapeMode) {
-                isLandscapeMode = newIsLandscape;
-                
-                if (game) {
-                    const gameSize = getGameSize();
-                    game.scale.resize(gameSize.width, gameSize.height);
-                }
-            }
-            
-            // إظهار رسالة التدوير للوضع الأفقي
-            if (window.innerHeight > window.innerWidth) {
-                rotateMessage.style.display = 'flex';
-                if (game && game.scene) {
-                    game.scene.getScene('GameScene').physics.pause();
-                    if (game.scene.getScene('GameScene').boxSpawnTimer) {
-                        game.scene.getScene('GameScene').boxSpawnTimer.paused = true;
-                    }
-                }
-            } else {
-                rotateMessage.style.display = 'none';
-                if (game && game.scene) {
-                    const scene = game.scene.getScene('GameScene');
-                    if (scene && !gameFinished) {
-                        scene.physics.resume();
-                        if (scene.boxSpawnTimer) {
-                            scene.boxSpawnTimer.paused = false;
-                        }
-                    }
-                }
-            }
-        };
-
-        // المشهد الرئيسي للعبة
+        
+        const introModal = document.getElementById('introModal'); 
+        const startBtn = document.getElementById('startBtn');     
+        
+        // ... (بقية الكود الخاص بدوال المشهد GameScene بقي كما هو)
+        
         class GameScene extends Phaser.Scene {
+
             shuffleQuestions() {
                 remainingQuestions = Phaser.Utils.Array.Shuffle(remainingQuestions);
             }
@@ -522,33 +222,17 @@
                 this.isMovingUp = false;
                 this.isMovingDown = false;
                 this.backgroundObjects = null;
-                this.startY = 0;
             }
             
             preload() {
                 this.createCarTexture();
                 this.createWideQuestionBoxTexture();
                 this.createBackgroundObjectTextures();
-                this.createFinishLineTexture();
+  		        this.createFinishLineTexture();
                 
-                // تحميل الأصوات مع مسارات احتياطية
-                try {
-                    this.load.audio('correctSound', 'assets/correct.mp3');
-                } catch {
-                    console.log('ملف الصوت الصحيح غير متوفر');
-                }
-                
-                try {
-                    this.load.audio('wrongSound', 'assets/wrong.mp3');
-                } catch {
-                    console.log('ملف الصوت الخاطئ غير متوفر');
-                }
-                
-                try {
-                    this.load.audio('winSound', 'assets/win.mp3');
-                } catch {
-                    console.log('ملف صوت الفوز غير متوفر');
-                }
+                this.load.audio('correctSound', 'assets/correct.mp3');
+                this.load.audio('wrongSound', 'assets/wrong.mp3');
+                this.load.audio('winSound', 'assets/win.mp3'); 
             }
 
             createCarTexture() {
@@ -562,7 +246,7 @@
                 carGraphics.fillCircle(65, 35, 6);
                 carGraphics.fillStyle(0xffffff, 0.6);
                 carGraphics.fillRect(25, 10, 30, 15);
-                carGraphics.generateTexture('carTexture', 80, 40);
+                carGraphics.generateTexture('carTexture', 80, 40); 
                 carGraphics.destroy();
             }
 
@@ -602,16 +286,16 @@
             }
             
             createFinishLineTexture() {
-                const size = 20;
-                const width = 60;
-                const height = 200;
+                const size = 20; 
+                const width = 60;  
+                const height = 200; 
                 const graphics = this.add.graphics({ add: false });
                 for (let i = 0; i < width / size; i++) {
                     for (let j = 0; j < height / size; j++) {
                         if ((i + j) % 2 === 0) {
-                            graphics.fillStyle(0x000000, 1);
+                            graphics.fillStyle(0x000000, 1); 
                         } else {
-                            graphics.fillStyle(0xffffff, 1);
+                            graphics.fillStyle(0xffffff, 1); 
                         }
                         graphics.fillRect(i * size, j * size, size, size);
                     }
@@ -621,86 +305,65 @@
             }
 		
             create() {
-                // إنشاء الخلفية والطريق بشكل متجاوب
-                this.createResponsiveBackground();
-                this.createResponsiveRoad();
+                this.createBackground();
+                this.createRoad();
                 this.backgroundObjects = this.add.group();
 
-                // تهيئة الأصوات
-                try {
-                    this.correctSound = this.sound.add('correctSound');
-                    this.wrongSound = this.sound.add('wrongSound');
-                    this.winSound = this.sound.add('winSound');
-                } catch {
-                    console.log('الأصوات غير متوفرة، اللعبة ستستمر بدون صوت');
-                }
+                this.correctSound = this.sound.add('correctSound');
+                this.wrongSound = this.sound.add('wrongSound');
+                this.winSound = this.sound.add('winSound'); 
 
-                // إنشاء السيارة في موقع نسبي
-                const playerX = this.cameras.main.width * 0.25;
-                const playerY = this.cameras.main.height * 0.75;
-                player = this.physics.add.sprite(playerX, playerY, 'carTexture');
+                player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
                 player.setCollideWorldBounds(true);
-                
-                // جعل حجم السيارة نسبياً
-                const carScale = Math.min(this.cameras.main.width / 800, this.cameras.main.height / 600) * 0.8;
-                player.setScale(carScale);
-                player.setDepth(100);
+                player.setScale(0.8);
+                player.setDepth(100); 
                 
                 questionBoxGroup = this.physics.add.group();
                 this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
                 
-                // عرض السرعة والنقاط بمقاس متجاوب
-                const fontSize = Math.min(24, this.cameras.main.width / 30);
-                speedText = this.add.text(this.cameras.main.width - 20, 20, `السرعة: ${baseSpeed}`, {
-                    fontSize: `${fontSize}px`,
+                speedText = this.add.text(20, 20, `السرعة: ${baseSpeed}`, {
+                    fontSize: '24px',
                     fill: '#4cc9f0',
                     fontStyle: 'bold'
-                }).setScrollFactor(0).setDepth(100).setOrigin(1, 0);
+                }).setScrollFactor(0).setDepth(100).setOrigin(0);
                 
-                this.scoreText = this.add.text(this.cameras.main.width - 20, 20 + fontSize + 10, `النقاط: ${score}`, {
-                    fontSize: `${fontSize}px`,
+                this.scoreText = this.add.text(20, 60, `النقاط: ${score}`, {
+                    fontSize: '24px',
                     fill: '#f72585',
                     fontStyle: 'bold'
-                }).setScrollFactor(0).setDepth(100).setOrigin(1, 0);
+                }).setScrollFactor(0).setDepth(100).setOrigin(0);
 
-                // مؤقت لتوليد صناديق الأسئلة
                 this.boxSpawnTimer = this.time.addEvent({
-                    delay: 3000,
+                    delay: 3000, 
                     callback: this.generateQuestionBox,
                     callbackScope: this,
                     loop: true
                 });
                 
-                // إيقاف المؤقت والفيزياء في البداية
                 this.boxSpawnTimer.paused = true;
                 this.physics.pause();
-                scrollSpeed = 0;
+                scrollSpeed = 0; 
 
-                // مؤقت لتوليد عناصر الخلفية
-                this.time.addEvent({
+		        this.time.addEvent({
                     delay: 500,
                     callback: this.generateBackgroundObject,
                     callbackScope: this,
                     loop: true
                 });
                 
-                // مؤقت لمراقبة انتهاء الأسئلة
                 this.finishLineTimer = this.time.addEvent({
                     delay: 500,
                     callback: this.spawnFinishLine,
                     callbackScope: this,
                     loop: true
-                });
+                }); 
 
                 this.shuffleQuestions();
                 
-                // إعداد واجهة الأسئلة في DOM
                 questionUI = document.getElementById('questionBox');
                
-                // إعداد مدخلات لوحة المفاتيح
                 this.cursors = this.input.keyboard.createCursorKeys();
 
-                // إعداد التحكم باللمس/السحب
                 this.input.on('pointerdown', (pointer) => {
                     this.startY = pointer.y;
                     this.isMovingUp = false;
@@ -715,7 +378,7 @@
                 this.input.on('pointermove', (pointer) => {
                     if (pointer.isDown && this.startY !== undefined) {
                         const swipeDistance = pointer.y - this.startY;
-                        const threshold = isLandscapeMode ? 5 : 10;
+                        const threshold = 10; 
 
                         if (swipeDistance < -threshold) {
                             this.isMovingUp = true;
@@ -730,20 +393,10 @@
                     }
                 });
                 
-                // زر بدء اللعب
                 startBtn.onclick = () => {
                     introModal.style.display = 'none';
                     this.startGame();
                 };
-                
-                // زر إغلاق سؤال
-                if (questionBoxCloseBtn) {
-                    questionBoxCloseBtn.onclick = () => {
-                        if (questionUI.style.display === 'block') {
-                            this.resumeGame();
-                        }
-                    };
-                }
             }
             
             startGame() {
@@ -753,15 +406,14 @@
                 this.generateQuestionBox();
             }
 
-            createResponsiveBackground() {
+            createBackground() {
                 const graphics = this.add.graphics();
                 graphics.fillGradientStyle(0x0a0a20, 0x0e1332, 0x0a0a20, 0x0e1332);
-                graphics.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
+                graphics.fillRect(0, 0, 800, 600);
 
-                const starsCount = Math.floor((this.cameras.main.width * this.cameras.main.height) / 5000);
-                for (let i = 0; i < starsCount; i++) {
-                    const x = Phaser.Math.Between(0, this.cameras.main.width);
-                    const y = Phaser.Math.Between(0, this.cameras.main.height * 0.5);
+                for (let i = 0; i < 100; i++) {
+                    const x = Phaser.Math.Between(0, 800);
+                    const y = Phaser.Math.Between(0, 300);
                     const size = Phaser.Math.FloatBetween(0.5, 2);
                     const alpha = Phaser.Math.FloatBetween(0.2, 0.8);
                     this.add.circle(x, y, size, 0xffffff, alpha);
@@ -769,46 +421,31 @@
 
                 const fogGraphics = this.add.graphics({ fillStyle: { color: 0x111122, alpha: 0.5 } });
                 for(let i = 0; i < 5; i++) {
-                    fogGraphics.fillRect(i * (this.cameras.main.width / 5), 
-                                        this.cameras.main.height * 0.5 + Phaser.Math.Between(0, 50), 
-                                        this.cameras.main.width / 5, 
-                                        50);
+                    fogGraphics.fillRect(i * 200, 300 + Phaser.Math.Between(0, 50), 300, 50);
                 }
             }
             
-            createResponsiveRoad() {
-                const roadHeight = this.cameras.main.height * 0.3;
-                const roadY = this.cameras.main.height - roadHeight;
-                
+            createRoad() {
                 const roadGraphics = this.add.graphics();
                 roadGraphics.fillStyle(0x333333, 1);
-                roadGraphics.fillRect(0, roadY, this.cameras.main.width, roadHeight);
+                roadGraphics.fillRect(0, 400, 800, 200);
 
                 roadGraphics.fillStyle(0x00008b, 1);
-                roadGraphics.fillRect(0, roadY, this.cameras.main.width, 10);
-                roadGraphics.fillRect(0, this.cameras.main.height - 10, this.cameras.main.width, 10);
+                roadGraphics.fillRect(0, 400, 800, 10);
+                roadGraphics.fillRect(0, 590, 800, 10);
 
                 this.roadLines = this.add.group();
-                const lineCount = Math.floor(this.cameras.main.width / 100);
-                for (let i = 0; i < lineCount; i++) {
-                    this.roadLines.add(this.add.rectangle(i * 100, roadY + roadHeight / 2, 50, 5, 0xffffff));
+                for (let i = 0; i < 10; i++) {
+                    this.roadLines.add(this.add.rectangle(i * 100, 500, 50, 5, 0xffffff));
                 }
-                
-                // تخزين معلومات الطريق للاستخدام لاحقاً
-                this.roadInfo = {
-                    y: roadY,
-                    height: roadHeight,
-                    minY: roadY + 20,
-                    maxY: roadY + roadHeight - 20
-                };
             }
 
             generateBackgroundObject() {
                 const textures = ['houseTexture', 'treeTexture', 'poleTexture'];
                 const randomTexture = Phaser.Utils.Array.GetRandom(textures);
                 
-                const x = this.cameras.main.width + 50;
-                const y = this.roadInfo.y;
+                const x = 850;
+                const y = 350;
                 const scaleFactor = Phaser.Math.FloatBetween(0.8, 1.5);
 
                 const obj = this.add.sprite(x, y, randomTexture);
@@ -819,31 +456,29 @@
             }
 
             spawnFinishLine() {
-                if (remainingQuestions.length === 0 && wrongQuestions.length === 0 && 
-                    questionBoxGroup.getLength() === 0 && !finishLine && this.boxSpawnTimer.paused) {
+                if (remainingQuestions.length === 0 && wrongQuestions.length === 0 && questionBoxGroup.getLength() === 0 && !finishLine && this.boxSpawnTimer.paused) {
                     
-                    this.finishLineTimer.destroy();
-                    console.log("توليد خط النهاية!");
+                    this.finishLineTimer.destroy(); 
 
                     finishLine = this.physics.add.sprite(
-                        this.cameras.main.width + 100,
-                        this.roadInfo.y + this.roadInfo.height / 2,
+                        this.sys.game.config.width + 100, 
+                        500, 
                         'finishLineTexture'
                     );
                     
-                    finishLine.setOrigin(0.5, 0.5);
+                    finishLine.setOrigin(0.5, 0.5); 
                     finishLine.setImmovable(true);
-                    finishLine.setDisplaySize(60, this.roadInfo.height);
-                    finishLine.body.setSize(60, this.roadInfo.height);
+                    finishLine.setDisplaySize(60, 200); 
+                    finishLine.body.setSize(60, 200);
                     
-                    finishLine.setAngle(0);
-                    finishLine.setDepth(10);
+                    finishLine.setAngle(0); 
+                    finishLine.setDepth(10); 
 
                     finishLine.addText = this.add.text(
-                        finishLine.x,
-                        this.roadInfo.y - 20,
+                        finishLine.x, 
+                        380, 
                         '🏁 خط النهاية 🏁', {
-                            fontSize: `${Math.min(24, this.cameras.main.width / 30)}px`,
+                            fontSize: '24px',
                             fill: '#fff',
                             fontStyle: 'bold',
                             stroke: '#000',
@@ -856,37 +491,29 @@
             }
 
             onCrossFinishLine(player, line) {
-                if (gameFinished) return;
-                gameFinished = true;
+                if (isFinishing) return;
+                isFinishing = true;
 
-                line.body.enable = false;
+                line.body.enable = false; 
 
                 this.time.delayedCall(2000, () => {
-                    this.gameOver(true);
+                    this.gameOver(true); 
                 }, [], this);
             }
 
+
             update() {
-                // تحديث السرعة في DOM فقط عند التغيير
-                const currentSpeed = Math.round(baseSpeed);
-                if (currentSpeed !== lastDisplayedSpeed) {
-                    document.getElementById('speedValue').textContent = currentSpeed;
-                    lastDisplayedSpeed = currentSpeed;
-                }
-                
-                // تحريك خطوط المنتصف
                 this.roadLines.getChildren().forEach(line => {
                     line.x -= scrollSpeed / 30;
                     if (line.x < -50) {
-                        line.x = this.cameras.main.width + 50;
+                        line.x = 850;
                     }
                 });
 
-                // تحريك عناصر الخلفية
                 this.backgroundObjects.getChildren().forEach(obj => {
                     obj.x -= scrollSpeed / 50;
                     
-                    const distanceFactor = 1 - (obj.y - this.roadInfo.y) / 100;
+                    const distanceFactor = 1 - (obj.y - 350) / 100;
                     obj.x -= scrollSpeed * distanceFactor * 0.01;
                     
                     if (obj.x < -50) {
@@ -894,39 +521,37 @@
                     }
                 });
 
-                // تحريك صناديق الأسئلة
                 if (questionBoxGroup) {
                     questionBoxGroup.getChildren().forEach(box => {
                         box.x -= scrollSpeed / 60;
-                        if (box.x < -200) {
+                        if (box.x < -200) { 
                             box.destroy();
                         }
                     });
                 }
 
-                // تحريك خط النهاية
                 if (finishLine && !gameFinished) {
-                    finishLine.x -= scrollSpeed / 30;
+                    finishLine.x -= scrollSpeed / 30; 
                     finishLine.addText.x = finishLine.x;
                 }
                 
-                // تحديث النقاط
+                document.getElementById('speedValue').textContent = Math.round(baseSpeed);
                 this.scoreText.setText(`النقاط: ${score}`);
 
-                // التحكم في حركة السيارة
-                const moveAmount = scrollSpeed / 25;
+                const moveAmount = 8;
                 if (scrollSpeed > 0) {
                     if (this.cursors.up.isDown || this.isMovingUp) {
                         player.y -= moveAmount;
                     } else if (this.cursors.down.isDown || this.isMovingDown) {
                         player.y += moveAmount;
                     }
-                    player.y = Phaser.Math.Clamp(player.y, this.roadInfo.minY, this.roadInfo.maxY);
+                    player.y = Phaser.Math.Clamp(player.y, 420, 560);
                 }
             }
+            
 
             generateQuestionBox() {
-                if (questionBoxGroup.getLength() >= 2) {
+                if (questionBoxGroup.getLength() > 0) {
                     return;
                 }
                 
@@ -935,12 +560,13 @@
                 if (remainingQuestions.length > 0) {
                     const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
                     questionData = remainingQuestions.splice(randomIndex, 1)[0];
+                    
                 } else if (wrongQuestions.length > 0) {
                     questionData = wrongQuestions.shift();
+                    
                 } else {
                     if (this.boxSpawnTimer) {
                         this.boxSpawnTimer.paused = true;
-                        console.log("تم الانتهاء من جميع الأسئلة.");
                     }
                     return;
                 }
@@ -949,12 +575,14 @@
                     return Math.floor(Math.random() * 16777215);
                 };
 
-                const randomColor = getRandomColor();
-                const box = this.physics.add.sprite(this.cameras.main.width + 100, this.roadInfo.y + this.roadInfo.height / 2, 'wideQuestionBoxTexture');
+                const randomColor = getRandomColor(); 
+
+                const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture');
                 
                 box.setTint(randomColor);
-                box.setDisplaySize(this.cameras.main.width * 0.3, this.roadInfo.height * 0.8);
-                box.body.setSize(this.cameras.main.width * 0.3, this.roadInfo.height * 0.8);
+                
+                box.setDisplaySize(250, 150); 
+                box.body.setSize(250, 150);
                 
                 questionBoxGroup.add(box);
                 box.setData('question', questionData);
@@ -962,7 +590,7 @@
                 
                 this.tweens.add({
                     targets: box,
-                    y: this.roadInfo.y + this.roadInfo.height / 2 - 20,
+                    y: 480,
                     duration: 1000,
                     yoyo: true,
                     repeat: -1,
@@ -989,7 +617,7 @@
                 const optionsContainer = document.getElementById('optionsContainer');
                 optionsContainer.innerHTML = '';
                 
-                const shuffledOptions = Phaser.Utils.Array.Shuffle([...questionData.c]);
+                const shuffledOptions = Phaser.Utils.Array.Shuffle([...questionData.c]); 
                 
                 shuffledOptions.forEach((optionText, index) => {
                     const optionElement = document.createElement('div');
@@ -1017,7 +645,7 @@
                 }
                 
                 if (selectedIndex === correctIndex) {
-                    if (this.correctSound) this.correctSound.play();
+                    this.correctSound.play(); 
                     selectedOptionElement.classList.add('correct');
                     baseSpeed += 20;
                     
@@ -1025,19 +653,19 @@
                          score += 10;
                     }
                     
-                    this.findAndRemoveQuestionBox();
+                    this.findAndRemoveQuestionBox(); 
                     
                     setTimeout(() => {
                         this.resumeGame();
                     }, 1500);
                 } else {
-                    if (this.wrongSound) this.wrongSound.play();
+                    this.wrongSound.play(); 
                     selectedOptionElement.classList.add('incorrect');
                     
-                    const correctAnswerText = activeQuestion.c[correctIndex];
+                    const correctAnswerText = activeQuestion.c[correctIndex]; 
                     allOptions.forEach(opt => {
                         if (opt.textContent === correctAnswerText) {
-                            opt.classList.add('correct');
+                            opt.classList.add('correct'); 
                         }
                     });
 
@@ -1046,11 +674,11 @@
                     baseSpeed *= 0.8;
                     baseSpeed = Math.max(100, baseSpeed);
                     
-                    if (!wrongQuestions.some(q => q.id === activeQuestion.id)) {
+                    if (!wrongQuestions.includes(activeQuestion)) {
                          wrongQuestions.push(activeQuestion);
                     }
                     
-                    this.findAndRemoveQuestionBox();
+                    this.findAndRemoveQuestionBox(); 
 
                     errorOverlay.style.display = 'flex';
                     errorIcon.style.opacity = 1;
@@ -1066,9 +694,7 @@
             findAndRemoveQuestionBox() {
                 if (questionBoxGroup) {
                     questionBoxGroup.getChildren().forEach(box => {
-                         const boxQuestion = box.getData('question');
-                         if (boxQuestion && activeQuestion && 
-                             JSON.stringify(boxQuestion) === JSON.stringify(activeQuestion)) {
+                         if (box.getData('question') === activeQuestion) { 
                             this.tweens.add({
                                 targets: box,
                                 y: box.y - 50,
@@ -1097,11 +723,12 @@
                 });
             }
 
+            
             gameOver(isWin) {
                 if (gameFinished) return;
                 gameFinished = true;
                 
-                if (this.sound) this.sound.stopAll();
+                this.sound.stopAll();
 
                 scrollSpeed = 0;
                 this.physics.pause();
@@ -1109,54 +736,52 @@
                 if (this.boxSpawnTimer) this.boxSpawnTimer.destroy();
                 
                 if (isWin) {
-                    if (this.winSound) this.winSound.play();
+                    this.winSound.play(); 
                     this.showSummaryBox("🏆 مبروك! لقد عبرت خط النهاية 🏆", score);
                 } else {
                     this.showSummaryBox("انتهت اللعبة!", score);
                 }
             }
 
-            showSummaryBox(title, finalScore) {
+           showSummaryBox(title, finalScore) {
                 const totalQuestions = allQuestionsData.length;
                 
-                const PRIMARY_COLOR = 0xf72585;
-                const SECONDARY_COLOR = 0x1a1a2e;
-                const TEXT_COLOR = 0xffffff;
-                const SUCCESS_COLOR = 0x2ecc71;
-                const NEUTRAL_COLOR = 0x4cc9f0;
+                const PRIMARY_COLOR = 0xf72585; 
+                const SECONDARY_COLOR = 0x1a1a2e; 
+                const TEXT_COLOR = 0xffffff; 
+                const SUCCESS_COLOR = 0x2ecc71; 
+                const NEUTRAL_COLOR = 0x4cc9f0; 
                 
-                const windowWidth = this.cameras.main.width * 0.95;
-                const windowHeight = this.cameras.main.height * 0.95;
+                const windowWidth = this.sys.game.config.width * 0.98;
+                const windowHeight = this.sys.game.config.height * 0.98;
 
-                const summaryBoxContainer = this.add.container(this.cameras.main.width / 2, this.cameras.main.height / 2).setDepth(2000);
+                const summaryBoxContainer = this.add.container(this.scale.width / 2, this.scale.height / 2).setDepth(2000);
 
-                const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, SECONDARY_COLOR, 0.95)
+                const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, SECONDARY_COLOR, 1)
                     .setOrigin(0.5)
-                    .setStrokeStyle(10, PRIMARY_COLOR);
+                    .setStrokeStyle(10, PRIMARY_COLOR); 
                 summaryBoxContainer.add(boxRect);
 
-                let yPos = -windowHeight / 2 + 40;
+                let yPos = -windowHeight / 2 + 40; 
 
                 const titleText = this.add.text(0, yPos, title, {
-                    fontSize: `${Math.min(36, windowWidth / 20)}px`,
-                    fill: `#${TEXT_COLOR.toString(16)}`,
-                    fontStyle: 'bold'
+                    fontSize: '36px', 
+                    fill: `#${TEXT_COLOR.toString(16)}`, fontStyle: 'bold'
                 }).setOrigin(0.5);
                 summaryBoxContainer.add(titleText);
 
                 yPos += 60;
 
                 const scoreText = this.add.text(0, yPos, `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`, {
-                    fontSize: `${Math.min(30, windowWidth / 25)}px`,
-                    fill: `#${SUCCESS_COLOR.toString(16)}`,
-                    fontStyle: 'bold'
+                    fontSize: '30px', 
+                    fill: `#${SUCCESS_COLOR.toString(16)}`, fontStyle: 'bold'
                 }).setOrigin(0.5);
                 summaryBoxContainer.add(scoreText);
                 
-                yPos += 50;
+                yPos += 50; 
                 
                 const reviewTitle = this.add.text(0, yPos, 'مراجعة الأسئلة والإجابات الصحيحة:', {
-                    fontSize: `${Math.min(26, windowWidth / 30)}px`,
+                    fontSize: '26px', 
                     fill: `#${TEXT_COLOR.toString(16)}`,
                     fontStyle: 'bold'
                 }).setOrigin(0.5);
@@ -1175,27 +800,27 @@
                 });
                 
                 const reviewText = this.add.text(
-                    windowWidth / 2 - 20,
-                    yPos,
-                    reviewContent,
+                    windowWidth / 2 - 20, 
+                    yPos, 
+                    reviewContent, 
                     {
-                        fontSize: `${Math.min(20, windowWidth / 40)}px`,
+                        fontSize: '20px', 
                         fill: `#${TEXT_COLOR.toString(16)}`,
-                        wordWrap: { width: windowWidth - 40 },
+                        wordWrap: { width: windowWidth - 40 }, 
                         align: 'right',
-                        rtl: true,
+                        rtl: true, 
                         padding: { x: 5, y: 5 }
                     }
-                ).setOrigin(1, 0);
+                ).setOrigin(1, 0); 
                 
                 summaryBoxContainer.add(reviewText);
 
-                yPos = windowHeight / 2 - 60;
+                yPos = windowHeight / 2 - 60; 
                 
-                const okBtn = this.add.text(0, yPos, '👍 حسناً، أعد اللعب', {
-                    fontSize: `${Math.min(28, windowWidth / 25)}px`,
-                    fill: `#${SECONDARY_COLOR.toString(16)}`,
-                    backgroundColor: `#${NEUTRAL_COLOR.toString(16)}`,
+                const okBtn = this.add.text(0, yPos, '👍 حسناً، أعد اللعب', { 
+                    fontSize: '28px', 
+                    fill: `#${SECONDARY_COLOR.toString(16)}`, 
+                    backgroundColor: `#${NEUTRAL_COLOR.toString(16)}`, 
                     padding: { x: 20, y: 10 },
                     borderRadius: 8
                 })
@@ -1214,46 +839,12 @@
             }
         }
 
+
         // إعداد تكوين اللعبة
-        const gameSize = getGameSize();
         const config = {
-            type: Phaser.AUTO,
-            width: gameSize.width,
-            height: gameSize.height,
+            type: Phaser.AUTO, 
+            width: 800,
+            height: 600,
             parent: 'gameCanvas',
             scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                resizeInterval: 100,
-                expandParent: true,
-                min: {
-                    width: 400,
-                    height: 300
-                },
-                max: {
-                    width: 1920,
-                    height: 1080
-                }
-            },
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 0 },
-                    debug: false
-                }
-            },
-            scene: GameScene
-        };
-
-        // إنشاء اللعبة
-        game = new Phaser.Game(config);
-
-        // إعداد مستمعي الأحداث للاتجاه
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
-
-        // التحقق الأولي من الاتجاه
-        checkOrientation();
-    </script>
-</body>
-</html>
+                // استخدام FIT و CENTER_BOTH لضمان التوسيط في وضع الشاشة الأ
