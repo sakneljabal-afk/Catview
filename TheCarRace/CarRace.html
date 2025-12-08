@@ -549,10 +549,10 @@
                 this.wrongSound = this.sound.add('wrongSound');
                 this.winSound = this.sound.add('winSound'); 
 
-                player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
+            player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 500, 'carTexture'); // تم إنزال السيارة قليلاً لتبدو أقرب (الموضع Y)
                 player.setCollideWorldBounds(true);
-                player.setScale(0.8);
-                player.setDepth(100); 
+                player.setScale(1.5); // تم تكبير حجم السيارة بشكل ملحوظ
+                player.setDepth(100);
                 
                 questionBoxGroup = this.physics.add.group();
                 this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
