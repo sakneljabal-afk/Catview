@@ -616,32 +616,6 @@
                 });
             }
                 
-                // إنشاء صندوق عريض يغطي المسار
-                // الصندوق سيظهر في منتصف المسار رأسيًا (y=500)
-                // وسيكون عريضًا بما يكفي لتغطية المسار أفقيًا
-                const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture'); 
-                
-                // جعل الصندوق عريضًا وطويلًا لتغطية المسار
-                box.setDisplaySize(250, 150); // جعل الصندوق أكبر
-                
-                // جعل الجسم الفيزيائي يغطي مساحة كبيرة
-                box.body.setSize(250, 150);
-                
-                questionBoxGroup.add(box);
-                box.setData('question', questionData);
-                box.setData('used', false);
-                
-                // إضافة حركة خفيفة للصندوق لجذب الانتباه
-                this.tweens.add({
-                    targets: box,
-                    y: 480,
-                    duration: 1000,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-            }
-            
             hitQuestionBox(player, box) {
                 if (box.getData('used')) return;
                 
@@ -778,5 +752,6 @@
     </script>
 </body>
 </html>
+
 
 
