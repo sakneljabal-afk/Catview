@@ -266,11 +266,12 @@ const game = new Phaser.Game(config);
 /* ======================
    3. المتغيرات العامة
 ====================== */
-let cannon, bubbles, arrow, invisibleWall;
+let cannon, bubbles, invisibleWall;
 let currentQ = 0;
 let canShoot = true;
 let isAiming = false;
 let missedShots = 0;
+ let shootAngle = -90; // متغير لتخزين الزاوية let aimLine; // كائن خط التوجيه 
 
 const BUBBLE_IMG_SIZE = 300; 
 
@@ -317,22 +318,12 @@ function create(){
   });
   this.physics.add.collider(bubbles, invisibleWall);
 
-  arrow = this.add.text(cannon.x, cannon.y - (cannon.displayHeight), '⬆️', {
-    fontSize: '32px',
-    fontFamily: 'Arial',
-    color: '#FF5722'
-  }).setOrigin(0.5);
-
-  this.input.on('pointermove', (pointer) => {
-    let xPos = pointer.x;
-    cannon.x = Phaser.Math.Clamp(xPos, width * 0.1, width * 0.9);
-    arrow.x = cannon.x;
-  });
-
-  this.input.on('pointerdown', () => {
-    if (!isAiming) { isAiming = true; return; }
-    if (canShoot) fire(this);
-  });
+// 🔴 إزالة كائن السهم القديم (arrow) لأنه لن يستخدم بعد الآن 
+// أضف هنا كائن الخط الرسومي 
+(aimLine) aimLine = this.add.graphics({ lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } }).setDepth(2);
+javascript this.input.on('pointermove', (pointer) => { // المدفع لم يعد يتحرك، فقط نرسم الخط updateAimLine(this, pointer); });
+ this.input.on('pointerdown', () => { // إلغاء منطق التصويب المزدوج if (canShoot) updateAimLine(this, this.input.activePointer); });
+ this.input.on('pointerup', () => { // 🟢 إطلاق النار عند رفع الإصبع if (canShoot) fire(this); });
 
   showQuestion(this);
 }
@@ -346,13 +337,51 @@ function update() {
   });
 }
 
+
+/* ======================
+   * دالة رسم خط التوجيه
+====================== */
+function updateAimLine(scene, pointer) {
+  // موقع إطلاق المقذوف
+  const cannonX = cannon.x;
+  const cannonY = cannon.y - cannon.displayHeight / 2;
+  
+  const pointerX = pointer.x;
+  const pointerY = pointer.y;
+
+  // حساب الزاوية بين المدفع ونقطة اللمس
+  shootAngle = Phaser.Math.Angle.Between(cannonX, cannonY, pointerX, pointerY);
+
+  // لضمان الإطلاق للأعلى فقط
+  // إذا كانت الزاوية موجبة (تدل على الإطلاق للأسفل)، نجعلها قريبة من الصفر أو -180
+  if (shootAngle > 0) {
+    if (pointerX < cannonX) {
+        shootAngle = Phaser.Math.DegToRad(-179); // لليسار
+    } else {
+        shootAngle = Phaser.Math.DegToRad(-1); // لليمين
+    }
+  }
+
+  // رسم الخط المنقط 
+  aimLine.clear();
+  aimLine.lineStyle(4, 0xFF5722, 0.8); 
+  
+  // طول كبير للخط ليمتد حتى نهاية الشاشة
+  const lineLength = 1000; 
+  const endX = cannonX + Math.cos(shootAngle) * lineLength;
+  const endY = cannonY + Math.sin(shootAngle) * lineLength;
+
+  aimLine.beginPath();
+  aimLine.moveTo(cannonX, cannonY);
+  aimLine.lineTo(endX, endY);
+  aimLine.strokePath(); 
+}
+
 /* ======================
    7. منطق الإطلاق (Fire)
 ====================== */
-function fire(scene){
-  canShoot = false;
-  isAiming = false;
-  arrow.setVisible(false);
+function fire(scene){ canShoot = false;
+aimLine.clear(); // 🔴 إخفاء خط التوجيه فور الإطلاق //
 
   const width = scene.scale.width;
   const shotScale = (width * 0.12) / 300; 
@@ -363,7 +392,11 @@ function fire(scene){
     'shoot'
   ).setScale(shotScale);
 
-  shot.setVelocityY(-800); 
+// 🟢 تطبيق السرعة باستخدام الزاوية المحسوبة 
+const speed = 800; // سرعة الإطلاق 
+const velocityX = Math.cos(shootAngle) * speed; 
+const velocityY = Math.sin(shootAngle) * speed; 
+shot.setVelocity(velocityX, velocityY);
 
   scene.physics.add.overlap(shot, bubbles, (s, b) => {
     s.destroy();
@@ -387,10 +420,7 @@ function fire(scene){
 
   scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
   
-  scene.time.delayedCall(800, () => {
-    canShoot = true;
-    arrow.setVisible(true);
-  });
+scene.time.delayedCall(800, () => { canShoot = true; // aimLine سيظهر تلقائياً عند أول حركة pointermove جديدة // لا نحتاج إلى إعادة تعيين isAiming أو إظهار arrow });
 }
 
 /* ======================
@@ -478,4 +508,3 @@ function showQuestion(scene){
 </script>
 </body>
 </html>
-
