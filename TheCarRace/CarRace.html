@@ -926,16 +926,16 @@ showWinScreen() {
 
 
         // إعداد تكوين اللعبة
-        const config = {
+const config = {
             type: Phaser.AUTO, 
             width: 800,
             height: 600,
             parent: 'gameCanvas',
             scale: {
+                // وضع جميع خصائص التكبير هنا
                 mode: Phaser.Scale.FIT, 
-                autoCenter: Phaser.Scale.CENTER_BOTH
-            },
-min: {
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                min: {
                     width: 320,
                     height: 480
                 },
@@ -944,11 +944,9 @@ min: {
                     height: 1080
                 },
                 expandParent: true // يضمن أن الحاوية تتوسع قدر الإمكان
-                // ⬆️ نهاية التعديل ⬆️
-            },
+            }, // إغلاق كائن scale بشكل صحيح
             physics: {
-                default: 'arcade',
-                arcade: {
+                default: 'arcade',                arcade: {
                     gravity: { y: 0 },
                     debug: false
                 }
