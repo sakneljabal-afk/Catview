@@ -789,25 +789,25 @@ checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer
     const allOptions = optionsContainer.querySelectorAll('.option');
     allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
     
-    // 1. تهيئة متغير تتبع فقدان النقاط (isScoreLost) لكل سؤال
-    // هذا يضمن أن يتم تتبع حالة النقاط بشكل دائم لهذا السؤال تحديدًا
+    // ⬇️⬇️ الإضافة 1: تهيئة خاصية تتبع فقدان النقاط ⬇️⬇️
     if (typeof activeQuestion.isScoreLost === 'undefined') {
         activeQuestion.isScoreLost = false;
     }
+    // ⬆️⬆️ نهاية الإضافة 1 ⬆️⬆️
     
     if (selectedIndex === correctIndex) {
         // إجابة صحيحة
         selectedOptionElement.classList.add('correct');
         baseSpeed += 20;
         
-        // ⬇️⬇️ التعديل المطلوب لـ منح النقاط ⬇️⬇️
-        // يتم إضافة النقاط فقط إذا لم يُسجل خطأ سابقًا في هذا السؤال
+        // ⬇️⬇️ التعديل 2: منح النقاط مشروط ⬇️⬇️
+        // يتم منح النقاط فقط إذا لم يُسجل خطأ سابقًا في هذا السؤال
         if (activeQuestion.isScoreLost !== true) {
              score += 10;
         }
-        // ⬆️⬆️ نهاية التعديل ⬆️⬆️
+        // ⬆️⬆️ نهاية التعديل 2 ⬆️⬆️
         
-        this.findAndRemoveQuestionBox();
+        this.findAndRemoveQuestionBox(); // إخفاء الصندوق من مسار اللعبة (Phaser)
         
         setTimeout(() => {
             this.resumeGame();
@@ -817,10 +817,10 @@ checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer
         selectedOptionElement.classList.add('incorrect');
         allOptions[correctIndex].classList.add('correct');
         
-        // ⬇️⬇️ التعديل المطلوب لفقدان النقاط ⬇️⬇️
+        // ⬇️⬇️ التعديل 3: وسم السؤال بفقدان النقاط ⬇️⬇️
         // بمجرد الخطأ، يتم وسم السؤال بفقدان النقاط بشكل دائم
         activeQuestion.isScoreLost = true;
-        // ⬆️⬆️ نهاية التعديل ⬆️⬆️
+        // ⬆️⬆️ نهاية التعديل 3 ⬆️⬆️
         
         baseSpeed *= 0.8;
         baseSpeed = Math.max(100, baseSpeed);
@@ -829,7 +829,8 @@ checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer
              wrongQuestions.push(activeQuestion);
         }
         
-        this.findAndRemoveQuestionBox();
+        // هذا السطر يقوم بإزالة الصندوق، لكن النافذة لا زالت موجودة على الشاشة
+        this.findAndRemoveQuestionBox(); 
 
         // تأثير الشاشة الحمراء
         errorOverlay.style.display = 'flex';
