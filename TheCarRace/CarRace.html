@@ -711,13 +711,24 @@ generateQuestionBox() {
         return;
     }
     
-    // إنشاء الصندوق (بقية الكود لا تتغير)
-    // ...
-    // إنشاء صندوق عريض يغطي المسار
-    // الصندوق سيظهر في منتصف المسار رأسيًا (y=500)
-    // وسيكون عريضًا بما يكفي لتغطية المسار أفقيًا
-    const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture'); 
+    // ⬇️⬇️ الكود الجديد لتوليد الألوان العشوائية ⬇️⬇️
+
+    // دالة لتوليد لون عشوائي (بصيغة رقم عشري لـ 0xRRGGBB)
+    const getRandomColor = () => {
+        // 16777215 يمثل أقصى قيمة لون سداسي عشري (0xFFFFFF)
+        return Math.floor(Math.random() * 16777215);
+    };
+
+    const randomColor = getRandomColor(); 
+
+    // إنشاء الصندوق
+    const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture');
     
+    // تطبيق اللون العشوائي على الصندوق باستخدام setTint()
+    box.setTint(randomColor);
+    
+    // ⬆️⬆️ نهاية الكود الجديد ⬆️⬆️
+
     // جعل الصندوق عريضًا وطويلًا لتغطية المسار
     box.setDisplaySize(250, 150); // جعل الصندوق أكبر
     
@@ -738,7 +749,6 @@ generateQuestionBox() {
         ease: 'Sine.easeInOut'
     });
 }
-            
             hitQuestionBox(player, box) {
                 if (box.getData('used')) return;
                 
