@@ -904,8 +904,15 @@ gameOver(player, finishLine) {
 // ... (الكود التالي يجب استبداله بالكامل)
 
 
-// استبدل دالة showWinScreen بالدالة التالية بالكامل:
 displaySummaryWindow(finalScore, totalQ, firstCorrect) {
+    // الألوان الجذابة المقترحة (مستوحاة من الصورة)
+    const PRIMARY_COLOR = 0xFF69B4; // وردي زاهي (Pink) للإطار
+    const SECONDARY_COLOR = 0xADD8E6; // أزرق سماوي فاتح لخلفية النافذة
+    const TEXT_COLOR = 0x1A1A2E; // لون نص غامق
+    const SUCCESS_COLOR = 0x00BFFF; // أزرق سماوي لامع للنجاح
+    const ERROR_COLOR = 0xFF4500; // برتقالي مائل للأحمر للأخطاء
+    const BUTTON_COLOR = 0x4169E1; // أزرق ملكي لزر الموافقة
+    
     // 1. إنشاء الخلفية المعتمة
     const bg = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.8).setDepth(200);
     
@@ -914,67 +921,72 @@ displaySummaryWindow(finalScore, totalQ, firstCorrect) {
     const windowHeight = 450;
     const summaryBoxContainer = this.add.container(400, 300).setDepth(201);
     
-    // خلفية النافذة
-    const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, 0xf0f0f0, 1).setOrigin(0.5).setStrokeStyle(4, 0x4cc9f0);
+    // خلفية النافذة (لون سماوي فاتح)
+    const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, SECONDARY_COLOR, 1)
+        .setOrigin(0.5)
+        .setStrokeStyle(10, PRIMARY_COLOR); // إطار سميك باللون الوردي الزاهي
     summaryBoxContainer.add(boxRect); 
     
     // 3. محتوى النتائج
     const maxPossibleScore = totalQ * 10;
-    let yPos = -windowHeight / 2 + 30; // موضع البداية من الأعلى
+    let yPos = -windowHeight / 2 + 40; // موضع البداية من الأعلى
     
-    // العنوان
+    // العنوان (لون نص غامق)
     const titleText = this.add.text(0, yPos, '🏆 ملخص النتائج النهائية 🏆', {
-        fontSize: '30px', 
-        fill: '#1a1a2e', 
+        fontSize: '32px', 
+        fill: `#${TEXT_COLOR.toString(16)}`, 
         fontStyle: 'bold'
     }).setOrigin(0.5);
     summaryBoxContainer.add(titleText);
     yPos += 50;
     
-    // النقاط المحتسبة (كام من كام)
+    // النقاط المحتسبة (لون النجاح)
     const scoreText = this.add.text(0, yPos, 
         `النقاط المحتسبة: ${finalScore} / ${maxPossibleScore}`, 
-        { fontSize: '24px', fill: '#0a9396', fontStyle: 'bold' })
+        { fontSize: '26px', fill: `#${SUCCESS_COLOR.toString(16)}`, fontStyle: 'bold' })
         .setOrigin(0.5);
     summaryBoxContainer.add(scoreText);
     yPos += 40;
     
-    // ملخص الإجابات الصحيحة من المرة الأولى
+    // ملخص الإجابات الصحيحة من المرة الأولى (لون نص غامق)
     const firstTimeText = this.add.text(0, yPos, 
         `أجبت ${firstCorrect} أسئلة صحيحة من ${totalQ} من المرة الأولى`, 
-        { fontSize: '20px', fill: '#94d2bd' })
+        { fontSize: '22px', fill: `#${TEXT_COLOR.toString(16)}` })
         .setOrigin(0.5);
     summaryBoxContainer.add(firstTimeText);
     yPos += 40;
     
-    // خط فاصل
-    const line = this.add.rectangle(0, yPos, windowWidth - 60, 2, 0xcccccc).setOrigin(0.5);
+    // خط فاصل (لون أصفر زاهي)
+    const line = this.add.rectangle(0, yPos, windowWidth - 60, 4, 0xFFD700).setOrigin(0.5);
     summaryBoxContainer.add(line);
-    yPos += 15;
+    yPos += 20;
 
-    // عنوان مراجعة الأخطاء
+    // عنوان مراجعة الأخطاء (لون نص غامق)
     const reviewTitle = this.add.text(-windowWidth / 2 + 30, yPos, 'مراجعة الأسئلة والإجابات الصحيحة:', {
         fontSize: '18px', 
-        fill: '#e76f51', 
+        fill: `#${TEXT_COLOR.toString(16)}`, 
         fontStyle: 'bold'
     }).setOrigin(0, 0);
     summaryBoxContainer.add(reviewTitle);
-    yPos += 25;
+    yPos += 30;
     
     // عرض مراجعة الأسئلة
     let reviewText = '';
-    const questionsToReview = [...wrongQuestions, ...allQuestionsData.filter(q => !wrongQuestions.includes(q))];
+    const questionsToReview = [...allQuestionsData.filter(q => !wrongQuestions.includes(q)), ...wrongQuestions]; // ترتيب الصحيح أولاً ثم الخاطئ
     
-    // جمع كل الأسئلة في نص واحد
     questionsToReview.forEach((qData, index) => {
         // البحث عن الإجابة الصحيحة
         const correctOption = qData.c[qData.a];
         
         let status = '';
+        let statusColor = SUCCESS_COLOR;
+        
         if (wrongQuestions.includes(qData)) {
             status = ' (أخطأت فيه)';
+            statusColor = ERROR_COLOR; // لون الخطأ
         }
         
+        // استخدام اللون المناسب للحالة
         reviewText += `${index + 1}. السؤال: ${qData.q}${status}\n   الإجابة الصحيحة: ${correctOption}\n\n`;
     });
 
@@ -983,12 +995,16 @@ displaySummaryWindow(finalScore, totalQ, firstCorrect) {
     } else if (wrongQuestions.length === 0) {
         reviewText = '🎉 أحسنت! لم تخطئ في أي سؤال. جميع الإجابات صحيحة من المرة الأولى.';
     }
+    
+    // لإتاحة مساحة أكبر للنصوص
+    const scrollableAreaHeight = windowHeight - yPos + (-windowHeight / 2) - 100;
 
+    // استخدام كائن نصي واحد وعمل WordWrap
     const reviewDisplay = this.add.text(-windowWidth / 2 + 30, yPos, reviewText, {
         fontSize: '16px', 
-        fill: '#1a1a2e', 
+        fill: `#${TEXT_COLOR.toString(16)}`, 
         wordWrap: { width: windowWidth - 60 },
-        maxLines: 8, // تحديد أقصى عدد من السطور ليناسب النافذة
+        maxLines: 7, 
         lineSpacing: 5
     }).setOrigin(0, 0);
 
@@ -997,11 +1013,11 @@ displaySummaryWindow(finalScore, totalQ, firstCorrect) {
     // 4. أزرار التحكم
     const buttonY = windowHeight / 2 - 40;
     
-    // زر الإغلاق (X) - يعيد التشغيل
-    const closeBtn = this.add.text(windowWidth / 2 - 25, -windowHeight / 2 + 10, '✖', { 
-        fontSize: '24px', 
-        fill: '#c0392b',
-        backgroundColor: '#f0f0f0',
+    // زر الإغلاق (X) - يعيد التشغيل (لون أحمر زاهي)
+    const closeBtn = this.add.text(windowWidth / 2 - 30, -windowHeight / 2 + 30, '❌', { 
+        fontSize: '30px', 
+        fill: '#f00', // الأحمر
+        backgroundColor: `#${PRIMARY_COLOR.toString(16)}`, // خلفية وردية
         padding: { x: 5, y: 5 } 
     })
         .setInteractive({ useHandCursor: true })
@@ -1009,12 +1025,12 @@ displaySummaryWindow(finalScore, totalQ, firstCorrect) {
         .setOrigin(1, 0);
     summaryBoxContainer.add(closeBtn);
 
-    // زر الموافقة (OK) - يعيد التشغيل
+    // زر الموافقة (OK) - يعيد التشغيل (لون أزرق ملكي)
     const okBtn = this.add.text(0, buttonY, 'موافق (إعادة اللعب)', { 
         fontSize: '24px', 
         fill: '#fff', 
-        backgroundColor: '#4cc9f0', 
-        padding: { x: 15, y: 10 },
+        backgroundColor: `#${BUTTON_COLOR.toString(16)}`, 
+        padding: { x: 20, y: 10 },
         borderRadius: 8
     })
         .setInteractive({ useHandCursor: true })
