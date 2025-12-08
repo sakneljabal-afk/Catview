@@ -1001,17 +1001,51 @@
                 }
             }
 
-          showSummaryBox(title, finalScore) {
+           showSummaryBox(title, finalScore) {
                 const totalQuestions = allQuestionsData.length;
                 
-                const summaryOverlay = document.getElementById('summaryOverlay');
-                const summaryTitle = document.getElementById('summaryTitle');
-                const summaryScore = document.getElementById('summaryScore');
-                const scrollableReview = document.getElementById('scrollableReview');
-                const restartBtn = document.getElementById('restartBtn');
+                const PRIMARY_COLOR = 0xf72585; 
+                const SECONDARY_COLOR = 0x1a1a2e; 
+                const TEXT_COLOR = 0xffffff; 
+                const SUCCESS_COLOR = 0x2ecc71; 
+                const NEUTRAL_COLOR = 0x4cc9f0; 
+                
+                const windowWidth = this.sys.game.config.width * 0.98;
+                const windowHeight = this.sys.game.config.height * 0.98;
 
-                summaryTitle.textContent = title;
-                summaryScore.textContent = `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`;
+                const summaryBoxContainer = this.add.container(this.scale.width / 2, this.scale.height / 2).setDepth(2000);
+
+                const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, SECONDARY_COLOR, 1)
+                    .setOrigin(0.5)
+                    .setStrokeStyle(10, PRIMARY_COLOR); 
+                summaryBoxContainer.add(boxRect);
+
+                let yPos = -windowHeight / 2 + 40; 
+
+               const titleText = this.add.text(0, yPos, title, {
+                    fontSize: '48px', // تم تكبير الخط
+                    fill: `#${TEXT_COLOR.toString(16)}`, fontStyle: 'bold'
+                }).setOrigin(0.5);
+                summaryBoxContainer.add(titleText);
+
+                yPos += 80; // زيادة المسافة العمودية
+
+                const scoreText = this.add.text(0, yPos, `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`, {
+                    fontSize: '36px', // تم تكبير الخط
+                    fill: `#${SUCCESS_COLOR.toString(16)}`, fontStyle: 'bold'
+                }).setOrigin(0.5);
+                summaryBoxContainer.add(scoreText);
+                
+                yPos += 70; // زيادة المسافة العمودية
+                
+                const reviewTitle = this.add.text(0, yPos, 'مراجعة الأسئلة والإجابات الصحيحة:', {
+                    fontSize: '30px', // تم تكبير الخط
+                    fill: `#${TEXT_COLOR.toString(16)}`,
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                summaryBoxContainer.add(reviewTitle);
+
+                yPos += 40; 
                 
                 let reviewContent = "";
                 
@@ -1020,25 +1054,45 @@
                     const statusIcon = isMissed ? '❌' : '✅';
                     const correctAnswerText = qData.c[qData.a];
                     
-                    // استخدام <br> للفصل بدلاً من \n في HTML
-                    reviewContent += `<span style="color: ${isMissed ? '#e74c3c' : '#2ecc71'}; font-weight: bold;">[${statusIcon} س${index + 1}]</span> ${qData.q}<br>  👈 <span style="color: #4cc9f0;">الجواب: ${correctAnswerText}</span><br><br>`;
+                    reviewContent += `\n[${statusIcon} س${index + 1}] ${qData.q}\n  👈 الجواب: ${correctAnswerText}\n`;
                 });
                 
-                scrollableReview.innerHTML = reviewContent;
+                const reviewText = this.add.text(
+                    windowWidth / 2 - 20, 
+                    yPos, 
+                    reviewContent, 
+                    {
+                        fontSize: '24px', // تم تكبير خط مراجعة الأسئلة
+                        fill: `#${TEXT_COLOR.toString(16)}`,
+                        wordWrap: { width: windowWidth - 40 }, 
+                        align: 'right',
+                        rtl: true, 
+                        padding: { x: 5, y: 5 }
+                    }
+                ).setOrigin(1, 0); 
                 
-                restartBtn.onclick = () => {
-                    window.location.reload();
-                };
+                summaryBoxContainer.add(reviewText);
 
-                // إظهار نافذة الملخص وتطبيق تأثير الظهور
-                summaryOverlay.style.opacity = 0;
-                summaryOverlay.style.display = 'flex';
+                yPos = windowHeight / 2 - 60; 
                 
+                const okBtn = this.add.text(0, yPos, '👍 حسناً، أعد اللعب', { 
+                    fontSize: '28px', 
+                    fill: `#${SECONDARY_COLOR.toString(16)}`, 
+                    backgroundColor: `#${NEUTRAL_COLOR.toString(16)}`, 
+                    padding: { x: 20, y: 10 },
+                    borderRadius: 8
+                })
+                    .setInteractive({ useHandCursor: true })
+                    .on('pointerdown', () => window.location.reload())
+                    .setOrigin(0.5);
+                summaryBoxContainer.add(okBtn);
+                
+                summaryBoxContainer.setScale(0);
                 this.tweens.add({
-                    targets: summaryOverlay,
-                    opacity: 1,
-                    duration: 500,
-                    ease: 'Sine.easeOut'
+                    targets: summaryBoxContainer,
+                    scale: 1,
+                    ease: 'Back.easeOut',
+                    duration: 800
                 });
             }
         }
