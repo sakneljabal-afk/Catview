@@ -855,7 +855,7 @@
                     ease: 'Sine.easeInOut'
                 });
             }
-            }
+            
             hitQuestionBox(player, box) {
                 if (box.getData('used')) return;
                 
@@ -1001,51 +1001,43 @@
                 }
             }
 
-         showSummaryBox(title, finalScore) {
-                const totalQuestions = allQuestionsData.length;
-                
-                // جلب عناصر DOM (HTML) الجديدة التي تسمح بالتمرير
-                const summaryOverlay = document.getElementById('summaryOverlay');
-                const summaryTitle = document.getElementById('summaryTitle');
-                const summaryScore = document.getElementById('summaryScore');
-                const scrollableReview = document.getElementById('scrollableReview');
-                const restartBtn = document.getElementById('restartBtn');
+     showSummaryBox(title, finalScore) {
+                const totalQuestions = allQuestionsData.length;
+                
+                // جلب عناصر DOM (HTML) الجديدة التي تسمح بالتمرير
+                const summaryOverlay = document.getElementById('summaryOverlay');
+                const summaryTitle = document.getElementById('summaryTitle');
+                const summaryScore = document.getElementById('summaryScore');
+                const scrollableReview = document.getElementById('scrollableReview');
+                const restartBtn = document.getElementById('restartBtn');
 
-                // 1. ملء المحتوى
-                summaryTitle.textContent = title;
-                summaryScore.textContent = `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`;
-                
-                let reviewContent = "";
-                
-                allQuestionsData.forEach((qData, index) => {
-                    const isMissed = qData.isScoreLost === true;
-                    const statusIcon = isMissed ? '❌' : '✅';
-                    const correctAnswerText = qData.c[qData.a];
-                    
-                    // استخدام <br> للفصل وتنسيق الألوان
-                    reviewContent += `<span style="color: ${isMissed ? '#e74c3c' : '#2ecc71'}; font-weight: bold;">[${statusIcon} س${index + 1}]</span> ${qData.q}<br>  👈 <span style="color: #4cc9f0;">الجواب: ${correctAnswerText}</span><br><br>`;
-                });
-                
-                scrollableReview.innerHTML = reviewContent;
-                
-                // 2. ربط زر الإعادة
-                restartBtn.onclick = () => {
-                    window.location.reload();
-                };
+                // 1. ملء المحتوى
+                summaryTitle.textContent = title;
+                summaryScore.textContent = `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`;
+                
+                let reviewContent = "";
+                
+                allQuestionsData.forEach((qData, index) => {
+                    const isMissed = qData.isScoreLost === true;
+                    const statusIcon = isMissed ? '❌' : '✅';
+                    const correctAnswerText = qData.c[qData.a];
+                    
+                    // استخدام <br> للفصل وتنسيق الألوان
+                    reviewContent += `<span style="color: ${isMissed ? '#e74c3c' : '#2ecc71'}; font-weight: bold;">[${statusIcon} س${index + 1}]</span> ${qData.q}<br>  👈 <span style="color: #4cc9f0;">الجواب: ${correctAnswerText}</span><br><br>`;
+                });
+                
+                scrollableReview.innerHTML = reviewContent;
+                
+                // 2. ربط زر الإعادة
+                restartBtn.onclick = () => {
+                    window.location.reload();
+                };
 
-                // 3. إظهار نافذة الملخص (نافذة HTML)
-                summaryOverlay.style.opacity = 0;
-                summaryOverlay.style.display = 'flex'; // ⬅️ هذه هي الخطوة التي تظهر النافذة
-
-                // إضافة حركة ظهور خفيفة (اختياري)
-                this.tweens.add({
-                    targets: summaryOverlay,
-                    opacity: 1,
-                    duration: 500,
-                    ease: 'Sine.easeOut'
-                });
-            }
-        }
+                // 3. إظهار نافذة الملخص (نافذة HTML)
+                // تم إزالة opacity=0 والحركة لضمان الظهور الفوري
+                summaryOverlay.style.display = 'flex'; // إظهار النافذة فوراً
+            }    
+    }
 
 
         // إعداد تكوين اللعبة
@@ -1083,4 +1075,3 @@
     </script>
 </body>
 </html>
-
