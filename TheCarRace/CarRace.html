@@ -876,6 +876,7 @@ onCrossFinishLine(player, finishLine) {
 }
 
 
+// ... (الكود السابق)
 // المنطقة الجديدة (داخل GameScene)
 gameOver(player, finishLine) {
     if (gameFinished) return;
@@ -891,57 +892,144 @@ gameOver(player, finishLine) {
     // إيقاف جميع الحركات (Tweens)
     if(finishLine) this.tweens.killTweensOf(finishLine);
     
-    // إظهار لوحة الفوز
-    this.showWinScreen();
+    // ⬇️⬇️ حساب وعرض ملخص النتائج ⬇️⬇️
+    const totalQuestions = allQuestionsData.length;
+    const finalScore = score;
+    // عدد الأسئلة الصحيحة من المحاولة الأولى = الأسئلة الكلية - الأسئلة التي أخطأ فيها (الموجودة في wrongQuestions)
+    const firstAttemptCorrect = totalQuestions - wrongQuestions.length; 
+    
+    this.displaySummaryWindow(finalScore, totalQuestions, firstAttemptCorrect);
+    // ⬆️⬆️ نهاية التعديل ⬆️⬆️
 }
+// ... (الكود التالي يجب استبداله بالكامل)
 
-showWinScreen() {
-    // 1. تأثير التعتيم/الإضاءة الخضراء
-    const winOverlay = this.add.graphics({ fillStyle: { color: 0x00ff00, alpha: 0.0 } }).setDepth(200);
-    winOverlay.fillRect(0, 0, 800, 600);
 
-    this.tweens.add({
-        targets: winOverlay,
-        alpha: 0.15,
-        duration: 1000,
-        yoyo: true,
-        repeat: -1
+// استبدل دالة showWinScreen بالدالة التالية بالكامل:
+displaySummaryWindow(finalScore, totalQ, firstCorrect) {
+    // 1. إنشاء الخلفية المعتمة
+    const bg = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.8).setDepth(200);
+    
+    // 2. إنشاء نافذة النتائج (صندوق رئيسي)
+    const windowWidth = 600;
+    const windowHeight = 450;
+    const summaryBoxContainer = this.add.container(400, 300).setDepth(201);
+    
+    // خلفية النافذة
+    const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, 0xf0f0f0, 1).setOrigin(0.5).setStrokeStyle(4, 0x4cc9f0);
+    summaryBoxContainer.add(boxRect); 
+    
+    // 3. محتوى النتائج
+    const maxPossibleScore = totalQ * 10;
+    let yPos = -windowHeight / 2 + 30; // موضع البداية من الأعلى
+    
+    // العنوان
+    const titleText = this.add.text(0, yPos, '🏆 ملخص النتائج النهائية 🏆', {
+        fontSize: '30px', 
+        fill: '#1a1a2e', 
+        fontStyle: 'bold'
+    }).setOrigin(0.5);
+    summaryBoxContainer.add(titleText);
+    yPos += 50;
+    
+    // النقاط المحتسبة (كام من كام)
+    const scoreText = this.add.text(0, yPos, 
+        `النقاط المحتسبة: ${finalScore} / ${maxPossibleScore}`, 
+        { fontSize: '24px', fill: '#0a9396', fontStyle: 'bold' })
+        .setOrigin(0.5);
+    summaryBoxContainer.add(scoreText);
+    yPos += 40;
+    
+    // ملخص الإجابات الصحيحة من المرة الأولى
+    const firstTimeText = this.add.text(0, yPos, 
+        `أجبت ${firstCorrect} أسئلة صحيحة من ${totalQ} من المرة الأولى`, 
+        { fontSize: '20px', fill: '#94d2bd' })
+        .setOrigin(0.5);
+    summaryBoxContainer.add(firstTimeText);
+    yPos += 40;
+    
+    // خط فاصل
+    const line = this.add.rectangle(0, yPos, windowWidth - 60, 2, 0xcccccc).setOrigin(0.5);
+    summaryBoxContainer.add(line);
+    yPos += 15;
+
+    // عنوان مراجعة الأخطاء
+    const reviewTitle = this.add.text(-windowWidth / 2 + 30, yPos, 'مراجعة الأسئلة والإجابات الصحيحة:', {
+        fontSize: '18px', 
+        fill: '#e76f51', 
+        fontStyle: 'bold'
+    }).setOrigin(0, 0);
+    summaryBoxContainer.add(reviewTitle);
+    yPos += 25;
+    
+    // عرض مراجعة الأسئلة
+    let reviewText = '';
+    const questionsToReview = [...wrongQuestions, ...allQuestionsData.filter(q => !wrongQuestions.includes(q))];
+    
+    // جمع كل الأسئلة في نص واحد
+    questionsToReview.forEach((qData, index) => {
+        // البحث عن الإجابة الصحيحة
+        const correctOption = qData.c[qData.a];
+        
+        let status = '';
+        if (wrongQuestions.includes(qData)) {
+            status = ' (أخطأت فيه)';
+        }
+        
+        reviewText += `${index + 1}. السؤال: ${qData.q}${status}\n   الإجابة الصحيحة: ${correctOption}\n\n`;
     });
 
-    // 2. نص "أحسنت" والنجوم
-    const winText = this.add.text(400, 300, 'أحسنت!', {
-        fontSize: '80px',
-        fill: '#ffffff',
-        fontStyle: 'bold',
-        shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 10, fill: true, stroke: true }
-    }).setOrigin(0.5).setDepth(201);
+    if (totalQ === 0) {
+         reviewText = 'لا توجد أسئلة لمراجعتها في هذا المستوى.';
+    } else if (wrongQuestions.length === 0) {
+        reviewText = '🎉 أحسنت! لم تخطئ في أي سؤال. جميع الإجابات صحيحة من المرة الأولى.';
+    }
 
-    const stars = '⭐'.repeat(3); // يمكنك تغيير عدد النجوم حسب النقاط
-    const starsText = this.add.text(400, 400, stars, {
-        fontSize: '60px'
-    }).setOrigin(0.5).setDepth(201);
+    const reviewDisplay = this.add.text(-windowWidth / 2 + 30, yPos, reviewText, {
+        fontSize: '16px', 
+        fill: '#1a1a2e', 
+        wordWrap: { width: windowWidth - 60 },
+        maxLines: 8, // تحديد أقصى عدد من السطور ليناسب النافذة
+        lineSpacing: 5
+    }).setOrigin(0, 0);
 
-    // 3. تأثير ظهور للنص
-    winText.setScale(0);
-    starsText.setScale(0);
+    summaryBoxContainer.add(reviewDisplay);
+    
+    // 4. أزرار التحكم
+    const buttonY = windowHeight / 2 - 40;
+    
+    // زر الإغلاق (X) - يعيد التشغيل
+    const closeBtn = this.add.text(windowWidth / 2 - 25, -windowHeight / 2 + 10, '✖', { 
+        fontSize: '24px', 
+        fill: '#c0392b',
+        backgroundColor: '#f0f0f0',
+        padding: { x: 5, y: 5 } 
+    })
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => window.location.reload()) 
+        .setOrigin(1, 0);
+    summaryBoxContainer.add(closeBtn);
 
+    // زر الموافقة (OK) - يعيد التشغيل
+    const okBtn = this.add.text(0, buttonY, 'موافق (إعادة اللعب)', { 
+        fontSize: '24px', 
+        fill: '#fff', 
+        backgroundColor: '#4cc9f0', 
+        padding: { x: 15, y: 10 },
+        borderRadius: 8
+    })
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => window.location.reload())
+        .setOrigin(0.5);
+    summaryBoxContainer.add(okBtn);
+    
+    // 5. تأثير الظهور
+    summaryBoxContainer.setScale(0);
     this.tweens.add({
-        targets: [winText, starsText],
+        targets: summaryBoxContainer,
         scale: 1,
         ease: 'Back.easeOut',
-        duration: 800,
-        delay: this.tweens.stagger(100, { start: 200 })
+        duration: 800
     });
-    
-    // 4. خيار إعادة اللعب
-    this.time.delayedCall(3000, () => {
-        this.add.text(400, 500, 'اضغط لإعادة اللعب', {
-            fontSize: '30px',
-            fill: '#4cc9f0'
-        }).setOrigin(0.5).setDepth(201).setInteractive().on('pointerdown', () => {
-            window.location.reload();
-        });
-    }, [], this);
 }
 
         }
