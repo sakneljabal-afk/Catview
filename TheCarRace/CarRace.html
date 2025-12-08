@@ -786,8 +786,8 @@ generateQuestionBox() {
                     selectedOptionElement.classList.add('incorrect');
                     allOptions[correctIndex].classList.add('correct');
                     
-                    baseSpeed *= 0.6;
-                    baseSpeed = Math.max(50, baseSpeed);
+                    baseSpeed *= 0.8;
+                    baseSpeed = Math.max(100, baseSpeed);
                     
                     if (!wrongQuestions.includes(activeQuestion)) {
                          wrongQuestions.push(activeQuestion);
@@ -953,4 +953,5 @@ showWinScreen() {
     </script>
 </body>
 </html>
+
 
