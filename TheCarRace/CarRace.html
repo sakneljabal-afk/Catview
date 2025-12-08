@@ -436,7 +436,7 @@ player.setDepth(100); // جعلنا السيارة في طبقة عليا جدا
                 this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
                 
                 // عرض السرعة والنقاط
-                speedText = this.add.text(20, 100, `السرعة: ${baseSpeed}`, {
+                speedText = this.add.text(-20, 30, `السرعة: ${baseSpeed}`, {
                     fontSize: '24px',
                     fill: '#4cc9f0',
                     fontStyle: 'bold'
