@@ -289,16 +289,14 @@ const BUBBLE_IMG_SIZE = 300;
 ====================== */
 function preload(){
   // ملاحظة: تأكد من وجود المجلد 'assets' وملفات الصور والصوت فيه
-  this.load.image('cannon','assets/cannon.png');
+   this.load.image('cannon','assets/cannon.png');
   this.load.image('shoot','assets/shoot.png');
   this.load.image('bubble1','assets/bubble1.png');
   this.load.image('bubble2','assets/bubble2.png');
   this.load.image('bubble3','assets/bubble3.png');
-  this.load.audio('correct','assets/correct.mp3');
-  this.load.audio('wrong','assets/wrong.mp3');
-  // 🔴 لاحظ: تم حذف التكرار هنا. يجب التأكد من مسارات الصوت
-  // this.load.audio('wrong','../assets/win.mp3'); 
-  this.load.audio('win','assets/win.mp3'); 
+  this.load.audio('correct','../assets/correct.mp3');
+  this.load.audio('wrong','../assets/wrong.mp3');
+  this.load.audio('wrong','../assets/win.mp3');
 }
 
 /* ======================
@@ -531,3 +529,4 @@ function showQuestion(scene){
 </script>
 </body>
 </html>
+
