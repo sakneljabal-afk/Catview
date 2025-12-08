@@ -351,10 +351,11 @@ function create(){
 
     const width = this.scale.width;
     const height = this.scale.height;
+// ... (داخل دالة function create())
 
     this.correctSound = this.sound.add('correct');
     this.wrongSound = this.sound.add('wrong');
-this.winSound = this.sound.add('win'); // ✅ تم إزالة التعليق وإضافة التهيئة
+    this.winSound = this.sound.add('win'); // ✅ تم إزالة التعليق وإضافة التهيئة
 
     this.physics.world.setBounds(0, 0, width, height);
 
@@ -364,7 +365,8 @@ this.winSound = this.sound.add('win'); // ✅ تم إزالة التعليق و�
     const cannonHeight = height * 0.10;
     const cannonScale = cannonHeight / 300;
 
-    cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
+    // 🌟 التعديل المطلوب: تم تغيير موضع المدفع العمودي من 0.90 إلى 0.95
+    cannon = this.add.sprite(width/2, height * 0.95, 'cannon') 
         .setScale(cannonScale)
         .setDepth(1);
 
@@ -374,7 +376,8 @@ this.winSound = this.sound.add('win'); // ✅ تم إزالة التعليق و�
         bounceY: 1
     });
     this.physics.add.collider(bubbles, invisibleWall);
-
+    
+// ... (باقي دالة create())
     aimLine = this.add.graphics({ lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } }).setDepth(2);
 
     this.input.on('pointermove', (pointer) => {
