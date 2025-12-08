@@ -657,7 +657,7 @@ if (finishLine && !gameFinished) {
                 this.scoreText.setText(`النقاط: ${score}`);
 
                 // التحكم في حركة السيارة
-                const moveAmount = 15;
+                const moveAmount = 8;
                 if (scrollSpeed > 0) {
                     if (this.cursors.up.isDown || this.isMovingUp) {
                         player.y -= moveAmount;
@@ -935,6 +935,17 @@ showWinScreen() {
                 mode: Phaser.Scale.FIT, 
                 autoCenter: Phaser.Scale.CENTER_BOTH
             },
+min: {
+                    width: 320,
+                    height: 480
+                },
+                max: {
+                    width: 1920,
+                    height: 1080
+                },
+                expandParent: true // يضمن أن الحاوية تتوسع قدر الإمكان
+                // ⬆️ نهاية التعديل ⬆️
+            },
             physics: {
                 default: 'arcade',
                 arcade: {
@@ -950,4 +961,3 @@ showWinScreen() {
     </script>
 </body>
 </html>
-
