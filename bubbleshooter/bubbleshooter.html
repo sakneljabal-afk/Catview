@@ -429,7 +429,7 @@ let canShoot = true;
 let missedShots = 0;
 let shootAngle = -90; // متغير لتخزين الزاوية
 let aimLine; // كائن خط التوجيه
-let startSound; // متغير لصوت البداية
+// تمت إزالة: let startSound;
 
 const BUBBLE_IMG_SIZE = 300;
 
@@ -442,8 +442,7 @@ const BUBBLE_IMG_SIZE = 300;
 function hideIntroScreen() {
     const introScreen = document.getElementById('introScreen');
     introScreen.classList.add('hidden');
-    // تشغيل صوت البداية
-    if (startSound) startSound.play();
+    // تم إزالة: if (startSound) startSound.play();
     // بدء المشهد الرئيسي للعبة Phaser
     game.scene.start('default');
 }
@@ -465,8 +464,7 @@ function preload(){
     this.load.audio('correct','../assets/correct.mp3');
     this.load.audio('wrong','../assets/wrong.mp3');
     this.load.audio('win','../assets/win.mp3');
-    // إضافة صوت جديد لبداية اللعب
-    this.load.audio('start','../assets/start.mp3'); // يجب توفير ملف start.mp3
+    // تم إزالة: this.load.audio('start','../assets/start.mp3'); 
 }
 
 /* ======================
@@ -484,7 +482,7 @@ function create(){
     this.correctSound = this.sound.add('correct');
     this.wrongSound = this.sound.add('wrong');
     this.winSound = this.sound.add('win');
-    startSound = this.sound.add('start'); // تعيين صوت البداية للمتغير العام
+    // تم إزالة: startSound = this.sound.add('start');
 
     this.physics.world.setBounds(0, 0, width, height);
 
