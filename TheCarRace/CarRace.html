@@ -240,7 +240,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             <span id="errorIcon">❌</span>
         </div>
 
-        <div class="speed-display">السرعة: <span id="speedValue">200</span></div>
+        <div class="speed-display">السرعة الإبتدائية: <span id="speedValue">200</span></div>
         <div id="gameCanvas"></div>
 
        
@@ -436,7 +436,7 @@ player.setDepth(100); // جعلنا السيارة في طبقة عليا جدا
                 this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
                 
                 // عرض السرعة والنقاط
-                speedText = this.add.text(-20, 30, `السرعة: ${baseSpeed}`, {
+                speedText = this.add.text(150, 20, `السرعة: ${baseSpeed}`, {
                     fontSize: '24px',
                     fill: '#4cc9f0',
                     fontStyle: 'bold'
