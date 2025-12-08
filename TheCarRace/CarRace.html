@@ -13,6 +13,68 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
         }
+
+/* ⬇️ تنسيقات جديدة لنافذة الملخص القابلة للتمرير ⬇️ */
+        .summary-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: none; /* إخفاؤها في البداية */
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+        }
+
+        .summary-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+            border: 4px solid #f72585;
+            width: 95%;
+            max-width: 750px;
+            max-height: 95vh; /* تحديد أقصى ارتفاع */
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .scrollable-review {
+            /* الحاوية التي ستسمح بالتمرير */
+            overflow-y: auto; 
+            max-height: calc(95vh - 250px); /* تحديد أقصى ارتفاع للمحتوى القابل للتمرير */
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px dashed #4cc9f0;
+            text-align: right;
+            line-height: 1.8;
+            font-size: 24px; /* حجم خط كبير للمحتوى */
+            white-space: pre-wrap; /* للحفاظ على تنسيق النصوص */
+        }
+        
+        .summary-content h2 {
+            font-size: 48px; /* خط كبير */
+            color: #4cc9f0;
+            margin-bottom: 20px;
+        }
+
+        .summary-content p {
+            font-size: 36px; /* خط كبير */
+            color: #2ecc71;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .summary-content h3 {
+             font-size: 30px; /* خط كبير */
+             color: #fff;
+             border-bottom: 1px solid #fff;
+             padding-bottom: 10px;
+        }
+        /* ⬆️ نهاية تنسيقات نافذة الملخص القابلة للتمرير ⬆️ */
         
         body {
             /* تعديل الخلفية لتملأ الشاشة بالكامل */
@@ -315,14 +377,25 @@
         </div>
     </div>
     
-    <div class="game-container">
+   <div class="game-container">
         <div id="errorOverlay">
             <span id="errorIcon">❌</span>
         </div>
 
         <div class="speed-display">السرعة : <span id="speedValue">200</span></div>
         <div id="gameCanvas"></div>
-    </div>
+        
+        <div class="summary-overlay" id="summaryOverlay">
+            <div class="summary-content">
+                <h2 id="summaryTitle"></h2>
+                <p id="summaryScore"></p>
+                <h3>مراجعة الأسئلة والإجابات الصحيحة:</h3>
+                <div class="scrollable-review" id="scrollableReview">
+                    </div>
+                <button class="modal-btn" id="restartBtn">👍 حسناً، أعد اللعب</button>
+            </div>
+        </div>
+        </div>
     
     <div class="question-box" id="questionBox">
         <div class="question-header">
@@ -928,51 +1001,17 @@
                 }
             }
 
-           showSummaryBox(title, finalScore) {
+          showSummaryBox(title, finalScore) {
                 const totalQuestions = allQuestionsData.length;
                 
-                const PRIMARY_COLOR = 0xf72585; 
-                const SECONDARY_COLOR = 0x1a1a2e; 
-                const TEXT_COLOR = 0xffffff; 
-                const SUCCESS_COLOR = 0x2ecc71; 
-                const NEUTRAL_COLOR = 0x4cc9f0; 
-                
-                const windowWidth = this.sys.game.config.width * 0.98;
-                const windowHeight = this.sys.game.config.height * 0.98;
+                const summaryOverlay = document.getElementById('summaryOverlay');
+                const summaryTitle = document.getElementById('summaryTitle');
+                const summaryScore = document.getElementById('summaryScore');
+                const scrollableReview = document.getElementById('scrollableReview');
+                const restartBtn = document.getElementById('restartBtn');
 
-                const summaryBoxContainer = this.add.container(this.scale.width / 2, this.scale.height / 2).setDepth(2000);
-
-                const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, SECONDARY_COLOR, 1)
-                    .setOrigin(0.5)
-                    .setStrokeStyle(10, PRIMARY_COLOR); 
-                summaryBoxContainer.add(boxRect);
-
-                let yPos = -windowHeight / 2 + 40; 
-
-                const titleText = this.add.text(0, yPos, title, {
-                    fontSize: '36px', 
-                    fill: `#${TEXT_COLOR.toString(16)}`, fontStyle: 'bold'
-                }).setOrigin(0.5);
-                summaryBoxContainer.add(titleText);
-
-                yPos += 60;
-
-                const scoreText = this.add.text(0, yPos, `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`, {
-                    fontSize: '30px', 
-                    fill: `#${SUCCESS_COLOR.toString(16)}`, fontStyle: 'bold'
-                }).setOrigin(0.5);
-                summaryBoxContainer.add(scoreText);
-                
-                yPos += 50; 
-                
-                const reviewTitle = this.add.text(0, yPos, 'مراجعة الأسئلة والإجابات الصحيحة:', {
-                    fontSize: '26px', 
-                    fill: `#${TEXT_COLOR.toString(16)}`,
-                    fontStyle: 'bold'
-                }).setOrigin(0.5);
-                summaryBoxContainer.add(reviewTitle);
-
-                yPos += 40;
+                summaryTitle.textContent = title;
+                summaryScore.textContent = `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`;
                 
                 let reviewContent = "";
                 
@@ -981,45 +1020,25 @@
                     const statusIcon = isMissed ? '❌' : '✅';
                     const correctAnswerText = qData.c[qData.a];
                     
-                    reviewContent += `\n[${statusIcon} س${index + 1}] ${qData.q}\n  👈 الجواب: ${correctAnswerText}\n`;
+                    // استخدام <br> للفصل بدلاً من \n في HTML
+                    reviewContent += `<span style="color: ${isMissed ? '#e74c3c' : '#2ecc71'}; font-weight: bold;">[${statusIcon} س${index + 1}]</span> ${qData.q}<br>  👈 <span style="color: #4cc9f0;">الجواب: ${correctAnswerText}</span><br><br>`;
                 });
                 
-                const reviewText = this.add.text(
-                    windowWidth / 2 - 20, 
-                    yPos, 
-                    reviewContent, 
-                    {
-                        fontSize: '20px', 
-                        fill: `#${TEXT_COLOR.toString(16)}`,
-                        wordWrap: { width: windowWidth - 40 }, 
-                        align: 'right',
-                        rtl: true, 
-                        padding: { x: 5, y: 5 }
-                    }
-                ).setOrigin(1, 0); 
+                scrollableReview.innerHTML = reviewContent;
                 
-                summaryBoxContainer.add(reviewText);
+                restartBtn.onclick = () => {
+                    window.location.reload();
+                };
 
-                yPos = windowHeight / 2 - 60; 
+                // إظهار نافذة الملخص وتطبيق تأثير الظهور
+                summaryOverlay.style.opacity = 0;
+                summaryOverlay.style.display = 'flex';
                 
-                const okBtn = this.add.text(0, yPos, '👍 حسناً، أعد اللعب', { 
-                    fontSize: '28px', 
-                    fill: `#${SECONDARY_COLOR.toString(16)}`, 
-                    backgroundColor: `#${NEUTRAL_COLOR.toString(16)}`, 
-                    padding: { x: 20, y: 10 },
-                    borderRadius: 8
-                })
-                    .setInteractive({ useHandCursor: true })
-                    .on('pointerdown', () => window.location.reload())
-                    .setOrigin(0.5);
-                summaryBoxContainer.add(okBtn);
-                
-                summaryBoxContainer.setScale(0);
                 this.tweens.add({
-                    targets: summaryBoxContainer,
-                    scale: 1,
-                    ease: 'Back.easeOut',
-                    duration: 800
+                    targets: summaryOverlay,
+                    opacity: 1,
+                    duration: 500,
+                    ease: 'Sine.easeOut'
                 });
             }
         }
