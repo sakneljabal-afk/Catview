@@ -514,71 +514,73 @@ function bubbleHit(scene, bubble){
     9. عرض السؤال وتوليد الفقاعات
 ====================== */
 function showQuestion(scene){
-    const q = QUESTIONS[currentQ];
+    const q = QUESTIONS[currentQ];
 
-    if(!q){
-        document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
-        bubbles.clear(true, true);
-        // يمكنك تشغيل صوت الفوز هنا: scene.winSound.play();
-        return;
-    }
+    if(!q){
+        document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
+        bubbles.clear(true, true);
+        // يمكنك تشغيل صوت الفوز هنا: scene.winSound.play();
+        return;
+    }
 
-    // 🌟 التعديل الثاني: خلط الخيارات مع حفظ النص الصحيح قبل الخلط
-    const correctOptionText = q.o[q.a]; // نحفظ نص الإجابة الصحيحة باستخدام الفهرس الأصلي
-    const optionsToShuffle = [...q.o]; // ننسخ المصفوفة للخلط
-    
-    // نخلط الخيارات
-    const shuffledOptions = shuffleArray(optionsToShuffle); 
+    // 🌟 1. نحفظ نص الإجابة الصحيحة باستخدام الفهرس الأصلي
+    const correctOptionText = q.o[q.a]; 
+    
+    // 🌟 التعديل الجذري: نستخدم .slice() لضمان إنشاء نسخة جديدة من المصفوفة قبل خلطها.
+    const optionsToShuffle = q.o.slice(); 
+    
+    // نخلط الخيارات
+    const shuffledOptions = shuffleArray(optionsToShuffle); 
 
-    // 🌟 التعديل الثالث: إيجاد الفهرس الجديد للإجابة الصحيحة بعد الخلط
-    const newCorrectIndex = shuffledOptions.indexOf(correctOptionText);
+    // 🌟 2. إيجاد الفهرس الجديد للإجابة الصحيحة بعد الخلط
+    const newCorrectIndex = shuffledOptions.indexOf(correctOptionText);
 
-    // ألوان لتمييز الخيارات
-    const colors = ['#81d4fa', '#a5d6a7', '#ffe082'];
+    // ألوان لتمييز الخيارات
+    const colors = ['#81d4fa', '#a5d6a7', '#ffe082'];
 
-    // بناء محتوى الخيارات في الـ HTML (يستخدم الترتيب العشوائي)
-    let answersHtml = '';
-    for(let i = 0; i < shuffledOptions.length; i++) {
-        answersHtml += `<span style="color:${colors[i]}">${i + 1}: ${shuffledOptions[i]}</span>`;
-    }
+    // بناء محتوى الخيارات في الـ HTML (يستخدم الترتيب العشوائي)
+    let answersHtml = '';
+    for(let i = 0; i < shuffledOptions.length; i++) {
+        answersHtml += `<span style="color:${colors[i]}">${i + 1}: ${shuffledOptions[i]}</span>`;
+    }
 
-    document.getElementById('questionHeader').innerHTML = `
-        <h3>${q.q}</h3>
-        <div class="answers">
-            ${answersHtml}
-        </div>
-    `;
+    document.getElementById('questionHeader').innerHTML = `
+        <h3>${q.q}</h3>
+        <div class="answers">
+            ${answersHtml}
+        </div>
+    `;
 
-    bubbles.clear(true, true);
+    bubbles.clear(true, true);
 
-    const width = scene.scale.width;
-    const height = scene.scale.height;
+    const width = scene.scale.width;
+    const height = scene.scale.height;
 
-    const bubbleTargetSize = width * 0.18;
-    const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
+    const bubbleTargetSize = width * 0.18;
+    const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
 
-    const positions = [0.2, 0.5, 0.8]; // مواقع الفقاعات
+    const positions = [0.2, 0.5, 0.8]; // مواقع الفقاعات
 
-    for(let i=0; i<3; i++){
-        const b = bubbles.create(
-            width * positions[i],
-            height * 0.3,
-            'bubble' + (i+1)
-        ).setScale(bubbleScale);
+    for(let i=0; i<3; i++){
+        const b = bubbles.create(
+            width * positions[i],
+            height * 0.3,
+            'bubble' + (i+1)
+        ).setScale(bubbleScale);
 
-        b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE)));
+        b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE)));
 
-        // 🌟 التعديل الرابع: تخزين حالة الإجابة الصحيحة في الفقاعة باستخدام الفهرس الجديد
-        b.setData('isCorrect', i === newCorrectIndex);
+        // 🌟 تخزين حالة الإجابة الصحيحة في الفقاعة باستخدام الفهرس الجديد بعد الخلط
+        b.setData('isCorrect', i === newCorrectIndex);
 
-        b.setVelocity(
-            Phaser.Math.Between(-50, 50),
-            Phaser.Math.Between(-30, 30)
-        );
+        b.setVelocity(
+            Phaser.Math.Between(-50, 50),
+            Phaser.Math.Between(-30, 30)
+        );
 
-        b.setBounce(1);
-        b.setCollideWorldBounds(true);
-    }
+        b.setBounce(1);
+        b.setCollideWorldBounds(true);
+    }
 }
 </script>
 </body>
