@@ -345,7 +345,7 @@
             { "q": "كيف تتخلص شجرة المانجروف من الملح الزائد؟", "c": ["عن طريق الجذور التي تفرز الملح", "عن طريق الأوراق التي تفرز الملح", "عن طريق الساق التي تخزن الملح"], "a": 1, "id": 3 },
             { "q": "أين توجد أشجار المانجروف عادة؟", "c": ["في الصحاري الحارة", "على قمم الجبال", "في مناطق المد والجزر على السواحل"], "a": 2, "id": 4 },
             { "q": "ما أهمية أشجار المانجروف للبيئة البحرية؟", "c": ["تزيد ملوحة المياه", "توفر بيئة آمنة لتكاثر الأسماك والكائنات البحرية", "تقلل من كمية الأكسجين في الماء"], "a": 1, "id": 5 },
-            { "q": "كيف تساعد جذور المانجروف الهوائية الشجرة على التنفس؟", "c": ["تمتص الماء المالح فقط", "تسمح بتبادل الغازات في التربة الفقيرة بالأكسجين", "تخزن الغذاء لفترات الجذاف"], "a": 1, "id": 6 },
+            { "q": "كيف تساعد جذور المانجروف الهوائية الشجرة على التنفس؟", "c": ["تمتص الماء المالح فقط", "تسمح بتبادل الغازات في التربة الفقيرة بالأكسجين", "تخزن الغذاء لفترات الجفاف"], "a": 1, "id": 6 },
             { "q": "ما هو التهديد الرئيسي لأشجار المانجروف؟", "c": ["الحيوانات البرية", "التلوث والقطع الجائر والتنمية الساحلية", "زيادة هطول الأمطار"], "a": 1, "id": 7 }
         ];
 
@@ -394,23 +394,28 @@
                 this.createFinishLineTexture();
                 
                 // تحميل الأصوات مع مسارات افتراضية
-                try {
-                    this.load.audio('correctSound', 'https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3');
-                } catch {
-                    console.log('ملف الصوت الصحيح غير متوفر');
-                }
-                
-                try {
-                    this.load.audio('wrongSound', 'https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3');
-                } catch {
-                    console.log('ملف الصوت الخاطئ غير متوفر');
-                }
-                
-                try {
-                    this.load.audio('winSound', 'https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3');
-                } catch {
-                    console.log('ملف صوت الفوز غير متوفر');
-                }
+                // تحميل الأصوات مع المسارات المحلية (تم التعديل)
+try {
+    this.load.audio('correctSound', '../assets/sounds/correct.mp3');
+} catch {
+    console.log('ملف الصوت الصحيح غير متوفر');
+}
+
+try {
+    this.load.audio('wrongSound', '../assets/sounds/wrong.mp3');
+} catch {
+    console.log('ملف الصوت الخاطئ غير متوفر');
+}
+
+try {
+    // إذا كان لديك ملف win.mp3 محلي
+    this.load.audio('winSound', '../assets/sounds/win.mp3');
+    
+    // إذا لم يكن لديك، يمكنك الإبقاء على رابط الويب كاحتياطي
+    // this.load.audio('winSound', 'https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3');
+} catch {
+    console.log('ملف صوت الفوز غير متوفر');
+}
             }
 
             createCarTexture() {
@@ -1076,7 +1081,7 @@
             }
         }
 
-        // إعداد تكوين اللعبة
+        // إعداد تكوين اللعبة بأبعاد ممتازة
         const config = {
             type: Phaser.AUTO,
             width: window.innerWidth,
@@ -1092,8 +1097,8 @@
                     height: 480
                 },
                 max: {
-                    width: 1920,
-                    height: 1080
+                    width: 2560,
+                    height: 1440
                 }
             },
             physics: {
