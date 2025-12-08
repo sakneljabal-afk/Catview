@@ -243,10 +243,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         <div class="speed-display">السرعة: <span id="speedValue">200</span></div>
         <div id="gameCanvas"></div>
 
-        <div class="controls">
-            <button class="control-btn" id="upBtn">⬆️</button>
-            <button class="control-btn" id="downBtn">⬇️</button>
-        </div>
+       
     </div>
     
     <div class="instructions">
@@ -482,48 +479,48 @@ player.setDepth(100); // جعلنا السيارة في طبقة عليا جدا
                
             
                 
-                // إعداد مدخلات لوحة المفاتيح
+
+// إعداد مدخلات لوحة المفاتيح
                 this.cursors = this.input.keyboard.createCursorKeys();
 
-                // إعداد مدخلات اللمس (للموبايل)
-                this.setupMobileControls();
-            }
+                // ⬇️ إضافة منطق التحكم باللمس/السحب ⬇️
+                this.input.on('pointerdown', (pointer) => {
+                    this.startY = pointer.y;
+                    this.isMovingUp = false;
+                    this.isMovingDown = false;
+                });
 
-            // دالة إعداد التحكم باللمس
-            setupMobileControls() {
-                const upBtn = document.getElementById('upBtn');
-                const downBtn = document.getElementById('downBtn');
+                this.input.on('pointerup', (pointer) => {
+                    this.isMovingUp = false;
+                    this.isMovingDown = false;
+                });
+                
+                this.input.on('pointermove', (pointer) => {
+                    if (pointer.isDown && this.startY !== undefined) {
+                        const swipeDistance = pointer.y - this.startY;
+                        const threshold = 10; // حساسية حركة السحب
 
-                const startMove = (direction) => {
-                    if (scrollSpeed > 0) {
-                        if (direction === 'up') {
+                        if (swipeDistance < -threshold) {
+                            // سحب للأعلى (رفع الإصبع)
                             this.isMovingUp = true;
-                        } else if (direction === 'down') {
+                            this.isMovingDown = false;
+                        } else if (swipeDistance > threshold) {
+                            // سحب للأسفل (إنزال الإصبع)
                             this.isMovingDown = true;
+                            this.isMovingUp = false;
+                        } else {
+                            // حركة بسيطة (لا شيء)
+                            this.isMovingUp = false;
+                            this.isMovingDown = false;
                         }
                     }
-                };
-
-                const stopMove = (direction) => {
-                    if (direction === 'up') {
-                        this.isMovingUp = false;
-                    } else if (direction === 'down') {
-                        this.isMovingDown = false;
-                    }
-                };
-
-                // للأعلى
-                upBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startMove('up'); });
-                upBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopMove('up'); });
-                upBtn.addEventListener('mousedown', (e) => { startMove('up'); });
-                upBtn.addEventListener('mouseup', (e) => { stopMove('up'); });
-
-                // للأسفل
-                downBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startMove('down'); });
-                downBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopMove('down'); });
-                downBtn.addEventListener('mousedown', (e) => { startMove('down'); });
-                downBtn.addEventListener('mouseup', (e) => { stopMove('down'); });
+                });
+                // ⬆️ نهاية منطق التحكم باللمس/السحب ⬆️
+ 
+                
             }
+
+
             
             createBackground() {
                 const graphics = this.add.graphics();
@@ -953,5 +950,4 @@ showWinScreen() {
     </script>
 </body>
 </html>
-
 
