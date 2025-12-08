@@ -320,9 +320,9 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         // المشهد الرئيسي للعبة
         class GameScene extends Phaser.Scene {
 
-shuffleQuestions() {
-        remainingQuestions = Phaser.Utils.Array.Shuffle(remainingQuestions);
-    }
+            shuffleQuestions() {
+                    remainingQuestions = Phaser.Utils.Array.Shuffle(remainingQuestions);
+                }
 
             constructor() {
                 super({ key: 'GameScene' });
@@ -335,7 +335,13 @@ shuffleQuestions() {
                 this.createCarTexture();
                 this.createWideQuestionBoxTexture(); // نسيج للصندوق العريض
                 this.createBackgroundObjectTextures();
-  		this.createFinishLineTexture(); // نسيج خط النهاية
+  		this.createFinishLineTexture();
+                
+                // ⬇️ التعديل 1: تحميل ملفات الصوت الثلاثة ⬇️
+                this.load.audio('correctSound', 'assets/correct.mp3');
+                this.load.audio('wrongSound', 'assets/wrong.mp3');
+                this.load.audio('winSound', 'assets/win.mp3'); // تحميل صوت الفوز
+                // ⬆️ نهاية التعديل 1 ⬆️
             }
 
             // دالة لتوليد نسيج السيارة
@@ -402,35 +408,41 @@ shuffleQuestions() {
             
 		// المنطقة الجديدة (داخل GameScene)
             // دالة لتوليد نسيج خط النهاية المخطط
-createFinishLineTexture() {
-    const size = 20; // حجم المربع الواحد كبرناه قليلاً
-    const width = 60;  // العرض: قليل ليكون مثل الخط
-    const height = 200; // الارتفاع: 200 ليغطي عرض الطريق بالكامل
-    const graphics = this.add.graphics({ add: false });
+            createFinishLineTexture() {
+                const size = 20; // حجم المربع الواحد كبرناه قليلاً
+                const width = 60;  // العرض: قليل ليكون مثل الخط
+                const height = 200; // الارتفاع: 200 ليغطي عرض الطريق بالكامل
+                const graphics = this.add.graphics({ add: false });
 
-    for (let i = 0; i < width / size; i++) {
-        for (let j = 0; j < height / size; j++) {
-            if ((i + j) % 2 === 0) {
-                graphics.fillStyle(0x000000, 1); // أسود
-            } else {
-                graphics.fillStyle(0xffffff, 1); // أبيض
+                for (let i = 0; i < width / size; i++) {
+                    for (let j = 0; j < height / size; j++) {
+                        if ((i + j) % 2 === 0) {
+                            graphics.fillStyle(0x000000, 1); // أسود
+                        } else {
+                            graphics.fillStyle(0xffffff, 1); // أبيض
+                        }
+                        graphics.fillRect(i * size, j * size, size, size);
+                    }
+                }
+                graphics.generateTexture('finishLineTexture', width, height);
+                graphics.destroy();
             }
-            graphics.fillRect(i * size, j * size, size, size);
-        }
-    }
-    graphics.generateTexture('finishLineTexture', width, height);
-    graphics.destroy();
-}
 		
             create() {
                 this.createBackground();
                 this.createRoad();
                 this.backgroundObjects = this.add.group();
 
-player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
-player.setCollideWorldBounds(true);
-player.setScale(0.8);
-player.setDepth(100); // جعلنا السيارة في طبقة عليا جداً لتظهر فوق أي شيء
+                // ⬇️ التعديل 2: تهيئة كائنات الأصوات ⬇️
+                this.correctSound = this.sound.add('correctSound');
+                this.wrongSound = this.sound.add('wrongSound');
+                this.winSound = this.sound.add('winSound'); // تهيئة صوت الفوز
+                // ⬆️ نهاية التعديل 2 ⬆️
+
+                player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
+                player.setCollideWorldBounds(true);
+                player.setScale(0.8);
+                player.setDepth(100); // جعلنا السيارة في طبقة عليا جداً لتظهر فوق أي شيء
                 
                 questionBoxGroup = this.physics.add.group();
                 this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
@@ -584,46 +596,60 @@ player.setDepth(100); // جعلنا السيارة في طبقة عليا جدا
             }
 
 
-spawnFinishLine() {
-    // شرط التوليد
-    if (remainingQuestions.length === 0 && wrongQuestions.length === 0 && questionBoxGroup.getLength() === 0 && !finishLine && this.boxSpawnTimer.paused) {
-        
-        this.finishLineTimer.destroy(); 
-        console.log("توليد خط النهاية!");
+            spawnFinishLine() {
+                // شرط التوليد
+                if (remainingQuestions.length === 0 && wrongQuestions.length === 0 && questionBoxGroup.getLength() === 0 && !finishLine && this.boxSpawnTimer.paused) {
+                    
+                    this.finishLineTimer.destroy(); 
+                    console.log("توليد خط النهاية!");
 
-        // إنشاء كائن خط النهاية
-        finishLine = this.physics.add.sprite(
-            this.sys.game.config.width + 100, // يبدأ من خارج الشاشة يميناً
-            500, // منتصف الطريق (الطريق من 400 لـ 600)
-            'finishLineTexture'
-        );
-        
-        // ضبط المركز والأبعاد الجديدة
-        finishLine.setOrigin(0.5, 0.5); 
-        finishLine.setImmovable(true);
-        finishLine.setDisplaySize(60, 200); // عرض 60 وارتفاع 200
-        finishLine.body.setSize(60, 200);
-        
-        finishLine.setAngle(0); 
-        finishLine.setDepth(10); // أسفل السيارة
+                    // إنشاء كائن خط النهاية
+                    finishLine = this.physics.add.sprite(
+                        this.sys.game.config.width + 100, // يبدأ من خارج الشاشة يميناً
+                        500, // منتصف الطريق (الطريق من 400 لـ 600)
+                        'finishLineTexture'
+                    );
+                    
+                    // ضبط المركز والأبعاد الجديدة
+                    finishLine.setOrigin(0.5, 0.5); 
+                    finishLine.setImmovable(true);
+                    finishLine.setDisplaySize(60, 200); // عرض 60 وارتفاع 200
+                    finishLine.body.setSize(60, 200);
+                    
+                    finishLine.setAngle(0); 
+                    finishLine.setDepth(10); // أسفل السيارة
 
-        // إضافة نص 'خط النهاية' فوق الخط (أعلى الطريق)
-        finishLine.addText = this.add.text(
-            finishLine.x, 
-            380, // وضعنا النص فوق الطريق قليلاً ليكون ظاهراً
-            '🏁 خط النهاية 🏁', {
-                fontSize: '24px',
-                fill: '#fff',
-                fontStyle: 'bold',
-                stroke: '#000',
-                strokeThickness: 4
+                    // إضافة نص 'خط النهاية' فوق الخط (أعلى الطريق)
+                    finishLine.addText = this.add.text(
+                        finishLine.x, 
+                        380, // وضعنا النص فوق الطريق قليلاً ليكون ظاهراً
+                        '🏁 خط النهاية 🏁', {
+                            fontSize: '24px',
+                            fill: '#fff',
+                            fontStyle: 'bold',
+                            stroke: '#000',
+                            strokeThickness: 4
+                        }
+                    ).setOrigin(0.5).setDepth(10);
+                    
+                    // استخدام دالة الانتظار الجديدة عند التداخل
+                    this.physics.add.overlap(player, finishLine, this.onCrossFinishLine, null, this);
+                }
             }
-        ).setOrigin(0.5).setDepth(10);
-        
-        // استخدام دالة الانتظار الجديدة عند التداخل
-        this.physics.add.overlap(player, finishLine, this.onCrossFinishLine, null, this);
-    }
-}
+
+            onCrossFinishLine(player, line) {
+                if (gameFinished) return;
+                gameFinished = true;
+                
+                // إيقاف جميع الأنشطة
+                scrollSpeed = 0;
+                this.physics.pause();
+                this.boxSpawnTimer.destroy(); 
+                
+                // عرض شاشة الفوز/الملخص
+                this.gameOver(true);
+            }
+
 
             update() {
                 // تحريك خطوط المنتصف
@@ -646,23 +672,23 @@ spawnFinishLine() {
                     }
                 });
 
-// تحريك صناديق الأسئلة
-if (questionBoxGroup) {
- questionBoxGroup.getChildren().forEach(box => {
- box.x -= scrollSpeed / 60;
- if (box.x < -200) { // -200 لأن الصندوق عريض
- box.destroy();
- }
- });
-}
+                // تحريك صناديق الأسئلة
+                if (questionBoxGroup) {
+                    questionBoxGroup.getChildren().forEach(box => {
+                        box.x -= scrollSpeed / 60;
+                        if (box.x < -200) { // -200 لأن الصندوق عريض
+                            box.destroy();
+                        }
+                    });
+                }
 
-// المنطقة الجديدة: تحريك خط النهاية إن وُجد ولم تنتهِ اللعبة
-if (finishLine && !gameFinished) {
-    // جعلنا القسمة على 30 لتطابق سرعة خطوط الطريق (roadLines)
-    // هذا سيجعل الخط يبدو ثابتاً تماماً على الأرض ولن ينزلق
-    finishLine.x -= scrollSpeed / 30; 
-    finishLine.addText.x = finishLine.x + 125;
-}
+                // المنطقة الجديدة: تحريك خط النهاية إن وُجد ولم تنتهِ اللعبة
+                if (finishLine && !gameFinished) {
+                    // جعلنا القسمة على 30 لتطابق سرعة خطوط الطريق (roadLines)
+                    // هذا سيجعل الخط يبدو ثابتاً تماماً على الأرض ولن ينزلق
+                    finishLine.x -= scrollSpeed / 30; 
+                    finishLine.addText.x = finishLine.x;
+                }
                 
                 // تحديث السرعة والنقاط
                 document.getElementById('speedValue').textContent = Math.round(baseSpeed);
@@ -680,75 +706,76 @@ if (finishLine && !gameFinished) {
                 }
             }
             
-// المنطقة الجديدة (الدالة generateQuestionBox بالكامل)
+            // المنطقة الجديدة (الدالة generateQuestionBox بالكامل)
 
-generateQuestionBox() {
-    // 1. التحقق من وجود صندوق قيد الظهور حالياً لتجنب التكرار
-    if (questionBoxGroup.getLength() > 0) {
-        return;
-    }
-    
-    let questionData = null;
-    
-    // 2. منطق اختيار السؤال (الأولوية الآن للأسئلة الجديدة أولاً)
-    
-    if (remainingQuestions.length > 0) {
-        // الأولوية 1: سحب سؤال جديد من الأسئلة المتبقية
-        const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
-        questionData = remainingQuestions.splice(randomIndex, 1)[0];
-        
-    } else if (wrongQuestions.length > 0) {
-        // الأولوية 2: إذا لم تتبق أسئلة جديدة (remainingQuestions)، نسحب السؤال الخاطئ
-        // هذا يضمن أن الأسئلة الخاطئة ستظهر كآخر مجموعة من الأسئلة.
-        questionData = wrongQuestions.shift();
-        
-    } else {
-        // إذا لم تتبق أسئلة جديدة أو خاطئة: إيقاف مؤقت التوليد
-        if (this.boxSpawnTimer) {
-            this.boxSpawnTimer.paused = true;
-            console.log("تم الانتهاء من جميع الأسئلة.");
-        }
-        return;
-    }
-    
-    // ⬇️⬇️ الكود الجديد لتوليد الألوان العشوائية ⬇️⬇️
+            generateQuestionBox() {
+                // 1. التحقق من وجود صندوق قيد الظهور حالياً لتجنب التكرار
+                if (questionBoxGroup.getLength() > 0) {
+                    return;
+                }
+                
+                let questionData = null;
+                
+                // 2. منطق اختيار السؤال (الأولوية الآن للأسئلة الجديدة أولاً)
+                
+                if (remainingQuestions.length > 0) {
+                    // الأولوية 1: سحب سؤال جديد من الأسئلة المتبقية
+                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
+                    questionData = remainingQuestions.splice(randomIndex, 1)[0];
+                    
+                } else if (wrongQuestions.length > 0) {
+                    // الأولوية 2: إذا لم تتبق أسئلة جديدة (remainingQuestions)، نسحب السؤال الخاطئ
+                    // هذا يضمن أن الأسئلة الخاطئة ستظهر كآخر مجموعة من الأسئلة.
+                    questionData = wrongQuestions.shift();
+                    
+                } else {
+                    // إذا لم تتبق أسئلة جديدة أو خاطئة: إيقاف مؤقت التوليد
+                    if (this.boxSpawnTimer) {
+                        this.boxSpawnTimer.paused = true;
+                        console.log("تم الانتهاء من جميع الأسئلة.");
+                    }
+                    return;
+                }
+                
+                // ⬇️⬇️ الكود الجديد لتوليد الألوان العشوائية ⬇️⬇️
 
-    // دالة لتوليد لون عشوائي (بصيغة رقم عشري لـ 0xRRGGBB)
-    const getRandomColor = () => {
-        // 16777215 يمثل أقصى قيمة لون سداسي عشري (0xFFFFFF)
-        return Math.floor(Math.random() * 16777215);
-    };
+                // دالة لتوليد لون عشوائي (بصيغة رقم عشري لـ 0xRRGGBB)
+                const getRandomColor = () => {
+                    // 16777215 يمثل أقصى قيمة لون سداسي عشري (0xFFFFFF)
+                    return Math.floor(Math.random() * 16777215);
+                };
 
-    const randomColor = getRandomColor(); 
+                const randomColor = getRandomColor(); 
 
-    // إنشاء الصندوق
-    const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture');
-    
-    // تطبيق اللون العشوائي على الصندوق باستخدام setTint()
-    box.setTint(randomColor);
-    
-    // ⬆️⬆️ نهاية الكود الجديد ⬆️⬆️
+                // إنشاء الصندوق
+                const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture');
+                
+                // تطبيق اللون العشوائي على الصندوق باستخدام setTint()
+                box.setTint(randomColor);
+                
+                // ⬆️⬆️ نهاية الكود الجديد ⬆️⬆️
 
-    // جعل الصندوق عريضًا وطويلًا لتغطية المسار
-    box.setDisplaySize(250, 150); // جعل الصندوق أكبر
-    
-    // جعل الجسم الفيزيائي يغطي مساحة كبيرة
-    box.body.setSize(250, 150);
-    
-    questionBoxGroup.add(box);
-    box.setData('question', questionData);
-    box.setData('used', false);
-    
-    // إضافة حركة خفيفة للصندوق لجذب الانتباه
-    this.tweens.add({
-        targets: box,
-        y: 480,
-        duration: 1000,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-    });
-}
+                // جعل الصندوق عريضًا وطويلًا لتغطية المسار
+                box.setDisplaySize(250, 150); // جعل الصندوق أكبر
+                
+                // جعل الجسم الفيزيائي يغطي مساحة كبيرة
+                box.body.setSize(250, 150);
+                
+                questionBoxGroup.add(box);
+                box.setData('question', questionData);
+                box.setData('used', false);
+                
+                // إضافة حركة خفيفة للصندوق لجذب الانتباه
+                this.tweens.add({
+                    targets: box,
+                    y: 480,
+                    duration: 1000,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+            }
+            
             hitQuestionBox(player, box) {
                 if (box.getData('used')) return;
                 
@@ -769,243 +796,164 @@ generateQuestionBox() {
                 const optionsContainer = document.getElementById('optionsContainer');
                 optionsContainer.innerHTML = '';
                 
-                questionData.c.forEach((option, index) => {
+                // ⬇️ التعديل: بعثرة الخيارات عشوائياً ⬇️
+                const shuffledOptions = [...questionData.c];
+                Phaser.Utils.Array.Shuffle(shuffledOptions); 
+                
+                // عرض الخيارات المُبعثرة
+                shuffledOptions.forEach((optionText, index) => {
                     const optionElement = document.createElement('div');
                     optionElement.className = 'option';
-                    optionElement.textContent = `${option}`;
-                    optionElement.dataset.index = index;
+                    optionElement.textContent = `${optionText}`;
+                    
+                    // نجد الفهرس الأصلي للخيار المختار في المصفوفة غير المبعثرة
+                    const originalOptionIndex = questionData.c.indexOf(optionText);
                     
                     optionElement.onclick = () => {
-                        this.checkAnswer(parseInt(optionElement.dataset.index), questionData.a, optionElement, optionsContainer);
+                        // نرسل الفهرس الأصلي للخيار المختار
+                        this.checkAnswer(originalOptionIndex, questionData.a, optionElement, optionsContainer);
                     };
                     
                     optionsContainer.appendChild(optionElement);
                 });
-                
+                // ⬆️ نهاية التعديل ⬆️
+
                 questionUI.style.display = 'block';
             }
             
-checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer) {
-    const allOptions = optionsContainer.querySelectorAll('.option');
-    allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
-    
-    // ⬇️⬇️ الإضافة 1: تهيئة خاصية تتبع فقدان النقاط ⬇️⬇️
-    if (typeof activeQuestion.isScoreLost === 'undefined') {
-        activeQuestion.isScoreLost = false;
-    }
-    // ⬆️⬆️ نهاية الإضافة 1 ⬆️⬆️
-    
-    if (selectedIndex === correctIndex) {
-        // إجابة صحيحة
-        selectedOptionElement.classList.add('correct');
-        baseSpeed += 20;
-        
-        // ⬇️⬇️ التعديل 2: منح النقاط مشروط ⬇️⬇️
-        // يتم منح النقاط فقط إذا لم يُسجل خطأ سابقًا في هذا السؤال
-        if (activeQuestion.isScoreLost !== true) {
-             score += 10;
-        }
-        // ⬆️⬆️ نهاية التعديل 2 ⬆️⬆️
-        
-        this.findAndRemoveQuestionBox(); // إخفاء الصندوق من مسار اللعبة (Phaser)
-        
-        setTimeout(() => {
-            this.resumeGame();
-        }, 1500);
-    } else {
-        // إجابة خاطئة
-        selectedOptionElement.classList.add('incorrect');
-        allOptions[correctIndex].classList.add('correct');
-        
-        // ⬇️⬇️ التعديل 3: وسم السؤال بفقدان النقاط ⬇️⬇️
-        // بمجرد الخطأ، يتم وسم السؤال بفقدان النقاط بشكل دائم
-        activeQuestion.isScoreLost = true;
-        // ⬆️⬆️ نهاية التعديل 3 ⬆️⬆️
-        
-        baseSpeed *= 0.8;
-        baseSpeed = Math.max(100, baseSpeed);
-        
-        if (!wrongQuestions.includes(activeQuestion)) {
-             wrongQuestions.push(activeQuestion);
-        }
-        
-        // هذا السطر يقوم بإزالة الصندوق، لكن النافذة لا زالت موجودة على الشاشة
-        this.findAndRemoveQuestionBox(); 
+            checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer) {
+                const allOptions = optionsContainer.querySelectorAll('.option');
+                allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
+                
+                if (typeof activeQuestion.isScoreLost === 'undefined') {
+                    activeQuestion.isScoreLost = false;
+                }
+                
+                if (selectedIndex === correctIndex) {
+                    // إجابة صحيحة
+                    this.correctSound.play(); // تشغيل صوت صحيح
+                    selectedOptionElement.classList.add('correct');
+                    baseSpeed += 20;
+                    
+                    if (activeQuestion.isScoreLost !== true) {
+                         score += 10;
+                    }
+                    
+                    this.findAndRemoveQuestionBox(); 
+                    
+                    setTimeout(() => {
+                        this.resumeGame();
+                    }, 1500);
+                } else {
+                    // إجابة خاطئة
+                    this.wrongSound.play(); // تشغيل صوت خاطئ
+                    selectedOptionElement.classList.add('incorrect');
+                    allOptions.forEach(opt => {
+                        const originalIndex = activeQuestion.c.indexOf(opt.textContent);
+                        if (originalIndex === correctIndex) {
+                            opt.classList.add('correct');
+                        }
+                    });
+                    
+                    activeQuestion.isScoreLost = true;
+                    
+                    baseSpeed *= 0.8;
+                    baseSpeed = Math.max(100, baseSpeed);
+                    
+                    if (!wrongQuestions.includes(activeQuestion)) {
+                         wrongQuestions.push(activeQuestion);
+                    }
+                    
+                    this.findAndRemoveQuestionBox(); 
 
-        // تأثير الشاشة الحمراء
-        errorOverlay.style.display = 'flex';
-        errorIcon.style.opacity = 1;
-        
-        setTimeout(() => {
-            errorIcon.style.opacity = 0;
-            errorOverlay.style.display = 'none';
-            this.resumeGame();
-        }, 4000);
-    }
-}
-            
+                    // تأثير الشاشة الحمراء
+                    errorOverlay.style.display = 'flex';
+                    errorIcon.style.opacity = 1;
+                    
+                    setTimeout(() => {
+                        errorIcon.style.opacity = 0;
+                        errorOverlay.style.display = 'none';
+                        this.resumeGame();
+                    }, 4000);
+                }
+            }
+
             findAndRemoveQuestionBox() {
                 if (questionBoxGroup) {
                     questionBoxGroup.getChildren().forEach(box => {
-                        if (box.getData('used')) {
-                            this.tweens.add({
-                                targets: box,
-                                y: box.y - 50,
-                                alpha: 0,
-                                scaleX: 0.5,
-                                scaleY: 0.5,
-                                duration: 500,
-                                onComplete: () => {
-                                    box.destroy();
-                                }
-                            });
+                        if (box.getData('question') === activeQuestion) {
+                            box.destroy();
                         }
                     });
                 }
+                activeQuestion = null;
             }
-            
+
             resumeGame() {
                 questionUI.style.display = 'none';
-                
                 scrollSpeed = baseSpeed;
                 this.physics.resume();
-                
-                const options = document.querySelectorAll('.option');
-                options.forEach(option => {
-                    option.classList.remove('correct', 'incorrect');
-                    option.style.pointerEvents = 'auto';
-                });
             }
 
-onCrossFinishLine(player, finishLine) {
-    // التأكد من تنفيذ الكود مرة واحدة فقط
-    if (this.isFinishing) return;
-    this.isFinishing = true;
+            
+            // ⬇️ التعديل 3: دالة gameOver لتشغيل صوت الفوز ⬇️
+            gameOver(isWin) {
+                // إيقاف جميع الأصوات (إذا كانت تعمل)
+                this.sound.stopAll();
 
-    console.log("السيارة عبرت الخط.. الانتظار ثانيتين");
+                if (isWin) {
+                    this.winSound.play(); // تشغيل صوت الفوز
+                    this.showSummaryBox("🏆 مبروك! لقد عبرت خط النهاية 🏆", score);
+                } else {
+                    this.showSummaryBox("انتهت اللعبة!", score);
+                }
+            }
+            // ⬆️ نهاية التعديل 3 ⬆️
 
-    // تعطيل تداخل الخط حتى لا يحسب التصادم أكثر من مرة
-    finishLine.body.enable = false; 
-
-    // انتظار لمدة 2000 ملي ثانية (ثانيتين) ثم إنهاء اللعبة
-    this.time.delayedCall(2000, () => {
-        this.gameOver(player, finishLine);
-    }, [], this);
-}
-
-
-// ... (الكود السابق)
-// المنطقة الجديدة (داخل GameScene)
-gameOver(player, finishLine) {
-    if (gameFinished) return;
-    gameFinished = true;
-    scrollSpeed = 0; // إيقاف تحرك الطريق
-    this.physics.pause(); // إيقاف الفيزياء تماماً
-    // إيقاف تسارع السيارة (لضمان توقفها)
-    if(player.body) player.setAcceleration(0);
-    if(player.body) player.setVelocity(0);
-    // إيقاف جميع الحركات (Tweens)
-    if(finishLine) this.tweens.killTweensOf(finishLine);
-
-    // ⬇️⬇️ حساب وعرض ملخص النتائج ⬇️⬇️
+            showSummaryBox(title, finalScore) {
     const totalQuestions = allQuestionsData.length;
-    const finalScore = score;
-    const totalQ = allQuestionsData.length;
-
-    // 1. تحديد الألوان
-    const PRIMARY_COLOR = 0xf72585; // وردي زاهي
-    const SECONDARY_COLOR = 0x1a1a2e; // سماوي غامق
-    const TEXT_COLOR = 0xffffff; // أبيض
-    const SUCCESS_COLOR = 0x2ecc71; // أخضر
-    const NEUTRAL_COLOR = 0x4cc9f0; // سماوي فاتح
+    const correctAnswers = totalQuestions - wrongQuestions.length;
     
-    // تحديد أبعاد الصندوق بناءً على حجم اللعبة (لضمان التوسعة على الأجهزة المختلفة)
-    const windowWidth = this.sys.game.config.width * 0.9;
-    const windowHeight = this.sys.game.config.height * 0.9;
-
-    // 2. إنشاء حاوية النتائج
-    const summaryBoxContainer = this.add.container(this.scale.width / 2, this.scale.height / 2).setDepth(200);
-
-    // الخلفية (لون سماوي فاتح)
-    const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, SECONDARY_COLOR, 1)
-        .setOrigin(0.5)
-        .setStrokeStyle(10, PRIMARY_COLOR); // إطار سميك باللون الوردي الزاهي
-    summaryBoxContainer.add(boxRect);
-
-    // 3. محتوى النتائج
-    let yPos = -windowHeight / 2 + 40; // موضع البداية من الأعلى
-
-    // العنوان (لون نص غامق)
-    const titleText = this.add.text(0, yPos, '🏆 ملخص النتائج النهائية 🏆', {
-        fontSize: '32px', fill: `#${TEXT_COLOR.toString(16)}`, fontStyle: 'bold'
+    // إنشاء حاوية UI
+    const summaryBoxContainer = this.add.container(400, 300).setDepth(2000).setScrollFactor(0);
+    
+    // 1. الخلفية (مستطيل)
+    const background = this.add.rectangle(0, 0, 500, 350, 0x1a1a2e, 0.95)
+        .setStrokeStyle(4, 0x4cc9f0)
+        .setOrigin(0.5);
+    summaryBoxContainer.add(background);
+    
+    // 2. العنوان
+    const titleText = this.add.text(0, -140, title, {
+        fontSize: '32px',
+        fill: '#4cc9f0',
+        fontStyle: 'bold',
+        align: 'center',
+        padding: { top: 10 }
     }).setOrigin(0.5);
     summaryBoxContainer.add(titleText);
-
-    yPos += 50;
-
-    // النقاط المحتسبة (لون النجاح)
-    const scoreText = this.add.text(0, yPos, `النقاط المحتسبة: ${finalScore} / ${totalQ * 10}`, {
-        fontSize: '26px', fill: `#${SUCCESS_COLOR.toString(16)}`, fontStyle: 'bold'
-    }).setOrigin(0.5);
-    summaryBoxContainer.add(scoreText);
     
-    // ⬇️⬇️ قائمة مراجعة الأسئلة (الجزء المعدّل) ⬇️⬇️
-
-    yPos += 40; // فراغ قبل قائمة المراجعة
-    
-    const reviewTitle = this.add.text(0, yPos, 'مراجعة الأسئلة والإجابات الصحيحة:', {
-        fontSize: '22px',
-        fill: `#${TEXT_COLOR.toString(16)}`,
-        fontStyle: 'bold'
-    }).setOrigin(0.5);
-    summaryBoxContainer.add(reviewTitle);
-
-    yPos += 30;
-    
-    let reviewContent = "";
-    
-    // نجمع جميع الأسئلة والإجابات في نص واحد
-    allQuestionsData.forEach((qData, index) => {
-        // التحقق من حالة فقدان النقاط (التي قمنا بإضافتها سابقاً)
-        const isMissed = qData.isScoreLost === true;
-        
-        // تحديد رمز الحالة
-        const statusIcon = isMissed ? '❌' : '✅';
-        
-        // الحصول على نص الإجابة الصحيحة
-        const correctAnswerText = qData.c[qData.a];
-        
-        // إضافة السؤال والجواب الصحيح مع تنسيق بسيط
-        reviewContent += `[${statusIcon} س${index + 1}] ${qData.q}\n  👈 الجواب: ${correctAnswerText}\n\n`;
-    });
-    
-    // إنشاء عنصر النص للمراجعة
-    const reviewText = this.add.text(
-        windowWidth / 2 - 20, // موضع X: اليمين مع هامش 20 بكسل
-        yPos, 
-        reviewContent, 
+    // 3. الملخص التفصيلي
+    const summaryText = this.add.text(0, -60, 
+        `السرعة النهائية: ${Math.round(baseSpeed)} كم/س\n` +
+        `النقاط الإجمالية: ${finalScore}\n\n` +
+        `إجمالي الأسئلة: ${totalQuestions}\n` +
+        `إجابات صحيحة: ${correctAnswers}\n` +
+        `إجابات خاطئة (متكررة): ${wrongQuestions.length}`, 
         {
-            fontSize: '16px', // حجم أصغر ليناسب النص الطويل
-            fill: `#${TEXT_COLOR.toString(16)}`,
-            wordWrap: { width: windowWidth - 40 }, // التفاف النص داخل الصندوق
-            align: 'right',
-            rtl: true, // ضروري لدعم الالتفاف واللغة العربية
-            padding: { x: 5, y: 5 }
+            fontSize: '20px',
+            fill: '#fff',
+            align: 'center',
+            lineSpacing: 8
         }
-    ).setOrigin(1, 0); // نقطة الأصل (1, 0) تعني أعلى اليمين
+    ).setOrigin(0.5);
+    summaryBoxContainer.add(summaryText);
     
-    summaryBoxContainer.add(reviewText);
-
-    // تعديل موضع زر الإغلاق ليتناسب مع زيادة طول النص
-    yPos = yPos + reviewText.height + 20; // موضع نهاية النص + 20 بكسل
-    
-    // ⬇️⬇️ نهاية الجزء المعدّل ⬇️⬇️
-    
-    // 4. زر الإغلاق / إعادة اللعب
-    const okBtn = this.add.text(0, yPos, '👍 حسناً، أعد اللعب', { 
-        fontSize: '24px', 
-        fill: `#${SECONDARY_COLOR.toString(16)}`, 
-        backgroundColor: `#${NEUTRAL_COLOR.toString(16)}`, 
+    // 4. زر إعادة اللعب
+    const okBtn = this.add.text(0, 130, 'إعادة اللعب', {
+        fontSize: '24px',
+        fill: `#${Phaser.Display.Color.GetColor(26, 26, 46).toString(16)}`,
+        backgroundColor: `#${Phaser.Display.Color.GetColor(76, 201, 240).toString(16)}`,
         padding: { x: 20, y: 10 },
         borderRadius: 8
     })
@@ -1048,15 +996,15 @@ const config = {
                 expandParent: true // يضمن أن الحاوية تتوسع قدر الإمكان
             }, // إغلاق كائن scale بشكل صحيح
             physics: {
-                default: 'arcade',                arcade: {
-                    gravity: { y: 0 },
-                    debug: false
+                default: 'arcade',
+                arcade: {
+                    // debug: true, 
+                    gravity: { y: 0 }
                 }
             },
-            scene: GameScene
+            scene: [GameScene]
         };
 
-        // إنشاء اللعبة
         game = new Phaser.Game(config);
     </script>
 </body>
