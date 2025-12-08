@@ -310,6 +310,11 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         
         // المشهد الرئيسي للعبة
         class GameScene extends Phaser.Scene {
+
+shuffleQuestions() {
+        remainingQuestions = Phaser.Utils.Array.Shuffle(remainingQuestions);
+    }
+
             constructor() {
                 super({ key: 'GameScene' });
                 this.isMovingUp = false;
@@ -453,13 +458,21 @@ player.setDepth(100); // جعلنا السيارة في طبقة عليا جدا
                     loop: true
                 });
                 
-		// مؤقت لمراقبة انتهاء الأسئلة لتوليد خط النهاية
-this.finishLineTimer = this.time.addEvent({
-delay: 500, // تحقق كل نصف ثانية
-callback: this.spawnFinishLine,
-callbackScope: this,
-loop: true
-}); 
+
+
+
+    // مؤقت لمراقبة انتهاء الأسئلة لتوليد خط النهاية
+    this.finishLineTimer = this.time.addEvent({
+        delay: 500,
+        callback: this.spawnFinishLine,
+        callbackScope: this,
+        loop: true
+    }); 
+
+    // بعثرة الأسئلة الجديدة مرة واحدة قبل البدء (جديد)
+    this.shuffleQuestions();
+
+
 
                 this.generateQuestionBox();
                 scrollSpeed = baseSpeed;
@@ -660,56 +673,63 @@ if (finishLine && !gameFinished) {
             }
             
 // المنطقة الجديدة (الدالة generateQuestionBox بالكامل)
-            generateQuestionBox() {
-                // 1. التحقق من وجود صندوق قيد الظهور حالياً لتجنب التكرار
-                if (questionBoxGroup.getLength() > 0) {
-                    return;
-                }
-                
-                let questionData = null;
-                
-                // 2. منطق اختيار السؤال (يعطي الأولوية للأسئلة الخاطئة)
-                if (wrongQuestions.length > 0) { 
-                    // سحب السؤال الخاطئ الأول
-                    questionData = wrongQuestions.shift();
-                } else if (remainingQuestions.length > 0) {
-                    // سحب سؤال جديد من الأسئلة المتبقية
-                    const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
-                    questionData = remainingQuestions.splice(randomIndex, 1)[0];
-                } else {
-                    // إذا لم تتبق أسئلة جديدة أو خاطئة: إيقاف مؤقت التوليد
-                    if (this.boxSpawnTimer) {
-                        this.boxSpawnTimer.paused = true;
-                        console.log("تم الانتهاء من جميع الأسئلة.");
-                    }
-                    return;
-                }
-                
-                // إنشاء صندوق عريض يغطي المسار
-                // الصندوق سيظهر في منتصف المسار رأسيًا (y=500)
-                // وسيكون عريضًا بما يكفي لتغطية المسار أفقيًا
-                const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture'); 
-                
-                // جعل الصندوق عريضًا وطويلًا لتغطية المسار
-                box.setDisplaySize(250, 150); // جعل الصندوق أكبر
-                
-                // جعل الجسم الفيزيائي يغطي مساحة كبيرة
-                box.body.setSize(250, 150);
-                
-                questionBoxGroup.add(box);
-                box.setData('question', questionData);
-                box.setData('used', false);
-                
-                // إضافة حركة خفيفة للصندوق لجذب الانتباه
-                this.tweens.add({
-                    targets: box,
-                    y: 480,
-                    duration: 1000,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-            }
+
+generateQuestionBox() {
+    // 1. التحقق من وجود صندوق قيد الظهور حالياً لتجنب التكرار
+    if (questionBoxGroup.getLength() > 0) {
+        return;
+    }
+    
+    let questionData = null;
+    
+    // 2. منطق اختيار السؤال (الأولوية الآن للأسئلة الجديدة أولاً)
+    
+    if (remainingQuestions.length > 0) {
+        // الأولوية 1: سحب سؤال جديد من الأسئلة المتبقية
+        const randomIndex = Phaser.Math.Between(0, remainingQuestions.length - 1);
+        questionData = remainingQuestions.splice(randomIndex, 1)[0];
+        
+    } else if (wrongQuestions.length > 0) {
+        // الأولوية 2: إذا لم تتبق أسئلة جديدة (remainingQuestions)، نسحب السؤال الخاطئ
+        // هذا يضمن أن الأسئلة الخاطئة ستظهر كآخر مجموعة من الأسئلة.
+        questionData = wrongQuestions.shift();
+        
+    } else {
+        // إذا لم تتبق أسئلة جديدة أو خاطئة: إيقاف مؤقت التوليد
+        if (this.boxSpawnTimer) {
+            this.boxSpawnTimer.paused = true;
+            console.log("تم الانتهاء من جميع الأسئلة.");
+        }
+        return;
+    }
+    
+    // إنشاء الصندوق (بقية الكود لا تتغير)
+    // ...
+    // إنشاء صندوق عريض يغطي المسار
+    // الصندوق سيظهر في منتصف المسار رأسيًا (y=500)
+    // وسيكون عريضًا بما يكفي لتغطية المسار أفقيًا
+    const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture'); 
+    
+    // جعل الصندوق عريضًا وطويلًا لتغطية المسار
+    box.setDisplaySize(250, 150); // جعل الصندوق أكبر
+    
+    // جعل الجسم الفيزيائي يغطي مساحة كبيرة
+    box.body.setSize(250, 150);
+    
+    questionBoxGroup.add(box);
+    box.setData('question', questionData);
+    box.setData('used', false);
+    
+    // إضافة حركة خفيفة للصندوق لجذب الانتباه
+    this.tweens.add({
+        targets: box,
+        y: 480,
+        duration: 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+    });
+}
             
             hitQuestionBox(player, box) {
                 if (box.getData('used')) return;
@@ -934,4 +954,3 @@ showWinScreen() {
     </script>
 </body>
 </html>
-
