@@ -847,4 +847,23 @@
             height: 600,
             parent: 'gameCanvas',
             scale: {
-                // استخدام FIT و CENTER_BOTH لضمان التوسيط في وضع الشاشة الأ
+                // استخدام FIT و CENTER_BOTH لضمان التوسيط في وضع الشاشة الأفقية
+                mode: Phaser.Scale.FIT, 
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                expandParent: true 
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: GameScene
+        };
+
+        // إنشاء اللعبة
+        game = new Phaser.Game(config);
+    </script>
+</body>
+</html>
