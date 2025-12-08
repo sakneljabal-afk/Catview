@@ -13,6 +13,7 @@
     /* خلفية برتقالية دافئة ومناسبة للطفل 12 سنة */
     background: linear-gradient(135deg, #FFD580 0%, #FFB347 100%);
     font-family: 'Segoe UI', 'Tajawal', Tahoma, Geneva, Verdana, sans-serif;
+    /* مهم لتعطيل الإيماءات غير المرغوب فيها على الموبايل */
     touch-action: none; 
     overflow: hidden; 
     height: 100vh;
@@ -26,19 +27,23 @@
     color: #fff;
     text-align: center;
     padding: 15px;
-    height: 25vh; /* زيادة الارتفاع ليكون السؤال أكثر وضوحاً */
+    /* 🌟 التعديل 1: ارتفاع مرن ليتسع للأسئلة الطويلة وتوفير مساحة للعبة */
+    height: auto; 
+    min-height: 25vh; 
+    max-height: 40vh; 
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: center;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     z-index: 10;
+    overflow-y: auto; /* يسمح بالتمرير إذا كان المحتوى أطول من Max-height */
   }
 
   header h3 {
     margin: 0 0 10px 0;
-    /* زيادة حجم الخط بشكل ملحوظ للوضوح على الموبايل */
-    font-size: clamp(2.2rem, 7vw, 2.8rem); 
+    /* 🌟 التعديل 2: مقاس خط أكثر مرونة للسؤال */
+    font-size: clamp(1.8rem, 6vw, 2.5rem); 
     color: #FFD700;
     font-weight: bold;
     line-height: 1.4;
@@ -54,8 +59,8 @@
   
   .answers span {
     display: block; 
-    /* زيادة حجم الخط للخيارات */
-    font-size: clamp(1.8rem, 6vw, 2.2rem); 
+    /* 🌟 التعديل 3: مقاس خط أكثر مرونة للخيارات */
+    font-size: clamp(1.4rem, 4.5vw, 1.9rem); 
     margin: 8px 0; 
     padding: 8px 12px;
     border-bottom: 2px solid rgba(255,255,255,0.3);
@@ -69,8 +74,9 @@
       border-bottom: none;
   }
 
-  /* === منطقة اللعبة === */
+  /* === منطقة اللعبة (Main) === */
   main {
+    /* 🌟 التعديل 4: تأكد من أن منطقة اللعب تأخذ كل المساحة المتبقية */
     flex: 1; 
     display: flex;
     justify-content: center;
@@ -82,7 +88,9 @@
   /* الإطار الخارجي للعبة */
   #game-frame {
     width: 95vw; 
-    height: 70vh; 
+    /* 🌟 التعديل 5: إزالة الارتفاع الثابت والسماح له بالنمو */
+    height: auto; 
+    flex-grow: 1; /* يأخذ كل المساحة المتبقية من الارتفاع */
     max-width: 700px; 
     /* خلفية برتقالية خفيفة ومناسبة للأطفال */
     background: #E8F5E9; 
@@ -140,25 +148,28 @@
   /* تحسينات للشاشات الصغيرة جداً */
   @media (max-width: 480px) {
     header {
-      height: 30vh;
+      /* 🌟 التعديل 6: الاعتماد على الارتفاع المرن هنا أيضاً */
+      height: auto;
+      min-height: 25vh; 
       padding: 12px;
     }
     
     header h3 {
-      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
     }
     
     .answers span {
-      font-size: clamp(1.6rem, 5vw, 2rem);
+      font-size: clamp(1.3rem, 4vw, 1.8rem);
       padding: 6px 10px;
     }
     
     #game-frame {
-      height: 65vh;
+      /* 🌟 التعديل 7: إزالة الارتفاع الثابت هنا أيضاً */
+      height: auto;
+      flex-grow: 1;
       border-width: 10px;
     }
   }
-
 </style>
 </head>
 
@@ -271,10 +282,9 @@ let currentQ = 0;
 let canShoot = true;
 let isAiming = false;
 let missedShots = 0;
-let shootAngle = -90; // متغير لتخزين الزاوية 
-let aimLine; // كائن خط التوجيه 
+ let shootAngle = -90; // متغير لتخزين الزاوية let aimLine; // كائن خط التوجيه 
 
-const BUBBLE_IMG_SIZE = 300;
+const BUBBLE_IMG_SIZE = 300; 
 
 /* ======================
    4. التحميل (Preload)
@@ -308,7 +318,6 @@ function create(){
   const cannonHeight = height * 0.10; 
   const cannonScale = cannonHeight / 300; 
 
-  // تثبيت المدفع في المنتصف
   cannon = this.add.sprite(width/2, height * 0.90, 'cannon')
     .setScale(cannonScale)
     .setDepth(1); 
@@ -320,23 +329,12 @@ function create(){
   });
   this.physics.add.collider(bubbles, invisibleWall);
 
-  // 🟢 إنشاء كائن الخط الرسومي (aimLine)
-  aimLine = this.add.graphics({ 
-    lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } 
-  }).setDepth(2);
-
-  // 🟢 معالجة مدخلات المستخدم (اللمس/الماوس)
-  this.input.on('pointermove', (pointer) => { 
-    updateAimLine(this, pointer); 
-  });
-
-  this.input.on('pointerdown', () => { 
-    if (canShoot) updateAimLine(this, this.input.activePointer); 
-  });
-
-  this.input.on('pointerup', () => { 
-    if (canShoot) fire(this); 
-  });
+// 🔴 إزالة كائن السهم القديم (arrow) لأنه لن يستخدم بعد الآن 
+// أضف هنا كائن الخط الرسومي 
+(aimLine) aimLine = this.add.graphics({ lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } }).setDepth(2);
+javascript this.input.on('pointermove', (pointer) => { // المدفع لم يعد يتحرك، فقط نرسم الخط updateAimLine(this, pointer); });
+ this.input.on('pointerdown', () => { // إلغاء منطق التصويب المزدوج if (canShoot) updateAimLine(this, this.input.activePointer); });
+ this.input.on('pointerup', () => { // 🟢 إطلاق النار عند رفع الإصبع if (canShoot) fire(this); });
 
   showQuestion(this);
 }
@@ -393,9 +391,8 @@ function updateAimLine(scene, pointer) {
 /* ======================
    7. منطق الإطلاق (Fire)
 ====================== */
-function fire(scene){ 
-  canShoot = false;
-  aimLine.clear(); // 🔴 إخفاء خط التوجيه فور الإطلاق 
+function fire(scene){ canShoot = false;
+aimLine.clear(); // 🔴 إخفاء خط التوجيه فور الإطلاق //
 
   const width = scene.scale.width;
   const shotScale = (width * 0.12) / 300; 
@@ -406,11 +403,11 @@ function fire(scene){
     'shoot'
   ).setScale(shotScale);
 
-  // 🟢 تطبيق السرعة باستخدام الزاوية المحسوبة 
-  const speed = 800; // سرعة الإطلاق 
-  const velocityX = Math.cos(shootAngle) * speed; 
-  const velocityY = Math.sin(shootAngle) * speed; 
-  shot.setVelocity(velocityX, velocityY);
+// 🟢 تطبيق السرعة باستخدام الزاوية المحسوبة 
+const speed = 800; // سرعة الإطلاق 
+const velocityX = Math.cos(shootAngle) * speed; 
+const velocityY = Math.sin(shootAngle) * speed; 
+shot.setVelocity(velocityX, velocityY);
 
   scene.physics.add.overlap(shot, bubbles, (s, b) => {
     s.destroy();
@@ -434,10 +431,7 @@ function fire(scene){
 
   scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
   
-  scene.time.delayedCall(800, () => { 
-    canShoot = true; 
-    // aimLine سيظهر تلقائياً عند أول حركة pointermove جديدة
-  });
+scene.time.delayedCall(800, () => { canShoot = true; // aimLine سيظهر تلقائياً عند أول حركة pointermove جديدة // لا نحتاج إلى إعادة تعيين isAiming أو إظهار arrow });
 }
 
 /* ======================
