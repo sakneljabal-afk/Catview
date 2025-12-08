@@ -785,46 +785,76 @@ generateQuestionBox() {
                 questionUI.style.display = 'block';
             }
             
-            checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer) {
-                const allOptions = optionsContainer.querySelectorAll('.option');
-                allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
-                
-                if (selectedIndex === correctIndex) {
-                    // إجابة صحيحة
-                    selectedOptionElement.classList.add('correct');
-                    baseSpeed += 20;
-                    score += 10;
-                    
-                    this.findAndRemoveQuestionBox();
-                    
-                    setTimeout(() => {
-                        this.resumeGame();
-                    }, 1500);
-                } else {
-                    // إجابة خاطئة
-                    selectedOptionElement.classList.add('incorrect');
-                    allOptions[correctIndex].classList.add('correct');
-                    
-                    baseSpeed *= 0.8;
-                    baseSpeed = Math.max(100, baseSpeed);
-                    
-                    if (!wrongQuestions.includes(activeQuestion)) {
-                         wrongQuestions.push(activeQuestion);
-                    }
-                    
-                    this.findAndRemoveQuestionBox();
+checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer) {
+    const allOptions = optionsContainer.querySelectorAll('.option');
+    allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
+    
+    // ⬇️⬇️ منطق تتبع فقدان النقاط ⬇️⬇️
+    // تهيئة خاصية التتبع إذا لم تكن موجودة
+    if (typeof activeQuestion.isScoreLost === 'undefined') {
+        activeQuestion.isScoreLost = false;
+    }
+    
+    if (selectedIndex === correctIndex) {
+        // إجابة صحيحة
+        selectedOptionElement.classList.add('correct');
 
-                    // تأثير الشاشة الحمراء
-                    errorOverlay.style.display = 'flex';
-                    errorIcon.style.opacity = 1;
-                    
-                    setTimeout(() => {
-                        errorIcon.style.opacity = 0;
-                        errorOverlay.style.display = 'none';
-                        this.resumeGame();
-                    }, 4000);
-                }
-            }
+        // 1. زيادة السرعة
+        baseSpeed += 20;
+        baseSpeed = Math.min(600, baseSpeed); // للحماية
+        
+        // 2. منح النقاط: يتم منح النقاط فقط إذا لم تُفقد مسبقاً (عند أول إجابة خاطئة)
+        if (activeQuestion.isScoreLost !== true) {
+             score += 10;
+        }
+        
+        // 3. إزالة السؤال من قائمة المراجعة (wrongQuestions) إذا تم حله الآن
+        const wrongIndex = wrongQuestions.findIndex(q => q === activeQuestion);
+        if (wrongIndex > -1) {
+            wrongQuestions.splice(wrongIndex, 1);
+        }
+
+        this.findAndRemoveQuestionBox();
+        
+        // تحديث عرض السرعة
+        this.speedText.setText('السرعة: ' + baseSpeed); 
+        
+        setTimeout(() => {
+            this.resumeGame();
+        }, 1500);
+    } else {
+        // إجابة خاطئة
+        selectedOptionElement.classList.add('incorrect');
+        allOptions[correctIndex].classList.add('correct');
+        
+        // 1. فقدان النقاط بشكل دائم لهذا السؤال
+        activeQuestion.isScoreLost = true; 
+        
+        // 2. عقوبة السرعة
+        baseSpeed *= 0.8;
+        baseSpeed = Math.max(100, baseSpeed);
+        
+        // 3. إضافة السؤال لقائمة المراجعة (wrongQuestions)
+        if (!wrongQuestions.includes(activeQuestion)) {
+            wrongQuestions.push(activeQuestion);
+        }
+        
+        this.findAndRemoveQuestionBox();
+        
+        // تحديث عرض السرعة
+        this.speedText.setText('السرعة: ' + baseSpeed);
+        
+        // تأثير الشاشة الحمراء
+        errorOverlay.style.display = 'flex';
+        errorIcon.style.opacity = 1;
+        
+        setTimeout(() => {
+            errorIcon.style.opacity = 0;
+            errorOverlay.style.display = 'none';
+            this.resumeGame();
+        }, 4000);
+    }
+}
             
             findAndRemoveQuestionBox() {
                 if (questionBoxGroup) {
