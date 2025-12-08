@@ -413,9 +413,10 @@ createFinishLineTexture() {
                 this.createRoad();
                 this.backgroundObjects = this.add.group();
 
-                player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
-                player.setCollideWorldBounds(true);
-                player.setScale(0.8);
+player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
+player.setCollideWorldBounds(true);
+player.setScale(0.8);
+player.setDepth(100); // جعلنا السيارة في طبقة عليا جداً لتظهر فوق أي شيء
                 
                 questionBoxGroup = this.physics.add.group();
                 this.physics.add.overlap(player, questionBoxGroup, this.hitQuestionBox, null, this);
@@ -562,28 +563,31 @@ loop: true
             }
 
 
-// المنطقة الجديدة (داخل GameScene)
 spawnFinishLine() {
-    // 1. تحقق من شرط التوليد: انتهاء جميع الأسئلة وعدم وجود صناديق حالية
+    // 1. تحقق من شرط التوليد
     if (remainingQuestions.length === 0 && wrongQuestions.length === 0 && questionBoxGroup.getLength() === 0 && !finishLine && this.boxSpawnTimer.paused) {
         
-        this.finishLineTimer.destroy(); // إيقاف مؤقت المراقبة
+        this.finishLineTimer.destroy(); 
         console.log("توليد خط النهاية!");
 
         // إنشاء كائن خط النهاية
         finishLine = this.physics.add.sprite(
-            this.sys.game.config.width + 150, // خارج الشاشة قليلاً
-            500, // منتصف المسار
+            this.sys.game.config.width + 150, 
+            500, 
             'finishLineTexture'
         );
-        finishLine.setOrigin(0, 0.5); // ابدأ من اليسار (للنص)
+        finishLine.setOrigin(0, 0.5); 
         finishLine.setImmovable(true);
-        finishLine.setDisplaySize(250, 50); // عرض خط النهاية
+        finishLine.setDisplaySize(250, 50); 
         finishLine.body.setSize(250, 50);
+        
+        // التعديلات الجديدة هنا:
+        finishLine.setAngle(0); // ضبط الزاوية للتأكد من أنه ليس مقلوباً
+        finishLine.setDepth(10); // جعل الخط في طبقة أقل من السيارة (السيارة 100)
 
         // إضافة نص 'خط النهاية'
         finishLine.addText = this.add.text(
-            finishLine.x + 125, // منتصف الخط
+            finishLine.x + 125, 
             finishLine.y - 40,
             '🏁 خط النهاية 🏁', {
                 fontSize: '28px',
@@ -594,8 +598,9 @@ spawnFinishLine() {
             }
         ).setOrigin(0.5).setDepth(10);
         
-        // إضافة كولايشن (Collision) بين السيارة وخط النهاية
-        this.physics.add.collider(player, finishLine, this.gameOver, null, this);
+        // تغيير مهم: استخدام overlap بدلاً من collider
+        // هذا يسمح للسيارة بالمرور "فوق" الخط وتشغيل دالة الفوز
+        this.physics.add.overlap(player, finishLine, this.gameOver, null, this);
     }
 }
 
@@ -632,8 +637,10 @@ if (questionBoxGroup) {
 
 // المنطقة الجديدة: تحريك خط النهاية إن وُجد ولم تنتهِ اللعبة
 if (finishLine && !gameFinished) {
- finishLine.x -= scrollSpeed / 60;
- finishLine.addText.x = finishLine.x + 125;
+    // جعلنا القسمة على 30 لتطابق سرعة خطوط الطريق (roadLines)
+    // هذا سيجعل الخط يبدو ثابتاً تماماً على الأرض ولن ينزلق
+    finishLine.x -= scrollSpeed / 30; 
+    finishLine.addText.x = finishLine.x + 125;
 }
                 
                 // تحديث السرعة والنقاط
