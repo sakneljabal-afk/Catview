@@ -389,9 +389,9 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
 		// المنطقة الجديدة (داخل GameScene)
             // دالة لتوليد نسيج خط النهاية المخطط
 createFinishLineTexture() {
-    const size = 15;
-    const width = 250;
-    const height = 50;
+    const size = 20; // حجم المربع الواحد كبرناه قليلاً
+    const width = 60;  // العرض: قليل ليكون مثل الخط
+    const height = 200; // الارتفاع: 200 ليغطي عرض الطريق بالكامل
     const graphics = this.add.graphics({ add: false });
 
     for (let i = 0; i < width / size; i++) {
@@ -564,7 +564,7 @@ loop: true
 
 
 spawnFinishLine() {
-    // 1. تحقق من شرط التوليد
+    // شرط التوليد
     if (remainingQuestions.length === 0 && wrongQuestions.length === 0 && questionBoxGroup.getLength() === 0 && !finishLine && this.boxSpawnTimer.paused) {
         
         this.finishLineTimer.destroy(); 
@@ -572,32 +572,34 @@ spawnFinishLine() {
 
         // إنشاء كائن خط النهاية
         finishLine = this.physics.add.sprite(
-            this.sys.game.config.width + 150, 
-            500, 
+            this.sys.game.config.width + 100, // يبدأ من خارج الشاشة يميناً
+            500, // منتصف الطريق (الطريق من 400 لـ 600)
             'finishLineTexture'
         );
-        finishLine.setOrigin(0, 0.5); 
+        
+        // ضبط المركز والأبعاد الجديدة
+        finishLine.setOrigin(0.5, 0.5); 
         finishLine.setImmovable(true);
-        finishLine.setDisplaySize(250, 50); 
-        finishLine.body.setSize(250, 50);
+        finishLine.setDisplaySize(60, 200); // عرض 60 وارتفاع 200
+        finishLine.body.setSize(60, 200);
         
         finishLine.setAngle(0); 
-        finishLine.setDepth(10); 
+        finishLine.setDepth(10); // أسفل السيارة
 
-        // إضافة نص 'خط النهاية'
+        // إضافة نص 'خط النهاية' فوق الخط (أعلى الطريق)
         finishLine.addText = this.add.text(
-            finishLine.x + 125, 
-            finishLine.y - 40,
+            finishLine.x, 
+            380, // وضعنا النص فوق الطريق قليلاً ليكون ظاهراً
             '🏁 خط النهاية 🏁', {
-                fontSize: '28px',
+                fontSize: '24px',
                 fill: '#fff',
                 fontStyle: 'bold',
-                backgroundColor: '#1a1a2e',
-                padding: { x: 10, y: 5 }
+                stroke: '#000',
+                strokeThickness: 4
             }
         ).setOrigin(0.5).setDepth(10);
         
-        // التغيير هنا: استدعاء دالة onCrossFinishLine بدلاً من gameOver مباشرة
+        // استخدام دالة الانتظار الجديدة عند التداخل
         this.physics.add.overlap(player, finishLine, this.onCrossFinishLine, null, this);
     }
 }
@@ -820,14 +822,13 @@ if (finishLine && !gameFinished) {
             }
 
 onCrossFinishLine(player, finishLine) {
-    // التأكد من أن هذه الدالة تعمل مرة واحدة فقط
+    // التأكد من تنفيذ الكود مرة واحدة فقط
     if (this.isFinishing) return;
     this.isFinishing = true;
 
-    console.log("تم عبور خط النهاية.. الانتظار قبل إيقاف اللعبة");
+    console.log("السيارة عبرت الخط.. الانتظار ثانيتين");
 
-    // تعطيل الجسم الفيزيائي لخط النهاية حتى لا يستمر في احتساب التلامس
-    // (true: تعطيل الجسم، false: إبقاء الشكل ظاهراً)
+    // تعطيل تداخل الخط حتى لا يحسب التصادم أكثر من مرة
     finishLine.body.enable = false; 
 
     // انتظار لمدة 2000 ملي ثانية (ثانيتين) ثم إنهاء اللعبة
