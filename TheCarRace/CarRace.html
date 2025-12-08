@@ -901,7 +901,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             }
             // ⬆️ نهاية التعديل ⬆️
 
-            showSummaryBox(title, finalScore) {
+           showSummaryBox(title, finalScore) {
                 const totalQuestions = allQuestionsData.length;
                 
                 // تحديد الألوان
@@ -911,11 +911,13 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 const SUCCESS_COLOR = 0x2ecc71; 
                 const NEUTRAL_COLOR = 0x4cc9f0; 
                 
-                const windowWidth = this.sys.game.config.width * 0.9;
-                const windowHeight = this.sys.game.config.height * 0.9;
+                // ⬇️ التعديل رقم 1: زيادة حجم النافذة (ليملأ 98% من ارتفاع وعرض الشاشة) ⬇️
+                const windowWidth = this.sys.game.config.width * 0.98;
+                const windowHeight = this.sys.game.config.height * 0.98;
 
                 // 2. إنشاء حاوية النتائج
-                const summaryBoxContainer = this.add.container(this.scale.width / 2, this.scale.height / 2).setDepth(200);
+                // ⬇️ التعديل رقم 2: زيادة العمق لضمان ظهورها فوق كل شيء (2000 عمق آمن) ⬇️
+                const summaryBoxContainer = this.add.container(this.scale.width / 2, this.scale.height / 2).setDepth(2000);
 
                 // الخلفية 
                 const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, SECONDARY_COLOR, 1)
@@ -928,45 +930,51 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
 
                 // العنوان 
                 const titleText = this.add.text(0, yPos, title, {
-                    fontSize: '32px', fill: `#${TEXT_COLOR.toString(16)}`, fontStyle: 'bold'
+                    fontSize: '36px', // ⬇️ زيادة حجم الخط
+                    fill: `#${TEXT_COLOR.toString(16)}`, fontStyle: 'bold'
                 }).setOrigin(0.5);
                 summaryBoxContainer.add(titleText);
 
-                yPos += 50;
+                yPos += 60;
 
                 // النقاط المحتسبة
                 const scoreText = this.add.text(0, yPos, `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`, {
-                    fontSize: '26px', fill: `#${SUCCESS_COLOR.toString(16)}`, fontStyle: 'bold'
+                    fontSize: '30px', // ⬇️ زيادة حجم الخط
+                    fill: `#${SUCCESS_COLOR.toString(16)}`, fontStyle: 'bold'
                 }).setOrigin(0.5);
                 summaryBoxContainer.add(scoreText);
                 
-                yPos += 40; 
+                yPos += 50; 
                 
                 const reviewTitle = this.add.text(0, yPos, 'مراجعة الأسئلة والإجابات الصحيحة:', {
-                    fontSize: '22px',
+                    fontSize: '26px', // ⬇️ زيادة حجم الخط
                     fill: `#${TEXT_COLOR.toString(16)}`,
                     fontStyle: 'bold'
                 }).setOrigin(0.5);
                 summaryBoxContainer.add(reviewTitle);
 
-                yPos += 30;
+                yPos += 40;
                 
                 let reviewContent = "";
                 
                 allQuestionsData.forEach((qData, index) => {
+                    // ⬇️ إضافة سطر فارغ بين الأسئلة لتحسين القراءة ⬇️
                     const isMissed = qData.isScoreLost === true;
                     const statusIcon = isMissed ? '❌' : '✅';
                     const correctAnswerText = qData.c[qData.a];
                     
-                    reviewContent += `[${statusIcon} س${index + 1}] ${qData.q}\n  👈 الجواب: ${correctAnswerText}\n\n`;
+                    reviewContent += `\n[${statusIcon} س${index + 1}] ${qData.q}\n  👈 الجواب: ${correctAnswerText}\n`;
                 });
+                
+                // ⬇️ استخدام خاصية scrollable (القابلة للتمرير) إذا كان النص طويلاً ⬇️
+                // هنا نستخدم مجموعة `Text` عادية لسهولة التنفيذ، مع زيادة حجم الخط
                 
                 const reviewText = this.add.text(
                     windowWidth / 2 - 20, 
                     yPos, 
                     reviewContent, 
                     {
-                        fontSize: '16px', 
+                        fontSize: '20px', // ⬇️ زيادة حجم الخط إلى 20px
                         fill: `#${TEXT_COLOR.toString(16)}`,
                         wordWrap: { width: windowWidth - 40 }, 
                         align: 'right',
@@ -977,11 +985,12 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 
                 summaryBoxContainer.add(reviewText);
 
-                yPos = yPos + reviewText.height + 20; 
+                // ⬇️ يجب حساب موقع زر الإغلاق بدقة، ليناسب كل الشاشات، ووضعه في أسفل النافذة ⬇️
+                yPos = windowHeight / 2 - 60; // 60 بكسل من الأسفل
                 
                 // 4. زر الإغلاق / إعادة اللعب
                 const okBtn = this.add.text(0, yPos, '👍 حسناً، أعد اللعب', { 
-                    fontSize: '24px', 
+                    fontSize: '28px', // ⬇️ زيادة حجم الخط للزر
                     fill: `#${SECONDARY_COLOR.toString(16)}`, 
                     backgroundColor: `#${NEUTRAL_COLOR.toString(16)}`, 
                     padding: { x: 20, y: 10 },
@@ -1001,7 +1010,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                     duration: 800
                 });
             }
-
         }
 
 
@@ -1039,3 +1047,4 @@ const config = {
     </script>
 </body>
 </html>
+
