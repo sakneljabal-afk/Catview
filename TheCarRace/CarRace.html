@@ -10,32 +10,29 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-/* تنسيق النجوم */
-.star-icon {
-font-size: 3rem;
-color: gold;
-text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
-}
-
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
         }
         
         body {
+            /* تعديل الخلفية لتملأ الشاشة بالكامل */
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #fff;
-            min-height: 100vh;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px;
+            justify-content: center; /* توسيط محتوى اللعبة */
+            overflow: hidden; /* لمنع ظهور أشرطة التمرير */
         }
         
         .header {
             text-align: center;
-            margin-bottom: 15px;
             width: 100%;
             max-width: 800px;
+            /* إخفاء العنوان لتوفير مساحة على الموبايل الأفقي */
+            display: none; 
         }
         
         h1 {
@@ -52,13 +49,17 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         }
         
         .game-container {
+            /* السماح للحاوية بملء الشاشة المتاحة */
             width: 100%;
-            max-width: 800px;
-            border-radius: 15px;
+            height: 100%;
+            max-width: none;
+            max-height: none;
+            border-radius: 0;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: none;
             position: relative;
-            aspect-ratio: 800 / 600;
+            /* إلغاء النسبة الثابتة للسماح بملء الشاشة */
+            aspect-ratio: auto; 
         }
         
         #gameCanvas {
@@ -102,19 +103,79 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             z-index: 10;
         }
 
-        .instructions {
-            background: rgba(22, 33, 62, 0.8);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            width: 100%;
-            max-width: 800px;
-            border-left: 5px solid #4cc9f0;
+        /* تنسيق النافذة المنبثقة للتعليمات */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 3px solid #4cc9f0;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #fff;
+        }
+
+        .modal-content h2 {
+            font-size: 1.5rem;
+            color: #4cc9f0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #4cc9f0;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .modal-content ul {
+            list-style-type: none;
+            padding-right: 0; /* إلغاء الترقيم التلقائي في RTL */
+        }
+
+        .modal-content li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+            padding-right: 20px;
+            position: relative;
+        }
+
+        .modal-content li::before {
+            content: '🔹';
+            position: absolute;
+            right: 0;
+            color: #f72585;
+            font-weight: bold;
         }
         
-        .instructions h2 {
-            font-size: 1.2rem;
-            margin-bottom: 8px;
+        .modal-btn {
+            display: block;
+            width: 80%;
+            margin: 20px auto 0;
+            padding: 15px 20px;
+            background-color: #f72585;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .modal-btn:hover {
+            background-color: #d11c70;
         }
 
         .question-box {
@@ -129,7 +190,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             padding: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
             border: 3px solid #4cc9f0;
-            z-index: 1000;
+            z-index: 4000; /* أعلى من اللعبة وأقل من المودال */
             display: none;
         }
 
@@ -191,6 +252,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             font-weight: bold;
         }
         
+        /* إبقاء التحكمات على الشاشة الصغيرة */
         .controls {
             position: absolute;
             bottom: 10px;
@@ -222,6 +284,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             transform: scale(0.98);
         }
         
+        /* إخفاء الأزرار المادية على الشاشات الكبيرة (الكمبيوتر) */
         @media (min-width: 769px) {
             .controls {
                 display: none;
@@ -235,6 +298,23 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         <p class="subtitle">لعبة تعليمية - أجب على الأسئلة لزيادة سرعة سيارتك</p>
     </div>
     
+    <div class="modal" id="introModal">
+        <div class="modal-content">
+            <h2>📋 كيفية اللعب:</h2>
+            <ul>
+                <li>تسير السيارة تلقائياً على المسار.</li>
+                <li><span class="highlight">الدبابة تغطي عرض الطريق بالكامل</span> - لا يمكن تفاديها.</li>
+                <li>للتحكم بحركة السيارة رأسياً، <span class="highlight">اسحب إصبعك للأعلى أو للأسفل في أي مكان على الشاشة.</span></li>
+                <li>عند الاصطدام <span class="highlight">بالدبابة</span>، تظهر لك سؤال.</li>
+                <li>الإجابة الصحيحة تزيد سرعة سيارتك <span class="highlight">+20</span>.</li>
+                <li>الإجابة الخاطئة تقلل سرعة سيارتك <span class="highlight">20%</span> وتظهر شاشة حمراء <span class="highlight">❌</span>.</li>
+                <li>الأسئلة التي تجيب عليها خطأً تعود إليك مع دبابة لاحقة.</li>
+                <li>هدف: الإجابة على أكبر عدد من الأسئلة لزيادة سرعتك لأقصى حد!</li>
+            </ul>
+            <button class="modal-btn" id="startBtn">أبدأ اللعب</button>
+        </div>
+    </div>
+    
     <div class="game-container">
         <div id="errorOverlay">
             <span id="errorIcon">❌</span>
@@ -242,51 +322,22 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
 
         <div class="speed-display">السرعة : <span id="speedValue">200</span></div>
         <div id="gameCanvas"></div>
-
-       
-    </div>
-    
-<div class="instructions">
-
-        <h2>📋 كيفية اللعب:</h2>
-
-        <ul>
-
-            <li>تسير السيارة تلقائياً على المسار.</li>
-
-            <li><span class="highlight">الدبابة تغطي عرض الطريق بالكامل</span> - لا يمكن تفاديها.</li>
-
-            <li>للتحكم بحركة السيارة رأسياً، <span class="highlight">اسحب إصبعك للأعلى أو للأسفل في أي مكان على الشاشة.</span></li>
-
-            <li>عند الاصطدام <span class="highlight">بالدبابة</span>، تظهر لك سؤال.</li>
-
-            <li>الإجابة الصحيحة تزيد سرعة سيارتك <span class="highlight">+20</span>.</li>
-
-            <li>الإجابة الخاطئة تقلل سرعة سيارتك <span class="highlight">20%</span> وتظهر شاشة حمراء <span class="highlight">❌</span>.</li>
-
-            <li>الأسئلة التي تجيب عليها خطأً تعود إليك مع دبابة لاحقة.</li>
-
-            <li>هدفك: الإجابة على أكبر عدد من الأسئلة لزيادة سرعتك لأقصى حد!</li>
-
-        </ul>
-
     </div>
     
     <div class="question-box" id="questionBox">
         <div class="question-header">
             <div>❓ سؤال تعليمي</div>
-
         </div>
         <div class="question-text" id="questionText"></div>
         <div class="options-container" id="optionsContainer"></div>
     </div>
     
-<div class="footer">
+    <div class="footer">
         <p>منصة تفاعلية تعليمية تهدف إلى تعزيز استيعاب المعلومات المقررة بطريقة مبتكرة ومحفزة بعيداً عن الأساليب التقليدية.</p>
     </div>
 
     <script>
-        // بيانات الأسئلة
+        // ... (باقي بيانات الأسئلة كما هي)
         const allQuestionsData = [
             { "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:", "c": ["أوراق عريضة تطفو على الماء", "جذور قصيرة ضعيفة", "جذور طويلة وقوية لمقاومة الأمواج"], "a": 2, "id": 1 },
             { "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟", "c": ["تخزين كميات كبيرة من الماء", "امتصاص الضوء من سطح الماء", "الصمود أمام الأمواج القوية"], "a": 2, "id": 2 },
@@ -297,7 +348,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             { "q": "ما هو التهديد الرئيسي لأشجار المانجروف؟", "c": ["الحيوانات البرية", "التلوث والقطع الجائر والتنمية الساحلية", "زيادة هطول الأمطار"], "a": 1, "id": 7 }
         ];
 
-        // متغيرات اللعبة
+        // ... (باقي المتغيرات)
         let game;
         let baseSpeed = 200;
         let scrollSpeed = 200;
@@ -310,18 +361,19 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         let scoreText;
         let wrongQuestions = [];
         let remainingQuestions = [...allQuestionsData];
-        let finishLine; // كائن خط النهاية
-        let gameFinished = false; // حالة إنهاء اللعبة
-        let isFinishing = false; // لمنع تكرار نهاية اللعبة
+        let finishLine; 
+        let gameFinished = false; 
+        let isFinishing = false; 
 
-        // عناصر DOM الإضافية لتأثير الخطأ
         const errorOverlay = document.getElementById('errorOverlay');
         const errorIcon = document.getElementById('errorIcon');
         
+        const introModal = document.getElementById('introModal'); // عنصر النافذة المنبثقة
+        const startBtn = document.getElementById('startBtn');     // زر بدء اللعب
+
         // المشهد الرئيسي للعبة
         class GameScene extends Phaser.Scene {
 
-            // هذه الدالة هي المسؤولة عن بعثرة ترتيب الأسئلة (طلبك الثاني)
             shuffleQuestions() {
                 remainingQuestions = Phaser.Utils.Array.Shuffle(remainingQuestions);
             }
@@ -335,18 +387,17 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             
             preload() {
                 this.createCarTexture();
-                this.createWideQuestionBoxTexture(); // نسيج للصندوق العريض
+                this.createWideQuestionBoxTexture();
                 this.createBackgroundObjectTextures();
   		        this.createFinishLineTexture();
                 
-                // ⬇️ تحميل ملفات الصوت بما فيها صوت الفوز (win.mp3) ⬇️
                 this.load.audio('correctSound', 'assets/correct.mp3');
                 this.load.audio('wrongSound', 'assets/wrong.mp3');
                 this.load.audio('winSound', 'assets/win.mp3'); 
-                // ⬆️ نهاية تعديل الصوت ⬆️
             }
 
-            // دالة لتوليد نسيج السيارة
+            // ... (دوال توليد الأنسجة: createCarTexture, createWideQuestionBoxTexture, createBackgroundObjectTextures, createFinishLineTexture تبقى كما هي)
+            
             createCarTexture() {
                 const carGraphics = this.add.graphics({ add: false });
                 carGraphics.fillStyle(0x4285f4, 1);
@@ -362,44 +413,33 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 carGraphics.destroy();
             }
 
-            // دالة لتوليد نسيج صندوق أسئلة عريض يغطي المسار
             createWideQuestionBoxTexture() {
                 const boxGraphics = this.add.graphics({ add: false });
-                
-                // صندوق عريض يغطي عرض الطريق (تقريباً 200 عرض، 100 ارتفاع)
                 boxGraphics.fillStyle(0xff0000, 1);
                 boxGraphics.fillRect(0, 0, 200, 100);
-                
-                // علامة استفهام في المنتصف
                 boxGraphics.fillStyle(0xffffff, 1);
                 boxGraphics.fillCircle(100, 50, 30);
-                
                 boxGraphics.fillStyle(0x000000, 1);
                 boxGraphics.fillCircle(100, 40, 10);
                 boxGraphics.fillRect(98, 60, 4, 20);
-                
                 boxGraphics.generateTexture('wideQuestionBoxTexture', 200, 100);
                 boxGraphics.destroy();
             }
 
-            // دالة لتوليد نسيج عناصر الخلفية
             createBackgroundObjectTextures() {
                 const graphics = this.add.graphics({ add: false });
-
                 graphics.fillStyle(0x000000, 0.7);
                 graphics.fillRect(0, 15, 30, 15);
                 graphics.fillStyle(0x0a0a0a, 0.9);
                 graphics.fillTriangle(0, 15, 30, 15, 15, 0);
                 graphics.generateTexture('houseTexture', 30, 30);
                 graphics.clear();
-
                 graphics.fillStyle(0x000000, 0.8);
                 graphics.fillRect(13, 20, 4, 10);
                 graphics.fillStyle(0x1a1a1a, 0.85);
                 graphics.fillCircle(15, 15, 15);
                 graphics.generateTexture('treeTexture', 30, 30);
                 graphics.clear();
-                
                 graphics.fillStyle(0x2a2a2a, 0.9);
                 graphics.fillRect(14, 0, 2, 30);
                 graphics.fillStyle(0xfff59d, 0.5);
@@ -408,19 +448,17 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 graphics.destroy();
             }
             
-            // دالة لتوليد نسيج خط النهاية المخطط
             createFinishLineTexture() {
                 const size = 20; 
                 const width = 60;  
                 const height = 200; 
                 const graphics = this.add.graphics({ add: false });
-
                 for (let i = 0; i < width / size; i++) {
                     for (let j = 0; j < height / size; j++) {
                         if ((i + j) % 2 === 0) {
-                            graphics.fillStyle(0x000000, 1); // أسود
+                            graphics.fillStyle(0x000000, 1); 
                         } else {
-                            graphics.fillStyle(0xffffff, 1); // أبيض
+                            graphics.fillStyle(0xffffff, 1); 
                         }
                         graphics.fillRect(i * size, j * size, size, size);
                     }
@@ -434,11 +472,9 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 this.createRoad();
                 this.backgroundObjects = this.add.group();
 
-                // ⬇️ تهيئة كائنات الأصوات ⬇️
                 this.correctSound = this.sound.add('correctSound');
                 this.wrongSound = this.sound.add('wrongSound');
-                this.winSound = this.sound.add('winSound'); // تهيئة صوت الفوز
-                // ⬆️ نهاية تهيئة الأصوات ⬆️
+                this.winSound = this.sound.add('winSound'); 
 
                 player = this.physics.add.sprite(this.sys.game.config.width * 0.25, 450, 'carTexture'); 
                 player.setCollideWorldBounds(true);
@@ -453,21 +489,27 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                     fontSize: '24px',
                     fill: '#4cc9f0',
                     fontStyle: 'bold'
-                }).setScrollFactor(0).setDepth(100); 
+                }).setScrollFactor(0).setDepth(100).setOrigin(0); // تم تعديل setOrigin
                 
                 this.scoreText = this.add.text(20, 60, `النقاط: ${score}`, {
                     fontSize: '24px',
                     fill: '#f72585',
                     fontStyle: 'bold'
-                }).setScrollFactor(0).setDepth(100);
+                }).setScrollFactor(0).setDepth(100).setOrigin(0);
 
                // مؤقت لتوليد صناديق الأسئلة 
                 this.boxSpawnTimer = this.time.addEvent({
-                    delay: 1000, 
+                    delay: 3000, 
                     callback: this.generateQuestionBox,
                     callbackScope: this,
                     loop: true
                 });
+                
+                // ⬇️ إيقاف المؤقت والفيزياء في البداية ⬇️
+                this.boxSpawnTimer.paused = true;
+                this.physics.pause();
+                scrollSpeed = 0; // إيقاف حركة الخلفية
+                // ⬆️ نهاية إيقاف المؤقت والفيزياء ⬆️
 
                 // مؤقت لتوليد عناصر الخلفية               
 		        this.time.addEvent({
@@ -485,11 +527,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                     loop: true
                 }); 
 
-                // ⬇️ تطبيق بعثرة الأسئلة (طلبك الثاني) ⬇️
                 this.shuffleQuestions();
-
-                this.generateQuestionBox();
-                scrollSpeed = baseSpeed;
                 
                 // إعداد واجهة الأسئلة في DOM
                 questionUI = document.getElementById('questionBox');
@@ -497,7 +535,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 // إعداد مدخلات لوحة المفاتيح
                 this.cursors = this.input.keyboard.createCursorKeys();
 
-                // إعداد منطق التحكم باللمس/السحب
+                // إعداد منطق التحكم باللمس/السحب (بقي كما هو)
                 this.input.on('pointerdown', (pointer) => {
                     this.startY = pointer.y;
                     this.isMovingUp = false;
@@ -526,7 +564,24 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                         }
                     }
                 });
+                
+                // ⬇️ إضافة معالج النقر لزر بدء اللعب ⬇️
+                startBtn.onclick = () => {
+                    introModal.style.display = 'none';
+                    this.startGame();
+                };
             }
+            
+            // ⬇️ دالة بدء اللعبة (لإعادة تشغيل الفيزياء والمؤقتات) ⬇️
+            startGame() {
+                this.physics.resume();
+                this.boxSpawnTimer.paused = false;
+                scrollSpeed = baseSpeed;
+                this.generateQuestionBox();
+            }
+            // ⬆️ نهاية دالة بدء اللعبة ⬆️
+
+            // ... (باقي دوال المشهد: createBackground, createRoad, generateBackgroundObject, spawnFinishLine, onCrossFinishLine, update, generateQuestionBox, hitQuestionBox, showQuestion, checkAnswer, findAndRemoveQuestionBox, resumeGame, gameOver, showSummaryBox تبقى كما هي مع التعديلات السابقة)
 
             createBackground() {
                 const graphics = this.add.graphics();
@@ -578,16 +633,14 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             }
 
             spawnFinishLine() {
-                // شرط التوليد
                 if (remainingQuestions.length === 0 && wrongQuestions.length === 0 && questionBoxGroup.getLength() === 0 && !finishLine && this.boxSpawnTimer.paused) {
                     
                     this.finishLineTimer.destroy(); 
                     console.log("توليد خط النهاية!");
 
-                    // إنشاء كائن خط النهاية
                     finishLine = this.physics.add.sprite(
-                        this.sys.game.config.width + 100, // يبدأ من خارج الشاشة يميناً
-                        500, // منتصف الطريق (الطريق من 400 لـ 600)
+                        this.sys.game.config.width + 100, 
+                        500, 
                         'finishLineTexture'
                     );
                     
@@ -599,7 +652,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                     finishLine.setAngle(0); 
                     finishLine.setDepth(10); 
 
-                    // إضافة نص 'خط النهاية'
                     finishLine.addText = this.add.text(
                         finishLine.x, 
                         380, 
@@ -612,7 +664,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                         }
                     ).setOrigin(0.5).setDepth(10);
                     
-                    // استخدام دالة الانتظار الجديدة عند التداخل
                     this.physics.add.overlap(player, finishLine, this.onCrossFinishLine, null, this);
                 }
             }
@@ -621,12 +672,10 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 if (isFinishing) return;
                 isFinishing = true;
 
-                // تعطيل تداخل الخط
                 line.body.enable = false; 
 
-                // انتظار لمدة 2 ثانية ثم إنهاء اللعبة
                 this.time.delayedCall(2000, () => {
-                    this.gameOver(true); // تمرير 'true' يعني فوز
+                    this.gameOver(true); 
                 }, [], this);
             }
 
@@ -707,17 +756,14 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                     return;
                 }
                 
-                // دالة لتوليد لون عشوائي
                 const getRandomColor = () => {
                     return Math.floor(Math.random() * 16777215);
                 };
 
                 const randomColor = getRandomColor(); 
 
-                // إنشاء الصندوق
                 const box = this.physics.add.sprite(900, 500, 'wideQuestionBoxTexture');
                 
-                // تطبيق اللون العشوائي
                 box.setTint(randomColor);
                 
                 box.setDisplaySize(250, 150); 
@@ -727,7 +773,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 box.setData('question', questionData);
                 box.setData('used', false);
                 
-                // إضافة حركة خفيفة
                 this.tweens.add({
                     targets: box,
                     y: 480,
@@ -745,35 +790,28 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 scrollSpeed = 0;
                 this.physics.pause();
                 
-                // إيقاف حركة الصندوق
                 this.tweens.killTweensOf(box);
                 
                 activeQuestion = box.getData('question');
                 this.showQuestion(activeQuestion);
             }
             
-            // ⬇️ التعديل هنا: تطبيق بعثرة الخيارات (طلبك الأول) ⬇️
             showQuestion(questionData) {
                 document.getElementById('questionText').textContent = questionData.q;
                 
                 const optionsContainer = document.getElementById('optionsContainer');
                 optionsContainer.innerHTML = '';
                 
-                // 1. بعثرة الخيارات عشوائياً
                 const shuffledOptions = Phaser.Utils.Array.Shuffle([...questionData.c]); 
                 
-                // 2. عرض الخيارات المُبعثرة
                 shuffledOptions.forEach((optionText, index) => {
                     const optionElement = document.createElement('div');
                     optionElement.className = 'option';
                     optionElement.textContent = `${optionText}`;
                     
-                    // 3. نجد الفهرس الأصلي للخيار المختار في المصفوفة غير المبعثرة
-                    // نستخدم نص الخيار (optionText) لإيجاد مكانه الأصلي في questionData.c
                     const originalOptionIndex = questionData.c.indexOf(optionText);
                     
                     optionElement.onclick = () => {
-                        // 4. نرسل الفهرس الأصلي (originalOptionIndex) للتحقق
                         this.checkAnswer(originalOptionIndex, questionData.a, optionElement, optionsContainer);
                     };
                     
@@ -782,7 +820,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
 
                 questionUI.style.display = 'block';
             }
-            // ⬆️ نهاية تعديل بعثرة الخيارات ⬆️
             
             checkAnswer(selectedIndex, correctIndex, selectedOptionElement, optionsContainer) {
                 const allOptions = optionsContainer.querySelectorAll('.option');
@@ -793,8 +830,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 }
                 
                 if (selectedIndex === correctIndex) {
-                    // إجابة صحيحة
-                    this.correctSound.play(); // تشغيل صوت صحيح
+                    this.correctSound.play(); 
                     selectedOptionElement.classList.add('correct');
                     baseSpeed += 20;
                     
@@ -808,18 +844,15 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                         this.resumeGame();
                     }, 1500);
                 } else {
-                    // إجابة خاطئة
-                    this.wrongSound.play(); // تشغيل صوت خاطئ
+                    this.wrongSound.play(); 
                     selectedOptionElement.classList.add('incorrect');
                     
-                    // ⬇️ التعديل هنا: إيجاد العنصر الصحيح في الـ DOM بالاعتماد على نصه ⬇️
-                    const correctAnswerText = activeQuestion.c[correctIndex]; // نص الإجابة الصحيحة من البيانات الأصلية
+                    const correctAnswerText = activeQuestion.c[correctIndex]; 
                     allOptions.forEach(opt => {
                         if (opt.textContent === correctAnswerText) {
-                            opt.classList.add('correct'); // تمييز الإجابة الصحيحة المعروضة حالياً
+                            opt.classList.add('correct'); 
                         }
                     });
-                    // ⬆️ نهاية التعديل ⬆️
 
                     activeQuestion.isScoreLost = true;
                     
@@ -832,7 +865,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                     
                     this.findAndRemoveQuestionBox(); 
 
-                    // تأثير الشاشة الحمراء
                     errorOverlay.style.display = 'flex';
                     errorIcon.style.opacity = 1;
                     
@@ -847,7 +879,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             findAndRemoveQuestionBox() {
                 if (questionBoxGroup) {
                     questionBoxGroup.getChildren().forEach(box => {
-                        // بدلاً من الاعتماد على 'used'، نعتمد على 'activeQuestion'
                          if (box.getData('question') === activeQuestion) { 
                             this.tweens.add({
                                 targets: box,
@@ -863,7 +894,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                         }
                     });
                 }
-                // activeQuestion = null; // لا نحتاج لإلغائه هنا، يكفي أن يكون الصندوق 'used'
             }
 
             resumeGame() {
@@ -879,67 +909,56 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
             }
 
             
-            // ⬇️ دالة نهاية اللعبة (معدلة) ⬇️
             gameOver(isWin) {
                 if (gameFinished) return;
                 gameFinished = true;
                 
                 this.sound.stopAll();
 
-                // إيقاف جميع الأنشطة
                 scrollSpeed = 0;
                 this.physics.pause();
                 
                 if (this.boxSpawnTimer) this.boxSpawnTimer.destroy();
                 
                 if (isWin) {
-                    this.winSound.play(); // تشغيل صوت الفوز
+                    this.winSound.play(); 
                     this.showSummaryBox("🏆 مبروك! لقد عبرت خط النهاية 🏆", score);
                 } else {
                     this.showSummaryBox("انتهت اللعبة!", score);
                 }
             }
-            // ⬆️ نهاية التعديل ⬆️
 
            showSummaryBox(title, finalScore) {
                 const totalQuestions = allQuestionsData.length;
                 
-                // تحديد الألوان
                 const PRIMARY_COLOR = 0xf72585; 
                 const SECONDARY_COLOR = 0x1a1a2e; 
                 const TEXT_COLOR = 0xffffff; 
                 const SUCCESS_COLOR = 0x2ecc71; 
                 const NEUTRAL_COLOR = 0x4cc9f0; 
                 
-                // ⬇️ التعديل رقم 1: زيادة حجم النافذة (ليملأ 98% من ارتفاع وعرض الشاشة) ⬇️
                 const windowWidth = this.sys.game.config.width * 0.98;
                 const windowHeight = this.sys.game.config.height * 0.98;
 
-                // 2. إنشاء حاوية النتائج
-                // ⬇️ التعديل رقم 2: زيادة العمق لضمان ظهورها فوق كل شيء (2000 عمق آمن) ⬇️
                 const summaryBoxContainer = this.add.container(this.scale.width / 2, this.scale.height / 2).setDepth(2000);
 
-                // الخلفية 
                 const boxRect = this.add.rectangle(0, 0, windowWidth, windowHeight, SECONDARY_COLOR, 1)
                     .setOrigin(0.5)
                     .setStrokeStyle(10, PRIMARY_COLOR); 
                 summaryBoxContainer.add(boxRect);
 
-                // 3. محتوى النتائج
                 let yPos = -windowHeight / 2 + 40; 
 
-                // العنوان 
                 const titleText = this.add.text(0, yPos, title, {
-                    fontSize: '36px', // ⬇️ زيادة حجم الخط
+                    fontSize: '36px', 
                     fill: `#${TEXT_COLOR.toString(16)}`, fontStyle: 'bold'
                 }).setOrigin(0.5);
                 summaryBoxContainer.add(titleText);
 
                 yPos += 60;
 
-                // النقاط المحتسبة
                 const scoreText = this.add.text(0, yPos, `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`, {
-                    fontSize: '30px', // ⬇️ زيادة حجم الخط
+                    fontSize: '30px', 
                     fill: `#${SUCCESS_COLOR.toString(16)}`, fontStyle: 'bold'
                 }).setOrigin(0.5);
                 summaryBoxContainer.add(scoreText);
@@ -947,7 +966,7 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 yPos += 50; 
                 
                 const reviewTitle = this.add.text(0, yPos, 'مراجعة الأسئلة والإجابات الصحيحة:', {
-                    fontSize: '26px', // ⬇️ زيادة حجم الخط
+                    fontSize: '26px', 
                     fill: `#${TEXT_COLOR.toString(16)}`,
                     fontStyle: 'bold'
                 }).setOrigin(0.5);
@@ -958,7 +977,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 let reviewContent = "";
                 
                 allQuestionsData.forEach((qData, index) => {
-                    // ⬇️ إضافة سطر فارغ بين الأسئلة لتحسين القراءة ⬇️
                     const isMissed = qData.isScoreLost === true;
                     const statusIcon = isMissed ? '❌' : '✅';
                     const correctAnswerText = qData.c[qData.a];
@@ -966,15 +984,12 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                     reviewContent += `\n[${statusIcon} س${index + 1}] ${qData.q}\n  👈 الجواب: ${correctAnswerText}\n`;
                 });
                 
-                // ⬇️ استخدام خاصية scrollable (القابلة للتمرير) إذا كان النص طويلاً ⬇️
-                // هنا نستخدم مجموعة `Text` عادية لسهولة التنفيذ، مع زيادة حجم الخط
-                
                 const reviewText = this.add.text(
                     windowWidth / 2 - 20, 
                     yPos, 
                     reviewContent, 
                     {
-                        fontSize: '20px', // ⬇️ زيادة حجم الخط إلى 20px
+                        fontSize: '20px', 
                         fill: `#${TEXT_COLOR.toString(16)}`,
                         wordWrap: { width: windowWidth - 40 }, 
                         align: 'right',
@@ -985,12 +1000,10 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                 
                 summaryBoxContainer.add(reviewText);
 
-                // ⬇️ يجب حساب موقع زر الإغلاق بدقة، ليناسب كل الشاشات، ووضعه في أسفل النافذة ⬇️
-                yPos = windowHeight / 2 - 60; // 60 بكسل من الأسفل
+                yPos = windowHeight / 2 - 60; 
                 
-                // 4. زر الإغلاق / إعادة اللعب
                 const okBtn = this.add.text(0, yPos, '👍 حسناً، أعد اللعب', { 
-                    fontSize: '28px', // ⬇️ زيادة حجم الخط للزر
+                    fontSize: '28px', 
                     fill: `#${SECONDARY_COLOR.toString(16)}`, 
                     backgroundColor: `#${NEUTRAL_COLOR.toString(16)}`, 
                     padding: { x: 20, y: 10 },
@@ -1001,7 +1014,6 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
                     .setOrigin(0.5);
                 summaryBoxContainer.add(okBtn);
                 
-                // 5. تأثير الظهور
                 summaryBoxContainer.setScale(0);
                 this.tweens.add({
                     targets: summaryBoxContainer,
@@ -1014,17 +1026,18 @@ text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
 
 
         // إعداد تكوين اللعبة
-const config = {
+        const config = {
             type: Phaser.AUTO, 
             width: 800,
             height: 600,
             parent: 'gameCanvas',
             scale: {
-                mode: Phaser.Scale.FIT, 
+                // ⬇️ تغييرات لتناسب شاشة الموبايل الأفقية وملء الشاشة ⬇️
+                mode: Phaser.Scale.FIT, // استخدام FIT
                 autoCenter: Phaser.Scale.CENTER_BOTH,
                 min: {
-                    width: 320,
-                    height: 480
+                    width: 600, // زيادة الحد الأدنى للعرض
+                    height: 400 // زيادة الحد الأدنى للارتفاع
                 },
                 max: {
                     width: 1920,
@@ -1047,4 +1060,3 @@ const config = {
     </script>
 </body>
 </html>
-
