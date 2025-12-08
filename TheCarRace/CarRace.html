@@ -10,6 +10,13 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+/* تنسيق النجوم */
+.star-icon {
+font-size: 3rem;
+color: gold;
+text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+}
+
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
         }
@@ -294,6 +301,8 @@
         let scoreText;
         let wrongQuestions = [];
         let remainingQuestions = [...allQuestionsData];
+        let finishLine; // كائن خط النهاية
+        let gameFinished = false; // حالة إنهاء اللعبة
 
         // عناصر DOM الإضافية لتأثير الخطأ
         const errorOverlay = document.getElementById('errorOverlay');
@@ -312,6 +321,7 @@
                 this.createCarTexture();
                 this.createWideQuestionBoxTexture(); // نسيج للصندوق العريض
                 this.createBackgroundObjectTextures();
+  		this.createFinishLineTexture(); // نسيج خط النهاية
             }
 
             // دالة لتوليد نسيج السيارة
@@ -376,6 +386,28 @@
                 graphics.destroy();
             }
             
+		// المنطقة الجديدة (داخل GameScene)
+            // دالة لتوليد نسيج خط النهاية المخطط
+createFinishLineTexture() {
+    const size = 15;
+    const width = 250;
+    const height = 50;
+    const graphics = this.add.graphics({ add: false });
+
+    for (let i = 0; i < width / size; i++) {
+        for (let j = 0; j < height / size; j++) {
+            if ((i + j) % 2 === 0) {
+                graphics.fillStyle(0x000000, 1); // أسود
+            } else {
+                graphics.fillStyle(0xffffff, 1); // أبيض
+            }
+            graphics.fillRect(i * size, j * size, size, size);
+        }
+    }
+    graphics.generateTexture('finishLineTexture', width, height);
+    graphics.destroy();
+}
+		
             create() {
                 this.createBackground();
                 this.createRoad();
@@ -411,14 +443,23 @@
                 });
 
 
-                // مؤقت لتوليد عناصر الخلفية
-                this.time.addEvent({
+                // مؤقت لتوليد عناصر الخلفية               
+
+		this.time.addEvent({
                     delay: 500,
                     callback: this.generateBackgroundObject,
                     callbackScope: this,
                     loop: true
                 });
                 
+		// مؤقت لمراقبة انتهاء الأسئلة لتوليد خط النهاية
+this.finishLineTimer = this.time.addEvent({
+delay: 500, // تحقق كل نصف ثانية
+callback: this.spawnFinishLine,
+callbackScope: this,
+loop: true
+}); 
+
                 this.generateQuestionBox();
                 scrollSpeed = baseSpeed;
                 
@@ -519,7 +560,45 @@
                 obj.setDepth(Phaser.Math.Between(10, 20));
                 this.backgroundObjects.add(obj);
             }
-            
+
+
+// المنطقة الجديدة (داخل GameScene)
+spawnFinishLine() {
+    // 1. تحقق من شرط التوليد: انتهاء جميع الأسئلة وعدم وجود صناديق حالية
+    if (remainingQuestions.length === 0 && wrongQuestions.length === 0 && questionBoxGroup.getLength() === 0 && !finishLine && this.boxSpawnTimer.paused) {
+        
+        this.finishLineTimer.destroy(); // إيقاف مؤقت المراقبة
+        console.log("توليد خط النهاية!");
+
+        // إنشاء كائن خط النهاية
+        finishLine = this.physics.add.sprite(
+            this.sys.game.config.width + 150, // خارج الشاشة قليلاً
+            500, // منتصف المسار
+            'finishLineTexture'
+        );
+        finishLine.setOrigin(0, 0.5); // ابدأ من اليسار (للنص)
+        finishLine.setImmovable(true);
+        finishLine.setDisplaySize(250, 50); // عرض خط النهاية
+        finishLine.body.setSize(250, 50);
+
+        // إضافة نص 'خط النهاية'
+        finishLine.addText = this.add.text(
+            finishLine.x + 125, // منتصف الخط
+            finishLine.y - 40,
+            '🏁 خط النهاية 🏁', {
+                fontSize: '28px',
+                fill: '#fff',
+                fontStyle: 'bold',
+                backgroundColor: '#1a1a2e',
+                padding: { x: 10, y: 5 }
+            }
+        ).setOrigin(0.5).setDepth(10);
+        
+        // إضافة كولايشن (Collision) بين السيارة وخط النهاية
+        this.physics.add.collider(player, finishLine, this.gameOver, null, this);
+    }
+}
+
             update() {
                 // تحريك خطوط المنتصف
                 this.roadLines.getChildren().forEach(line => {
@@ -541,15 +620,21 @@
                     }
                 });
 
-                // تحريك صناديق الأسئلة
-                if (questionBoxGroup) {
-                    questionBoxGroup.getChildren().forEach(box => {
-                        box.x -= scrollSpeed / 60;
-                        if (box.x < -200) { // -200 لأن الصندوق عريض
-                            box.destroy();
-                        }
-                    });
-                }
+// تحريك صناديق الأسئلة
+if (questionBoxGroup) {
+ questionBoxGroup.getChildren().forEach(box => {
+ box.x -= scrollSpeed / 60;
+ if (box.x < -200) { // -200 لأن الصندوق عريض
+ box.destroy();
+ }
+ });
+}
+
+// المنطقة الجديدة: تحريك خط النهاية إن وُجد ولم تنتهِ اللعبة
+if (finishLine && !gameFinished) {
+ finishLine.x -= scrollSpeed / 60;
+ finishLine.addText.x = finishLine.x + 125;
+}
                 
                 // تحديث السرعة والنقاط
                 document.getElementById('speedValue').textContent = Math.round(baseSpeed);
@@ -728,7 +813,74 @@
                     option.style.pointerEvents = 'auto';
                 });
             }
+
+// المنطقة الجديدة (داخل GameScene)
+gameOver(player, finishLine) {
+    if (gameFinished) return;
+    
+    gameFinished = true;
+    scrollSpeed = 0;
+    this.physics.pause();
+    player.setAcceleration(0);
+
+    // إيقاف جميع التوينز (Tweens) لخط النهاية للتثبيت في مكانه
+    this.tweens.killTweensOf(finishLine);
+    
+    // إظهار لوحة الفوز
+    this.showWinScreen();
+}
+
+showWinScreen() {
+    // 1. تأثير التعتيم/الإضاءة الخضراء
+    const winOverlay = this.add.graphics({ fillStyle: { color: 0x00ff00, alpha: 0.0 } }).setDepth(200);
+    winOverlay.fillRect(0, 0, 800, 600);
+
+    this.tweens.add({
+        targets: winOverlay,
+        alpha: 0.15,
+        duration: 1000,
+        yoyo: true,
+        repeat: -1
+    });
+
+    // 2. نص "أحسنت" والنجوم
+    const winText = this.add.text(400, 300, 'أحسنت!', {
+        fontSize: '80px',
+        fill: '#ffffff',
+        fontStyle: 'bold',
+        shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 10, fill: true, stroke: true }
+    }).setOrigin(0.5).setDepth(201);
+
+    const stars = '⭐'.repeat(3); // يمكنك تغيير عدد النجوم حسب النقاط
+    const starsText = this.add.text(400, 400, stars, {
+        fontSize: '60px'
+    }).setOrigin(0.5).setDepth(201);
+
+    // 3. تأثير ظهور للنص
+    winText.setScale(0);
+    starsText.setScale(0);
+
+    this.tweens.add({
+        targets: [winText, starsText],
+        scale: 1,
+        ease: 'Back.easeOut',
+        duration: 800,
+        delay: this.tweens.stagger(100, { start: 200 })
+    });
+    
+    // 4. خيار إعادة اللعب
+    this.time.delayedCall(3000, () => {
+        this.add.text(400, 500, 'اضغط لإعادة اللعب', {
+            fontSize: '30px',
+            fill: '#4cc9f0'
+        }).setOrigin(0.5).setDepth(201).setInteractive().on('pointerdown', () => {
+            window.location.reload();
+        });
+    }, [], this);
+}
+
         }
+
 
         // إعداد تكوين اللعبة
         const config = {
