@@ -154,6 +154,7 @@
             questionBlock = platforms.create(600, 150, 'block');
             questionBlock.setTint(0xff8800); // لون برتقالي مميز
             questionBlock.body.immovable = true; 
+            questionBlock.canBeHit = true; // تم إضافة خاصية تسمح بضرب الكتلة مرة واحدة
             
             // 4. اللاعب (Player)
             player = this.physics.add.sprite(100, 400, 'dude');
@@ -175,13 +176,8 @@
             createTouchControls(this);
             
             // 8. إضافة كاشف التصادم بين رأس اللاعب وكتلة السؤال
-            this.physics.world.on('collide', (object1, object2) => {
-                // التأكد من أن player هو object1 وأن block هو object2
-                if (object1 === player && object2 === questionBlock) {
-                    handleBlockHit.call(this, player, questionBlock); // استخدام .call(this) لتمرير سياق المشهد
-                }
-            });
-
+            // تم تغيير طريقة اكتشاف التصادم إلى طريقة أبسط وأكثر مباشرة في دالة التحديث
+            this.physics.add.collider(player, questionBlock, handleBlockHit, null, this);
         }
 
         // ====================================================================
@@ -207,7 +203,7 @@
                 player.anims.play('turn');
             }
 
-            // القفز
+            // القفز (تعديل: القفز لمرة واحدة فقط عند ملامسة الأرض أو المنصات)
             if ((cursors.up.isDown || (touchControls && touchControls.up.isDown)) && player.body.touching.down) {
                 player.setVelocityY(-400);
             }
@@ -262,10 +258,9 @@
         function handleBlockHit(player, block) {
             
             // التحقق من الاصطدام من الأسفل (رأس اللاعب يضرب الكتلة)
-            if (player.body.touching.up && block.body.touching.down) {
+            // والتأكد من أن الكتلة يمكن ضربها (لم تُضرب بعد)
+            if (player.body.touching.up && block.body.touching.down && block.canBeHit) {
                 
-                // منع تكرار الضربة أثناء الارتداد
-                if (!block.canBeHit) return;
                 block.canBeHit = false;
                 
                 player.body.velocity.y = 0; 
@@ -322,8 +317,9 @@
                 modal.style.display = 'none';
                 game.scene.scenes[0].physics.resume();
                 
-                // لإعادة تفعيل الكتلة (للاختبار فقط)
-                questionBlock.canBeHit = true; 
+                // لا يتم إعادة تفعيل الكتلة (لأنها يفترض أن تكون قد استُخدمت مرة واحدة)
+                // إذا أردت إعادة تفعيلها بعد الإجابة، قم بإلغاء التعليق على السطر التالي:
+                // questionBlock.canBeHit = true; 
                 
             }, 2000); 
         }
