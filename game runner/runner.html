@@ -176,7 +176,6 @@
             createTouchControls(this);
             
             // 8. إضافة كاشف التصادم بين رأس اللاعب وكتلة السؤال
-            // تم تغيير طريقة اكتشاف التصادم إلى طريقة أبسط وأكثر مباشرة في دالة التحديث
             this.physics.add.collider(player, questionBlock, handleBlockHit, null, this);
         }
 
@@ -191,7 +190,7 @@
         function handleMovement() {
             const velocityX = 160;
 
-            // حركة لوحة المفاتيح واللمس
+            // 1. الحركة الأفقية
             if (cursors.left.isDown || (touchControls && touchControls.left.isDown)) {
                 player.setVelocityX(-velocityX);
                 player.anims.play('left', true);
@@ -203,9 +202,18 @@
                 player.anims.play('turn');
             }
 
-            // القفز (تعديل: القفز لمرة واحدة فقط عند ملامسة الأرض أو المنصات)
-            if ((cursors.up.isDown || (touchControls && touchControls.up.isDown)) && player.body.touching.down) {
+            // 2. القفز (التصحيح):
+            const isKeyboardJump = Phaser.Input.Keyboard.JustDown(cursors.up);
+            const isTouchJump = touchControls && touchControls.up.isDown;
+
+            // القفز لمرة واحدة فقط عند ملامسة الأرض أو المنصات
+            if ((isKeyboardJump || isTouchJump) && player.body.touching.down) {
                 player.setVelocityY(-400);
+                
+                // مهم: إذا تم القفز عبر زر اللمس، نعيد تعيين حالته لتتطلب نقرة جديدة (محاكاة JustDown)
+                if (isTouchJump) {
+                    touchControls.up.isDown = false;
+                }
             }
         }
 
@@ -240,15 +248,15 @@
                 .on('pointerup', () => touchControls.right.isDown = false)
                 .on('pointerout', () => touchControls.right.isDown = false);
 
-            // زر القفز
+            // زر القفز (تعديل: عند الضغط يتم تفعيل isDown، ويتم تعطيله في دالة handleMovement بعد استخدامه)
             let upBtn = scene.add.image(scene.scale.width - 50, scene.scale.height - 50, 'button_up')
                 .setScrollFactor(0)
                 .setInteractive()
                 .setAlpha(0.7)
                 .setDepth(10)
                 .on('pointerdown', () => touchControls.up.isDown = true)
-                .on('pointerup', () => touchControls.up.isDown = false)
-                .on('pointerout', () => touchControls.up.isDown = false);
+                // لا نستخدم pointerup/pointerout هنا حتى لا نفقد النقرة أثناء محاولة القفز المستمر.
+                // يتم إعادة تعيين isDown في handleMovement بعد كل قفزة ناجحة.
         }
 
         // ====================================================================
@@ -316,10 +324,6 @@
             setTimeout(() => {
                 modal.style.display = 'none';
                 game.scene.scenes[0].physics.resume();
-                
-                // لا يتم إعادة تفعيل الكتلة (لأنها يفترض أن تكون قد استُخدمت مرة واحدة)
-                // إذا أردت إعادة تفعيلها بعد الإجابة، قم بإلغاء التعليق على السطر التالي:
-                // questionBlock.canBeHit = true; 
                 
             }, 2000); 
         }
