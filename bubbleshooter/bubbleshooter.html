@@ -7,6 +7,86 @@
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 
 <style>
+  /* === تنسيقات شاشة النهاية (مقتبسة من CarRace.html) === */
+  .summary-overlay {
+      position: fixed; 
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.95);
+      display: none; 
+      justify-content: center;
+      align-items: center;
+      z-index: 5000;
+  }
+
+  .summary-content {
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+      border: 4px solid #f72585;
+      width: 95%;
+      max-width: 750px;
+      max-height: 95vh;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+  }
+
+  .scrollable-review {
+      overflow-y: auto;
+      max-height: calc(95vh - 120px);
+      margin: 5px 0;
+      padding: 8px;
+      border: 1px dashed #4cc9f0;
+      text-align: right;
+      line-height: 1.8;
+      font-size: 22px;
+      white-space: pre-wrap;
+      color: #fff;
+  }
+
+  .summary-content h2 {
+      font-size: 32px;
+      color: #4cc9f0;
+      margin-bottom: 5px;
+  }
+
+  .summary-content p {
+      font-size: 24px;
+      color: #2ecc71;
+      font-weight: bold;
+      margin-bottom: 5px;
+  }
+
+  .summary-content h3 {
+      font-size: 20px;
+      color: #fff;
+      border-bottom: 1px solid #fff;
+      padding-bottom: 3px;
+  }
+
+  .modal-btn {
+      display: block;
+      width: 80%;
+      margin: 20px auto 0;
+      padding: 15px 20px;
+      background-color: #f72585;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+  }
+
+  .modal-btn:hover {
+      background-color: #d11c70;
+  }
+  
   /* === تنسيقات الصفحة العامة === */
   body {
     margin: 0;
@@ -210,7 +290,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 5px; /* تم تقليل البادينج الخارجي */
+      padding: 20px;
       color: white;
       text-align: center;
       transition: opacity 0.5s ease;
@@ -225,72 +305,63 @@
   .intro-content {
       background: rgba(255, 255, 255, 0.95);
       color: #2c3e50;
-      /* 🌟 التعديل الجذري: تقليل البادينج الداخلي لتقليص الحجم */
-      padding: 15px; 
+      padding: 20px; /* تم تقليل البادينج قليلاً */
       border-radius: 20px;
       max-width: 500px;
       width: 90%;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       
-      /* ✅ إزالة التمرير وقيود الارتفاع لترك المحتوى يتقلص */
-      max-height: none; 
-      overflow-y: hidden; 
-      box-sizing: border-box;
-      
-      /* 🌟 السماح للعنصر بالتقلص قدر الإمكان داخل الشاشة */
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-  }
-  
-  /* 🌟 تقليص حجم العنوان لتوفير مساحة */
-  .intro-content h2 {
-      color: #FF8C42;
-      font-size: clamp(1.8rem, 5vw, 2.8rem); /* أصغر قليلاً */
-      margin-top: 0;
-      border-bottom: 3px solid #FF8C42;
-      padding-bottom: 8px; /* أقل بادينج */
-      margin-bottom: 15px; /* أقل هوامش */
+      /* ✅ التعديل الجديد لجعلها مناسبة للموبايل */
+      max-height: 90vh; 
+      overflow-y: auto; 
+      box-sizing: border-box; 
   }
 
-  /* 🌟 تقليص حجم النص العادي */
+  .intro-content h2 {
+      color: #FF8C42;
+      font-size: clamp(2rem, 6vw, 3rem);
+      margin-top: 0;
+      border-bottom: 3px solid #FF8C42;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+  }
+
   .intro-content p {
-      font-size: clamp(0.9rem, 3.2vw, 1.3rem); /* أصغر */
-      line-height: 1.5;
-      margin-bottom: 12px; /* أقل هوامش */
+      /* ✅ تعديل حجم الخط ليكون أكثر مرونة */
+      font-size: clamp(1rem, 3.5vw, 1.4rem); 
+      line-height: 1.6;
+      margin-bottom: 15px;
       text-align: right;
   }
   
-  /* 🌟 تقليص حجم وعناصر القائمة */
   .intro-content ul {
       list-style-type: none;
       padding: 0;
       text-align: right;
-      margin: 0; /* إزالة الهوامش الافتراضية */
   }
   
   .intro-content ul li {
       background: #e8f5e9;
-      padding: 8px; /* أقل بادينج */
-      margin-bottom: 6px; /* أقل هوامش */
+      padding: 10px;
+      margin-bottom: 8px;
       border-radius: 8px;
       font-weight: 600;
       border-right: 4px solid #3498db;
       text-align: right;
-      font-size: clamp(0.9rem, 3vw, 1.2rem); /* أصغر ليتناسب مع الشاشة */
+      /* ✅ تعديل حجم خط القائمة */
+      font-size: clamp(0.95rem, 3.2vw, 1.3rem); 
   }
 
   #startButton {
       background: #FF8C42;
       color: white;
       border: none;
-      padding: 10px 25px; /* تم تقليص حجم الزر */
-      font-size: 1.3rem; /* خط أصغر للزر */
+      padding: 12px 30px;
+      font-size: 1.5rem;
       font-weight: bold;
       border-radius: 50px;
       cursor: pointer;
-      margin-top: 20px; /* أقل هوامش علوية */
+      margin-top: 25px;
       box-shadow: 0 5px 0 #d35400;
       transition: all 0.1s ease;
   }
@@ -317,108 +388,66 @@
         
         <h3>🎯 طريقة اللعب</h3>
         <ul>
-            <li>**الإجابة أولاً:** اقرأ السؤال وخيارات الإجابة في المنطقة العلوية.</li>
-            <li>**التصويب:** حرّك المؤشر (باللمس) لتوجيه المدفع نحو الفقاعة التي تحمل الإجابة الصحيحة.</li>
-            <li>**الإطلاق:** اضغط أو انقر للإطلاق وتفجير الفقاعة الصحيحة.</li>
+            <li>**الإجابة أولاً:** اقرأ السؤال والخيارات المتاحة في الأعلى.</li>
+            <li>**التصويب:** حرك مؤشر الماوس (أو إصبعك) لتحديد زاوية إطلاق المدفع.</li>
+            <li>**الإطلاق:** انقر/المس لإطلاق قذيفة.</li>
+            <li>**صوب على الإجابة الصحيحة:** يجب أن تصيب الفقاعة التي تحمل رقم الإجابة الصحيحة (1 أو 2 أو 3).</li>
+            <li>**النقاط:** كل إجابة صحيحة تمنحك **10 نقاط**.</li>
+            <li>**الخطأ:** إذا أطلقت على إجابة خاطئة أو أخطأت مرتين متتاليتين، ستفقد محاولة وستعود لك الأسئلة التي أخطأت فيها في النهاية للمراجعة.</li>
+            <li>**الهدف:** جمع أكبر عدد من النقاط قبل انتهاء جميع الأسئلة!</li>
         </ul>
         
-        <button id="startButton">ابدأ اللعب الآن!</button>
+        <button id="startButton">ابدأ التحدي</button>
     </div>
 </div>
-<header id="questionHeader"></header>
+
+<header id="questionHeader">
+    </header>
 
 <main>
-  <section id="game-frame">
-    <div id="game-container"></div>
-  </section>
+    <div id="game-frame">
+        <div id="score-display" style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.7); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 1.2rem; border: 2px solid #FFD700; z-index: 100;">
+            النقاط: <span>0</span>
+        </div>
+        <div id="game-container"></div>
+    </div>
 </main>
 
 <div id="wrongFlash">
-  <div id="errorMark">✖</div>
+    <div id="errorMark">❌</div>
 </div>
 
+<div class="summary-overlay" id="summaryOverlay">
+    <div class="summary-content">
+        <h2 id="summaryTitle"></h2>
+        <p id="summaryScore"></p>
+        <h3>مراجعة الأسئلة والإجابات الصحيحة:</h3>
+        <div class="scrollable-review" id="scrollableReview">
+        </div>
+        <button class="modal-btn" id="restartBtn">👍 حسناً، أعد اللعب</button>
+    </div>
+</div>
 <script>
-/* ======================
-    0. دالة خلط المصفوفة (Shuffle Function)
-====================== */
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
 
-/* ======================
-    1. البيانات (الأسئلة) - *الصيغة الأصلية بدون تغيير*
-====================== */
+/* ====================== 1. بيانات الأسئلة ====================== */
+// o = Options (الخيارات), a = Answer (الإجابة الصحيحة - تبدأ من 0)
 const QUESTIONS = [
-    {
-        "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:",
-        "o": [
-            "أوراق عريضة تطفو على الماء",
-            "جذور قصيرة ضعيفة",
-            "جذور طويلة وقوية لمقاومة الأمواج"
-        ],
-        "a": 2 // الفهرس (Index) الأصلي للإجابة الصحيحة
-    },
-    {
-        "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟",
-        "o": [
-            "تخزين كميات كبيرة من الماء",
-            "امتصاص الضوء من سطح الماء",
-            "الصمود أمام الأمواج القوية"
-        ],
-        "a": 2
-    },
-    {
-        "q": "البيئة التي ينمو فيها نبات زنبق الماء (اللوتس) هي المستنقعات، وتتميز هذه البيئة بـ:",
-        "o": [
-            "مياه مالحة وأمواج قوية",
-            "تربة جافة ودرجات حرارة مرتفعة",
-            "مياه راكدة وكميات كبيرة من الطين"
-        ],
-        "a": 2
-    },
-    {
-        "q": "يمتلك نبات زنبق الماء أوراقاً عريضة تطفو على سطح الماء، وهذا التكيف التركيبي يساعده على:",
-        "o": [
-            "مقاومة التيارات المائية",
-            "تخزين الماء الزائد",
-            "امتصاص قدر كبير من ضوء الشمس"
-        ],
-        "a": 2
-    },
-    {
-        "q": "ما هي البيئة التي تتكيف شجرة الصنوبر للعيش فيها؟",
-        "o": [
-            "المستنقعات المائية",
-            "الصحاري الجافة",
-            "المناطق الثلجية شديدة البرودة"
-        ],
-        "a": 2
-    },
-    {
-        "q": "تنمو شجرة الصنوبر على شكل مثلث، وهذا التكيف التركيبي يسمح بـ:",
-        "o": [
-            "جذب المزيد من ضوء الشمس",
-            "زيادة سرعة نمو الأغصان",
-            "سهولة انزلاق الثلج من عليها دون كسر الفروع"
-        ],
-        "a": 2
-    }
+    { "id": 1, "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:", "o": [ "أوراق عريضة تطفو على الماء", "جذور قصيرة ضعيفة", "جذور طويلة وقوية لمقاومة الأمواج" ], "a": 2 },
+    { "id": 2, "q": "ما هي وظيفة الجذور الطويلة والقوية لشجرة المانجروف؟", "o": [ "تخزين كميات كبيرة من الماء", "امتصاص الضوء من سطح الماء", "الصمود أمام الأمواج القوية" ], "a": 2 },
+    { "id": 3, "q": "البيئة التي ينمو فيها نبات زنبق الماء (اللوتس) هي المستنقعات، وتتميز هذه البيئة بـ:", "o": [ "مياه مالحة وأمواج قوية", "تربة جافة ودرجات حرارة مرتفعة", "مياه راكدة وكميات كبيرة من الطين" ], "a": 2 },
+    { "id": 4, "q": "يمتلك نبات زنبق الماء أوراقاً عريضة تطفو على سطح الماء، وهذا التكيف التركيبي يساعده على:", "o": [ "مقاومة التيارات المائية", "تخزين الماء الزائد", "امتصاص قدر كبير من ضوء الشمس" ], "a": 2 },
+    { "id": 5, "q": "ما هي البيئة التي تتكيف شجرة الصنوبر للعيش فيها؟", "o": [ "المستنقعات المائية", "الصحاري الجافة", "المناطق الثلجية شديدة البرودة" ], "a": 2 },
+    { "id": 6, "q": "تنمو شجرة الصنوبر على شكل مثلث، وهذا التكيف التركيبي يسمح بـ:", "o": [ "جذب المزيد من ضوء الشمس", "زيادة سرعة نمو الأغصان", "سهولة انزلاق الثلج من عليها دون كسر الفروع" ], "a": 2 }
 ];
 
-/* ======================
-    2. إعدادات اللعبة (Phaser)
-====================== */
+/* ====================== 2. إعدادات اللعبة (Phaser) ====================== */
 const config = {
     type: Phaser.AUTO,
     parent: 'game-container',
     width: 600,
     height: 800,
     // لون خلفية برتقالي خفيف ومناسب للأطفال
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#E8F5E9', 
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -430,45 +459,32 @@ const config = {
             debug: false
         }
     },
-    scene: { preload, create, update }
+    scene: {
+        preload,
+        create,
+        update
+    }
 };
 
 const game = new Phaser.Game(config);
 
-/* ======================
-    3. المتغيرات العامة
-====================== */
-let cannon, bubbles, invisibleWall;
+/* ====================== 3. المتغيرات العامة ====================== */
+let cannon, bubbles, invisibleWall, aimLine;
+let shootSound, correctSound, wrongSound, winSound;
 let currentQ = 0;
+let newCorrectIndex = 0;
 let canShoot = true;
+const BUBBLE_IMG_SIZE = 300; 
 let missedShots = 0;
-let shootAngle = -90; // متغير لتخزين الزاوية
-let aimLine; // كائن خط التوجيه
+const totalQuestions = QUESTIONS.length; 
+let score = 0; 
+let wrongQuestions = []; 
+let gameFinished = false; 
+let scoreDisplay; 
 
-const BUBBLE_IMG_SIZE = 300;
-
-
-/* ======================
-    * منطق شاشة التقديم (Intro Screen Logic)
-====================== */
-
-// دالة لإخفاء شاشة التقديم وبدء اللعبة
-function hideIntroScreen() {
-    const introScreen = document.getElementById('introScreen');
-    introScreen.classList.add('hidden');
-    // بدء المشهد الرئيسي للعبة Phaser
-    game.scene.start('default');
-}
-
-// إضافة المستمع لزر "ابدأ اللعب"
-document.getElementById('startButton').addEventListener('click', hideIntroScreen);
-
-
-/* ======================
-    4. التحميل (Preload)
-====================== */
-function preload(){
-    // ملاحظة: تم تعديل المسار هنا إلى 'assets/' ليتوافق مع التحميلات الأخرى في الكود الأصلي
+/* ====================== 4. التحميل (Preload) ====================== */
+function preload() {
+    // تعديل المسار هنا إلى 'assets/' ليتوافق مع التحميلات الأخرى في الكود الأصلي
     this.load.image('cannon','assets/cannon.png');
     this.load.image('shoot','assets/shoot.png');
     this.load.image('bubble1','assets/bubble1.png');
@@ -479,16 +495,20 @@ function preload(){
     this.load.audio('win','../assets/win.mp3');
 }
 
-/* ======================
-    5. الإنشاء (Create)
-    * ملاحظة: هذه الدالة لن تُنفذ إلا بعد الضغط على زر "ابدأ اللعب"
-====================== */
+/* ====================== 5. الإنشاء (Create) ====================== */
 function create(){
-    // 🌟 التعديل الأول: خلط مصفوفة الأسئلة عند بدء اللعبة
-    shuffleArray(QUESTIONS);
-
     const width = this.scale.width;
     const height = this.scale.height;
+
+    // ⬇️ إضافة عرض النقاط على الشاشة (في DOM) ⬇️
+    scoreDisplay = document.getElementById('score-display').querySelector('span');
+    scoreDisplay.textContent = '0';
+    
+    // ⬇️ التحقق من انتهاء اللعبة ⬇️
+    if (currentQ >= totalQuestions && wrongQuestions.length === 0) {
+        gameOver(this, true); 
+        return;
+    }
 
     // تهيئة الأصوات
     this.correctSound = this.sound.add('correct');
@@ -501,10 +521,10 @@ function create(){
     this.physics.add.existing(invisibleWall, true);
 
     const cannonHeight = height * 0.10;
-    const cannonScale = cannonHeight / 300;
-
-    // 🌟 التعديل المطلوب: تم تغيير موضع المدفع العمودي من 0.90 إلى 0.95
-    cannon = this.add.sprite(width/2, height * 0.8, 'cannon') 
+    const cannonScale = cannonHeight / 300; 
+    
+    // تم تغيير موضع المدفع العمودي من 0.90 إلى 0.95
+    cannon = this.add.sprite(width/2, height * 0.8, 'cannon')
         .setScale(cannonScale)
         .setDepth(1);
 
@@ -513,9 +533,12 @@ function create(){
         bounceX: 1,
         bounceY: 1
     });
+
     this.physics.add.collider(bubbles, invisibleWall);
-    
-    aimLine = this.add.graphics({ lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } }).setDepth(2);
+
+    aimLine = this.add.graphics({ 
+        lineStyle: { width: 4, color: 0xFF5722, alpha: 0.8 } 
+    }).setDepth(2);
 
     this.input.on('pointermove', (pointer) => {
         updateAimLine(this, pointer);
@@ -529,71 +552,67 @@ function create(){
         if (canShoot) fire(this);
     });
 
+    // إظهار السؤال عند بدء اللعب
     showQuestion(this);
 }
 
-/* ======================
-    6. التحديث المستمر (Update)
-====================== */
-function update() {
-    bubbles.children.iterate((b) => {
-        if (b) b.rotation += 0.005;
-    });
+/* ====================== 6. تحديث (Update) ====================== */
+function update(){
+    // لا يوجد تحديث حركي مستمر مطلوب في هذه اللعبة
 }
 
+/* ====================== 6.1 وظائف مساعدة ====================== */
 
-/* ======================
-    * دالة رسم خط التوجيه
-====================== */
-function updateAimLine(scene, pointer) {
-    // موقع إطلاق المقذوف
-    const cannonX = cannon.x;
-    const cannonY = cannon.y - cannon.displayHeight / 2;
-
-    const pointerX = pointer.x;
-    const pointerY = pointer.y;
-
-    // حساب الزاوية بين المدفع ونقطة اللمس
-    shootAngle = Phaser.Math.Angle.Between(cannonX, cannonY, pointerX, pointerY);
-
-    // لضمان الإطلاق للأعلى فقط
-    // إذا كانت الزاوية موجبة (تدل على الإطلاق للأسفل)، نجعلها قريبة من الصفر أو -180
-    if (shootAngle > 0) {
-        if (pointerX < cannonX) {
-             shootAngle = Phaser.Math.DegToRad(-179); // لليسار
-        } else {
-             shootAngle = Phaser.Math.DegToRad(-1); // لليمين
-        }
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
+}
 
-    // رسم الخط المنقط
+function wrongFlash(){
+    const wrongFlashDiv = document.getElementById('wrongFlash');
+    const errorMark = document.getElementById('errorMark');
+    wrongFlashDiv.style.background = 'rgba(255, 0, 0, 0.4)';
+    errorMark.style.display = 'flex';
+    setTimeout(() => {
+        wrongFlashDiv.style.background = 'rgba(255, 0, 0, 0)';
+        errorMark.style.display = 'none';
+    }, 500);
+}
+
+function updateAimLine(scene, pointer) {
     aimLine.clear();
+    const angle = Phaser.Math.Angle.Between(cannon.x, cannon.y, pointer.x, pointer.y);
+    const distance = 300;
+    const x2 = cannon.x + Math.cos(angle) * distance;
+    const y2 = cannon.y + Math.sin(angle) * distance;
+    
+    // رسم خط التهديف
     aimLine.lineStyle(4, 0xFF5722, 0.8);
-
-    // طول كبير للخط ليمتد حتى نهاية الشاشة
-    const lineLength = 1000;
-    const endX = cannonX + Math.cos(shootAngle) * lineLength;
-    const endY = cannonY + Math.sin(shootAngle) * lineLength;
-
     aimLine.beginPath();
-    aimLine.moveTo(cannonX, cannonY);
-    aimLine.lineTo(endX, endY);
+    aimLine.moveTo(cannon.x, cannon.y);
+    aimLine.lineTo(x2, y2);
     aimLine.strokePath();
 }
 
-/* ======================
-    7. منطق الإطلاق (Fire)
-====================== */
-function fire(scene){
+function fire(scene) {
     canShoot = false;
-    aimLine.clear(); // إخفاء خط التوجيه فور الإطلاق
+    aimLine.clear();
+    
+    const pointer = scene.input.activePointer;
+    const shootAngle = Phaser.Math.Angle.Between(cannon.x, cannon.y, pointer.x, pointer.y);
+    
+    // لا تسمح بالإطلاق للأسفل
+    if (shootAngle > 0.5 * Math.PI || shootAngle < -1.5 * Math.PI) {
+        canShoot = true; 
+        return;
+    }
 
-    const width = scene.scale.width;
-    const shotScale = (width * 0.12) / 300;
-
+    const shotScale = (scene.scale.width * 0.12) / 300;
     const shot = scene.physics.add.sprite(
-        cannon.x,
-        cannon.y - cannon.displayHeight/1.5,
+        cannon.x, 
+        cannon.y - cannon.displayHeight/1.5, 
         'shoot'
     ).setScale(shotScale);
 
@@ -601,6 +620,7 @@ function fire(scene){
     const speed = 800; // سرعة الإطلاق
     const velocityX = Math.cos(shootAngle) * speed;
     const velocityY = Math.sin(shootAngle) * speed;
+    
     shot.setVelocity(velocityX, velocityY);
 
     scene.physics.add.overlap(shot, bubbles, (s, b) => {
@@ -611,7 +631,6 @@ function fire(scene){
 
     shot.setCollideWorldBounds(true);
     shot.body.onWorldBounds = true;
-
     shot.body.world.on('worldbounds', (body) => {
         if (body.gameObject === shot) {
             shot.destroy();
@@ -623,115 +642,246 @@ function fire(scene){
         }
     });
 
-    scene.time.delayedCall(1200, () => { if(shot.active) shot.destroy(); });
-
-    scene.time.delayedCall(800, () => { canShoot = true; });
+    scene.time.delayedCall(1200, () => {
+        if(shot.active) shot.destroy();
+    });
+    
+    scene.time.delayedCall(800, () => {
+        canShoot = true;
+    });
 }
 
-/* ======================
-    8. منطق الإصابة (Hit)
-====================== */
+/* ====================== 7. عرض الأسئلة والفقاعات (showQuestion) ====================== */
+function showQuestion(scene){
+    if (gameFinished) return;
+
+    let q;
+    
+    // ⬇️ أولاً: عرض الأسئلة الخاطئة للمراجعة ⬇️
+    if (wrongQuestions.length > 0) {
+        q = wrongQuestions[0]; 
+    } 
+    // ثانياً: عرض الأسئلة العادية بالتسلسل
+    else if (currentQ < totalQuestions) {
+        q = QUESTIONS[currentQ];
+    } 
+    // ثالثاً: إذا انتهت جميع الأسئلة
+    else {
+        gameOver(scene, true);
+        return;
+    }
+
+    // خلط الخيارات
+    const shuffledOptions = Phaser.Utils.Array.Shuffle([...q.o]);
+    const correctOptionText = q.o[q.a];
+    const newCorrectIndex = shuffledOptions.indexOf(correctOptionText);
+
+    // ألوان لتمييز الخيارات
+    const colors = ['#81d4fa', '#a5d6a7', '#ffe082'];
+
+    // بناء محتوى الخيارات في الـ HTML (يستخدم الترتيب العشوائي)
+    let answersHtml = '';
+    for(let i = 0; i < shuffledOptions.length; i++) {
+        answersHtml += `<span id="answer-${i+1}" style="color:${colors[i]}">${i + 1}: ${shuffledOptions[i]}</span>`;
+    }
+
+    document.getElementById('questionHeader').innerHTML = `
+        <h3>${q.q}</h3>
+        <div class="answers">
+            ${answersHtml}
+        </div>
+    `;
+
+    bubbles.clear(true, true);
+
+    const width = scene.scale.width;
+    const height = scene.scale.height;
+
+    const bubbleTargetSize = width * 0.18;
+    const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
+
+    // إنشاء الفقاعات
+    shuffledOptions.forEach((optionText, index) => {
+        const bubble = bubbles.create(
+            width * (0.2 + index * 0.3), 
+            height * 0.2, 
+            `bubble${index + 1}`
+        ).setScale(bubbleScale);
+
+        bubble.setCircle(BUBBLE_IMG_SIZE / 2);
+        bubble.setOffset(0, 0); 
+        bubble.setBounce(1);
+
+        // ⬇️ إضافة بيانات السؤال ID إلى الفقاعة ⬇️
+        bubble.setData('questionId', q.id); 
+
+        if (optionText === correctOptionText) {
+            bubble.setData('isCorrect', true);
+        } else {
+            bubble.setData('isCorrect', false);
+        }
+        
+        // حركة عشوائية للفقاعات
+        const angle = Phaser.Math.FloatBetween(Math.PI / 4, 3 * Math.PI / 4);
+        const speed = Phaser.Math.Between(150, 250);
+        bubble.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+    });
+    
+    newCorrectIndex = newCorrectIndex; // هذا المتغير لم يعد مستخدماً فعلياً ولكنه لا يضر
+    canShoot = true; // يمكن الإطلاق مجدداً
+}
+
+/* ====================== 8. منطق الإصابة (Hit) ====================== */
 function bubbleHit(scene, bubble){
-    // 🌟 التحقق من الإجابة الصحيحة
     const isCorrect = bubble.getData('isCorrect');
+    const questionId = bubble.getData('questionId'); 
     bubble.destroy();
 
     if(isCorrect){
         scene.correctSound.play();
+        
+        // ⬇️ تحديث النقاط ⬇️
+        score += 10;
+        scoreDisplay.textContent = score; 
+
+        // ⬇️ التحقق من إزالة السؤال من قائمة الأسئلة الخاطئة (إذا كان مكرر) ⬇️
+        const wrongIndex = wrongQuestions.findIndex(q => q.id === questionId);
+        if (wrongIndex > -1) {
+            // إزالة السؤال من المراجعة بعد الإجابة عليه صحيحاً
+            wrongQuestions.splice(wrongIndex, 1);
+        }
+
         scene.time.delayedCall(500, () => {
-            currentQ++;
-            showQuestion(scene);
+            // إذا لم نكن نراجع سؤالاً خاطئاً، ننتقل للسؤال التالي
+            if (wrongIndex === -1 && currentQ < totalQuestions) {
+                 currentQ++;
+            }
+            
+            // ⬇️ التحقق من نهاية اللعبة ⬇️
+            if (currentQ >= totalQuestions && wrongQuestions.length === 0) {
+                 gameOver(scene, true); 
+            } else {
+                 showQuestion(scene);
+            }
         });
     } else {
-        const flash = document.getElementById('wrongFlash');
-        const mark = document.getElementById('errorMark');
-
         scene.wrongSound.play();
+        wrongFlash();
+        
+        // ⬇️ تسجيل السؤال كإجابة خاطئة (للمراجعة في النهاية) ⬇️
+        let currentQuestion;
+        if (wrongQuestions.length > 0) {
+            currentQuestion = wrongQuestions[0];
+        } else if (currentQ < totalQuestions) {
+            currentQuestion = QUESTIONS[currentQ];
+        } else {
+             // لا يوجد سؤال لتسجيله كخطأ
+             return; 
+        }
 
-        flash.style.background = 'rgba(255,0,0,0.4)';
-        mark.style.display = 'flex';
-
-        setTimeout(() => {
-            flash.style.background = 'rgba(255,0,0,0)';
-            mark.style.display = 'none';
-        }, 400);
-
-        scene.time.delayedCall(600, () => showQuestion(scene));
+        if (!wrongQuestions.some(q => q.id === currentQuestion.id)) {
+             wrongQuestions.push({
+                 id: currentQuestion.id,
+                 q: currentQuestion.q,
+                 a: currentQuestion.a,
+                 o: currentQuestion.o
+             });
+        }
+        
+        scene.time.delayedCall(1000, () => {
+            // الاستمرار في السؤال الحالي/المراجع
+            showQuestion(scene); 
+        });
     }
 }
 
-/* ======================
-    9. عرض السؤال وتوليد الفقاعات
-====================== */
-function showQuestion(scene){
-    const q = QUESTIONS[currentQ];
+/* ====================== 9. وظائف نهاية اللعبة والملخص ====================== */
 
-    if(!q){
-        document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
-        bubbles.clear(true, true);
-        if (scene.winSound) scene.winSound.play(); 
-        return;
-    }
+// ⬇️ دالة عرض ملخص اللعبة (مقتبسة من CarRace.html) ⬇️
+function showSummaryBox(finalScore, title, reviewContent) {
+    const summaryOverlay = document.getElementById('summaryOverlay');
+    const summaryTitle = document.getElementById('summaryTitle');
+    const summaryScore = document.getElementById('summaryScore');
+    const scrollableReview = document.getElementById('scrollableReview');
+    const restartBtn = document.getElementById('restartBtn');
 
-    // 🌟 1. نحفظ نص الإجابة الصحيحة باستخدام الفهرس الأصلي
-    const correctOptionText = q.o[q.a]; 
-    
-    // 🌟 التعديل الجذري: نستخدم .slice() لضمان إنشاء نسخة جديدة من المصفوفة قبل خلطها.
-    const optionsToShuffle = q.o.slice(); 
-    
-    // نخلط الخيارات
-    const shuffledOptions = shuffleArray(optionsToShuffle); 
+    // 1. ملء المحتوى
+    summaryTitle.textContent = title;
+    summaryScore.textContent = `النقاط المحتسبة: ${finalScore} / ${totalQuestions * 10}`;
 
-    // 🌟 2. إيجاد الفهرس الجديد للإجابة الصحيحة بعد الخلط
-    const newCorrectIndex = shuffledOptions.indexOf(correctOptionText);
+    scrollableReview.innerHTML = reviewContent;
 
-    // ألوان لتمييز الخيارات
-    const colors = ['#81d4fa', '#a5d6a7', '#ffe082'];
+    // 2. ربط زر الإعادة
+    restartBtn.onclick = () => {
+        // إعادة تحميل الصفحة لإعادة تشغيل اللعبة
+        window.location.reload(); 
+    };
 
-    // بناء محتوى الخيارات في الـ HTML (يستخدم الترتيب العشوائي)
-    let answersHtml = '';
-    for(let i = 0; i < shuffledOptions.length; i++) {
-        answersHtml += `<span style="color:${colors[i]}">${i + 1}: ${shuffledOptions[i]}</span>`;
-    }
-
-    document.getElementById('questionHeader').innerHTML = `
-        <h3>${q.q}</h3>
-        <div class="answers">
-            ${answersHtml}
-        </div>
-    `;
-
-    bubbles.clear(true, true);
-
-    const width = scene.scale.width;
-    const height = scene.scale.height;
-
-    const bubbleTargetSize = width * 0.18;
-    const bubbleScale = bubbleTargetSize / BUBBLE_IMG_SIZE;
-
-    const positions = [0.2, 0.5, 0.8]; // مواقع الفقاعات
-
-    for(let i=0; i<3; i++){
-        const b = bubbles.create(
-            width * positions[i],
-            height * 0.3,
-            'bubble' + (i+1)
-        ).setScale(bubbleScale);
-
-        b.setCircle(130 * (bubbleScale / (width * 0.22 / BUBBLE_IMG_SIZE)));
-
-        // 🌟 تخزين حالة الإجابة الصحيحة في الفقاعة باستخدام الفهرس الجديد بعد الخلط
-        b.setData('isCorrect', i === newCorrectIndex);
-
-        b.setVelocity(
-            Phaser.Math.Between(-50, 50),
-            Phaser.Math.Between(-30, 30)
-        );
-
-        b.setBounce(1);
-        b.setCollideWorldBounds(true);
-    }
+    // 3. إظهار نافذة الملخص (نافذة HTML)
+    summaryOverlay.style.display = 'flex';
 }
+
+// ⬇️ دالة إنهاء اللعبة (مقتبسة من CarRace.html) ⬇️
+function gameOver(scene, completed) {
+    if (gameFinished) return;
+    gameFinished = true; 
+
+    scene.physics.pause();
+    bubbles.clear(true, true);
+    document.getElementById('questionHeader').innerHTML = `<h3>انتهت اللعبة!</h3>`;
+
+    const finalScore = score;
+    let title = 'لعبة رائعة! 🌟';
+    
+    if (finalScore === totalQuestions * 10) {
+        title = 'مذهل! الإجابة على جميع الأسئلة بشكل صحيح! 🏆';
+    } else if (finalScore < totalQuestions * 10 && finalScore > 0) {
+        title = 'نتيجة جيدة! يمكنك المحاولة مرة أخرى لتحسينها! 💪';
+    } else if (finalScore === 0) {
+        title = 'لا بأس! حاول التركيز أكثر في المرة القادمة. 💡';
+    }
+
+    // تجهيز مراجعة الأسئلة
+    let reviewContent = '';
+    
+    if (wrongQuestions.length > 0) {
+        wrongQuestions.forEach((q, index) => {
+            const correctAnswer = q.o[q.a];
+            reviewContent += `
+                <p style="font-weight: bold; color: #f72585;">السؤال ${index + 1} (تمت الإجابة عليه خطأً):</p>
+                <p style="margin-right: 15px;">**${q.q}**</p>
+                <p style="margin-right: 15px; color: #4cc9f0;">الإجابة الصحيحة: ${correctAnswer}</p>
+                <hr style="border-color: #333; margin: 10px 0;">
+            `;
+        });
+    } else {
+         reviewContent = '<p style="font-weight: bold; color: #2ecc71; text-align: center;">🎉 لقد أجبت على جميع الأسئلة بنجاح في المحاولة الأخيرة!</p>';
+    }
+
+    // عرض شاشة الملخص
+    showSummaryBox(finalScore, title, reviewContent);
+    scene.winSound.play();
+}
+
+/* ====================== 10. منطق شاشة البداية ====================== */
+document.getElementById('startButton').onclick = () => {
+    document.getElementById('introScreen').classList.add('hidden');
+    // تشغيل اللعبة يبدأ تلقائياً عند تحميل المشهد
+    // هنا يجب أن تتأكد أن اللعبة قد تم إعدادها قبل إزالة شاشة البداية
+    // (الـ Phaser.Game(config) يقوم بذلك)
+};
+
+// ⬇️ دالة خلط المصفوفة (لخلط الأسئلة في البداية) ⬇️
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+// ⬇️ خلط الأسئلة عند بدء الكود ⬇️
+shuffleArray(QUESTIONS);
+
+
 </script>
 </body>
 </html>
