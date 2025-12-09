@@ -225,11 +225,16 @@
   .intro-content {
       background: rgba(255, 255, 255, 0.95);
       color: #2c3e50;
-      padding: 30px 20px;
+      padding: 20px; /* تم تقليل البادينج قليلاً */
       border-radius: 20px;
       max-width: 500px;
       width: 90%;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      
+      /* ✅ التعديل الجديد لجعلها مناسبة للموبايل */
+      max-height: 90vh; 
+      overflow-y: auto; 
+      box-sizing: border-box; 
   }
 
   .intro-content h2 {
@@ -242,7 +247,8 @@
   }
 
   .intro-content p {
-      font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+      /* ✅ تعديل حجم الخط ليكون أكثر مرونة */
+      font-size: clamp(1rem, 3.5vw, 1.4rem); 
       line-height: 1.6;
       margin-bottom: 15px;
       text-align: right;
@@ -262,6 +268,8 @@
       font-weight: 600;
       border-right: 4px solid #3498db;
       text-align: right;
+      /* ✅ تعديل حجم خط القائمة */
+      font-size: clamp(0.95rem, 3.2vw, 1.3rem); 
   }
 
   #startButton {
@@ -294,19 +302,16 @@
         
         <h3>🏆 الهدف من اللعبة</h3>
         <ul>
-            <li>**التعلم والمراجعة:** مراجعة معلوماتك عن تكيف الكائنات الحية.</li>
-            <li>**التركيز والدقة:** تطوير مهارات التصويب والتركيز أثناء اللعب.</li>
+            <li>**التعلم والمراجعة:** تثبيت معلوماتك الدراسية واختبارها.</li>
             <li>**الاستمتاع:** قضاء وقت ممتع ومسلي!</li>
         </ul>
         
         <h3>🎯 طريقة اللعب</h3>
         <ul>
             <li>**الإجابة أولاً:** اقرأ السؤال وخيارات الإجابة في المنطقة العلوية.</li>
-            <li>**التصويب:** حرّك المؤشر (بالماوس أو اللمس) لتوجيه المدفع نحو الفقاعة التي تحمل الإجابة الصحيحة.</li>
+            <li>**التصويب:** حرّك المؤشر (باللمس) لتوجيه المدفع نحو الفقاعة التي تحمل الإجابة الصحيحة.</li>
             <li>**الإطلاق:** اضغط أو انقر للإطلاق وتفجير الفقاعة الصحيحة.</li>
-            <li>**تجنب الخطأ:** لديك محاولتان خطأ قبل أن يتغير السؤال.</li>
         </ul>
-        
         <button id="startButton">ابدأ اللعب الآن!</button>
     </div>
 </div>
@@ -429,7 +434,6 @@ let canShoot = true;
 let missedShots = 0;
 let shootAngle = -90; // متغير لتخزين الزاوية
 let aimLine; // كائن خط التوجيه
-// تمت إزالة: let startSound;
 
 const BUBBLE_IMG_SIZE = 300;
 
@@ -442,7 +446,6 @@ const BUBBLE_IMG_SIZE = 300;
 function hideIntroScreen() {
     const introScreen = document.getElementById('introScreen');
     introScreen.classList.add('hidden');
-    // تم إزالة: if (startSound) startSound.play();
     // بدء المشهد الرئيسي للعبة Phaser
     game.scene.start('default');
 }
@@ -464,7 +467,6 @@ function preload(){
     this.load.audio('correct','../assets/correct.mp3');
     this.load.audio('wrong','../assets/wrong.mp3');
     this.load.audio('win','../assets/win.mp3');
-    // تم إزالة: this.load.audio('start','../assets/start.mp3'); 
 }
 
 /* ======================
@@ -482,7 +484,6 @@ function create(){
     this.correctSound = this.sound.add('correct');
     this.wrongSound = this.sound.add('wrong');
     this.winSound = this.sound.add('win');
-    // تم إزالة: startSound = this.sound.add('start');
 
     this.physics.world.setBounds(0, 0, width, height);
 
@@ -658,7 +659,7 @@ function showQuestion(scene){
     if(!q){
         document.getElementById('questionHeader').innerHTML = '<h3 style="color:#4CAF50">🎉 أحسنت! أنهيت اللعبة</h3><p style="font-size: 1.8rem;">يمكنك إعادة تشغيل اللعبة لتحدي جديد!</p>';
         bubbles.clear(true, true);
-        if (scene.winSound) scene.winSound.play();
+        if (scene.winSound) scene.winSound.play(); 
         return;
     }
 
