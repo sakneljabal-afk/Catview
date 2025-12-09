@@ -210,7 +210,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 20px;
+      padding: 5px; /* تم تقليل البادينج الخارجي */
       color: white;
       text-align: center;
       transition: opacity 0.5s ease;
@@ -225,63 +225,72 @@
   .intro-content {
       background: rgba(255, 255, 255, 0.95);
       color: #2c3e50;
-      padding: 20px; /* تم تقليل البادينج قليلاً */
+      /* 🌟 التعديل الجذري: تقليل البادينج الداخلي لتقليص الحجم */
+      padding: 15px; 
       border-radius: 20px;
       max-width: 500px;
       width: 90%;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       
-      /* ✅ التعديل الجديد لجعلها مناسبة للموبايل */
-      max-height: 90vh; 
-      overflow-y: auto; 
-      box-sizing: border-box; 
+      /* ✅ إزالة التمرير وقيود الارتفاع لترك المحتوى يتقلص */
+      max-height: none; 
+      overflow-y: hidden; 
+      box-sizing: border-box;
+      
+      /* 🌟 السماح للعنصر بالتقلص قدر الإمكان داخل الشاشة */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
   }
-
+  
+  /* 🌟 تقليص حجم العنوان لتوفير مساحة */
   .intro-content h2 {
       color: #FF8C42;
-      font-size: clamp(2rem, 6vw, 3rem);
+      font-size: clamp(1.8rem, 5vw, 2.8rem); /* أصغر قليلاً */
       margin-top: 0;
       border-bottom: 3px solid #FF8C42;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
+      padding-bottom: 8px; /* أقل بادينج */
+      margin-bottom: 15px; /* أقل هوامش */
   }
 
+  /* 🌟 تقليص حجم النص العادي */
   .intro-content p {
-      /* ✅ تعديل حجم الخط ليكون أكثر مرونة */
-      font-size: clamp(1rem, 3.5vw, 1.4rem); 
-      line-height: 1.6;
-      margin-bottom: 15px;
+      font-size: clamp(0.9rem, 3.2vw, 1.3rem); /* أصغر */
+      line-height: 1.5;
+      margin-bottom: 12px; /* أقل هوامش */
       text-align: right;
   }
   
+  /* 🌟 تقليص حجم وعناصر القائمة */
   .intro-content ul {
       list-style-type: none;
       padding: 0;
       text-align: right;
+      margin: 0; /* إزالة الهوامش الافتراضية */
   }
   
   .intro-content ul li {
       background: #e8f5e9;
-      padding: 10px;
-      margin-bottom: 8px;
+      padding: 8px; /* أقل بادينج */
+      margin-bottom: 6px; /* أقل هوامش */
       border-radius: 8px;
       font-weight: 600;
       border-right: 4px solid #3498db;
       text-align: right;
-      /* ✅ تعديل حجم خط القائمة */
-      font-size: clamp(0.95rem, 3.2vw, 1.3rem); 
+      font-size: clamp(0.9rem, 3vw, 1.2rem); /* أصغر ليتناسب مع الشاشة */
   }
 
   #startButton {
       background: #FF8C42;
       color: white;
       border: none;
-      padding: 12px 30px;
-      font-size: 1.5rem;
+      padding: 10px 25px; /* تم تقليص حجم الزر */
+      font-size: 1.3rem; /* خط أصغر للزر */
       font-weight: bold;
       border-radius: 50px;
       cursor: pointer;
-      margin-top: 25px;
+      margin-top: 20px; /* أقل هوامش علوية */
       box-shadow: 0 5px 0 #d35400;
       transition: all 0.1s ease;
   }
@@ -312,6 +321,7 @@
             <li>**التصويب:** حرّك المؤشر (باللمس) لتوجيه المدفع نحو الفقاعة التي تحمل الإجابة الصحيحة.</li>
             <li>**الإطلاق:** اضغط أو انقر للإطلاق وتفجير الفقاعة الصحيحة.</li>
         </ul>
+        
         <button id="startButton">ابدأ اللعب الآن!</button>
     </div>
 </div>
