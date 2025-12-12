@@ -127,20 +127,20 @@ header h3 {
 }
 
 .answers {
-    flex-grow: 1; 
+    flex-grow: 1; 
     display: flex;
     flex-direction: column;
     gap: 5px; 
-    justify-content: flex-start; 
-    text-align: right;  
+    justify-content: flex-start; 
+    text-align: right; 
     padding: 5px 10px; 
     margin-top: 5px; 
     overflow-y: hidden; 
 }
 
 .answers span {
-    display: block;  
-    font-size: clamp(1.2rem, 4vw, 1.8rem);  
+    display: block;   
+    font-size: clamp(1.2rem, 4vw, 1.8rem);   
     margin: 0; 
     padding: 6px 10px;
     border-bottom: 1px solid rgba(255,255,255,0.2); 
@@ -150,7 +150,7 @@ header h3 {
     line-height: 1.4;
     white-space: normal; 
     height: auto; 
-    overflow: hidden; 
+    overflow: hidden; 
     text-overflow: ellipsis; 
 }
 
@@ -173,11 +173,11 @@ main {
 
 /* الإطار الخارجي للعبة */
 #game-frame {
-    width: 95vw;  
+    width: 95vw;   
     height: 100%; 
     flex-grow: 1; 
-    max-width: 700px;  
-    background: #E8F5E9;  
+    max-width: 700px;   
+    background: #E8F5E9;   
     border: 10px solid #FF8C42;
     border-radius: 20px;
     overflow: hidden;
@@ -211,7 +211,7 @@ main {
     width: 180px;
     height: 180px;
     border-radius: 50%;
-    display: none;  
+    display: none;   
     justify-content: center;
     align-items: center;
     box-shadow: 0 0 30px rgba(0,0,0,0.4);
@@ -232,7 +232,7 @@ main {
 @media (max-width: 480px) {
     header {
         height: 40vh;
-        min-height: 40vh;  
+        min-height: 40vh;   
         padding: 10px 8px;
     }
     
@@ -454,7 +454,7 @@ let aimLine;
 const BUBBLE_IMG_SIZE = 300;
 const totalQuestions = QUESTIONS.length; 
 let score = 0; 
-let wrongQuestions = []; 
+let wrongQuestions = []; // قائمة بأسئلة المراجعة (التي أجاب عليها خطأً)
 let gameFinished = false; 
 let scoreDisplay; 
 
@@ -651,24 +651,20 @@ function fire(scene){
 }
 
 /* ======================
-    8. منطق الإصابة (Hit) - 🛠️ تم إصلاح مشكلة تكرار سؤال المراجعة 🛠️
-====================== */
-/* ======================
-    8. منطق الإصابة (Hit) - 🛠️ تم التعديل للانتقال للسؤال التالي دائماً 🛠️
+    8. منطق الإصابة (Hit) - 🛠️ تم التعديل لمنطق الانتقال بعد الخطأ 🛠️
 ====================== */
 function bubbleHit(scene, bubble){
     const isCorrect = bubble.getData('isCorrect');
     const questionId = bubble.getData('questionId'); 
     bubble.destroy();
 
-    // نجد الفهرس سواء كان سؤال مراجعة أم لا (لم يعد مهمًا، لكن نتركه للوضوح)
-    const wrongIndex = wrongQuestions.findIndex(q => q.id === questionId); 
+    const wrongIndex = wrongQuestions.findIndex(q => q.id === questionId);
     const isReviewQuestion = wrongIndex > -1;
 
     if(isCorrect){
         scene.correctSound.play();
         
-        // ⬇️ منطق النقاط (ثابت) ⬇️
+        // ⬇️ منطق النقاط ⬇️
         const isPenalized = penalizedQuestions.includes(questionId);
         const alreadyScored = scoredQuestions.includes(questionId);
         
@@ -678,18 +674,31 @@ function bubbleHit(scene, bubble){
             scoredQuestions.push(questionId); 
         }
 
-        // ⬇️ منطق الانتقال (الجديد) ⬇️
+        // ⬇️ منطق الانتقال المُحكم ⬇️
+        
         if (isReviewQuestion) {
-            // الحالة 1: الإجابة الصحيحة على سؤال مراجعة (نُزيله)
+            // الحالة 1: الإجابة الصحيحة على سؤال مراجعة (المحاولة الثانية)
+            // نُزيل السؤال من قائمة المراجعة نهائياً
             wrongQuestions.splice(wrongIndex, 1);
             
         } else {
-            // الحالة 2: الإجابة الصحيحة في المحاولة الأولى (ننتقل للسؤال التالي في القائمة الأصلية)
+            // الحالة 2: الإجابة الصحيحة في المحاولة الأولى
+            // نزيد عداد الأسئلة الرئيسية للانتقال للسؤال التالي
             currentQ++;
         }
         
+        scene.time.delayedCall(500, () => {
+             // التحقق من نهاية اللعبة: هل انتهت الأسئلة الأصلية وهل قائمة المراجعة فارغة؟
+             if (currentQ >= totalQuestions && wrongQuestions.length === 0) {
+                 gameOver(scene, true); 
+             } else {
+                 // عرض السؤال التالي: سيعطي showQuestion الأولوية للأسئلة الأصلية أولاً
+                 showQuestion(scene);
+             }
+        });
+
     } else {
-        // ⬇️ منطق الخطأ (كما هو) ⬇️
+        // ⬇️ منطق الخطأ (تم التعديل للانتقال للسؤال التالي) ⬇️
         const flash = document.getElementById('wrongFlash');
         const mark = document.getElementById('errorMark');
 
@@ -703,11 +712,13 @@ function bubbleHit(scene, bubble){
 
         let currentQuestion;
         
-        // تحديد السؤال الحالي (سؤال المراجعة أو السؤال الجديد)
+        // إذا كان سؤال مراجعة، نأخذ بياناته من wrongQuestions
         if (isReviewQuestion) {
-            currentQuestion = wrongQuestions[0]; // سؤال المراجعة الأول
-        } else if (currentQ < totalQuestions) {
-            currentQuestion = QUESTIONS[currentQ]; // السؤال الجديد
+             currentQuestion = wrongQuestions[0];
+        } 
+        // إذا كان سؤال جديد (أو انتهت المراجعة)، نأخذ بياناته من QUESTIONS
+        else if (currentQ < totalQuestions) {
+             currentQuestion = QUESTIONS[currentQ]; 
         } else {
              return; 
         }
@@ -727,43 +738,36 @@ function bubbleHit(scene, bubble){
              });
         }
         
-        // ⬇️ منطق الانتقال (الجديد): الانتقال للسؤال التالي مباشرة بعد الخطأ ⬇️
+        // 🔴 التعديل هنا: زيادة عداد الأسئلة الأصلية للانتقال للسؤال التالي إذا لم يكن سؤال مراجعة
         if (!isReviewQuestion) {
-            // إذا كان خطأ على سؤال جديد، نزيد العداد للانتقال للسؤال التالي
-            currentQ++;
+            currentQ++; 
         }
-        // ملاحظة: إذا كان خطأ على سؤال مراجعة، فإنه يبقى في القائمة لحين الإجابة عليه صحيحاً، 
-        // لكننا ننتقل للسؤال التالي في القائمة الرئيسية إذا لم نكن في المراجعة. 
+
+        scene.time.delayedCall(600, () => {
+            // عرض السؤال التالي (الأصلي التالي أو أول سؤال مراجعة إذا انتهت الأسئلة الأصلية)
+            showQuestion(scene); 
+        });
     }
-    
-    // ⬇️ منطق الانتقال الموحد بعد 500 ملي ثانية ⬇️
-    scene.time.delayedCall(500, () => {
-         // التحقق من نهاية اللعبة: هل انتهت الأسئلة الأصلية وهل قائمة المراجعة فارغة؟
-        if (currentQ >= totalQuestions && wrongQuestions.length === 0) {
-             gameOver(scene, true); 
-        } else {
-             // عرض السؤال التالي: سيعطي showQuestion الأولوية لقائمة المراجعة
-             showQuestion(scene);
-        }
-    });
 }
+
 /* ======================
-    9. عرض السؤال وتوليد الفقاعات 
+    9. عرض السؤال وتوليد الفقاعات - 🛠️ تم التعديل على منطق الأولويات 🛠️
 ====================== */
 function showQuestion(scene){
     if (gameFinished) return;
 
     let q;
     
-    // ⬇️ أولاً: عرض الأسئلة الخاطئة للمراجعة ⬇️
-    if (wrongQuestions.length > 0) {
-        q = wrongQuestions[0]; 
-    } 
-    // ثانياً: عرض الأسئلة العادية بالتسلسل
-    else if (currentQ < totalQuestions) {
+    // 🔴 المنطق المُعدّل: الأولوية للأسئلة الأصلية أولاً
+    // 1. عرض الأسئلة العادية بالتسلسل
+    if (currentQ < totalQuestions) {
         q = QUESTIONS[currentQ];
     } 
-    // ثالثاً: إذا انتهت جميع الأسئلة
+    // 2. ثانياً: إذا انتهت الأسئلة الأصلية، نعرض أسئلة المراجعة 
+    else if (wrongQuestions.length > 0) {
+        q = wrongQuestions[0]; 
+    }
+    // 3. ثالثاً: إذا انتهت جميع الأسئلة
     else {
         gameOver(scene, true);
         return;
