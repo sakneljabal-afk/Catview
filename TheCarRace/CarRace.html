@@ -283,6 +283,10 @@
             margin-bottom: 20px;
         }
         
+        .options-container {
+            margin-bottom: 20px; /* مسافة قبل زر الإكمال */
+        }
+
         .option {
             padding: 12px;
             font-size: 1rem;
@@ -308,6 +312,27 @@
             color: #fff;
             font-weight: bold;
         }
+        
+        /* ⬇️ تنسيق زر إكمال اللعب الجديد ⬇️ */
+        #continueQuizBtn {
+            display: none; /* يبدأ مخفياً */
+            width: 100%;
+            padding: 15px;
+            background-color: #4cc9f0;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        #continueQuizBtn:hover {
+            background-color: #3aa0c5;
+        }
+        /* ⬆️ نهاية تنسيق زر إكمال اللعب الجديد ⬆️ */
+
 
         .highlight {
             color: #f72585;
@@ -403,7 +428,8 @@
         </div>
         <div class="question-text" id="questionText"></div>
         <div class="options-container" id="optionsContainer"></div>
-    </div>
+        <button id="continueQuizBtn">أكمل اللعب</button>
+        </div>
     
     <div class="footer">
         <p>منصة تفاعلية تعليمية تهدف إلى تعزيز استيعاب المعلومات المقررة بطريقة مبتكرة ومحفزة بعيداً عن الأساليب التقليدية.</p>
@@ -443,6 +469,8 @@
         
         const introModal = document.getElementById('introModal'); // عنصر النافذة المنبثقة
         const startBtn = document.getElementById('startBtn');     // زر بدء اللعب
+        // ⬇️ جلب زر إكمال اللعب الجديد ⬇️
+        const continueQuizBtn = document.getElementById('continueQuizBtn');
 
         // المشهد الرئيسي للعبة
         class GameScene extends Phaser.Scene {
@@ -469,7 +497,7 @@
                 this.load.audio('winSound', '../assets/win.mp3'); 
             }
 
-            // ... (دوال توليد الأنسجة: createCarTexture, createWideQuestionBoxTexture, createBackgroundObjectTextures, createFinishLineTexture تبقى كما هي)
+            // ... (دوال توليد الأنسجة تبقى كما هي)
             
             createCarTexture() {
                 const carGraphics = this.add.graphics({ add: false });
@@ -643,6 +671,11 @@
                     introModal.style.display = 'none';
                     this.startGame();
                 };
+                
+                // ⬇️ ربط زر إكمال اللعب الجديد بوظيفة استئناف اللعبة ⬇️
+                continueQuizBtn.onclick = () => {
+                    this.resumeGame();
+                };
             }
             
             // ⬇️ دالة بدء اللعبة (لإعادة تشغيل الفيزياء والمؤقتات) ⬇️
@@ -654,7 +687,7 @@
             }
             // ⬆️ نهاية دالة بدء اللعبة ⬆️
 
-            // ... (باقي دوال المشهد: createBackground, createRoad, generateBackgroundObject, spawnFinishLine, onCrossFinishLine, update, generateQuestionBox, hitQuestionBox, showQuestion, checkAnswer, findAndRemoveQuestionBox, resumeGame, gameOver, showSummaryBox تبقى كما هي مع التعديلات السابقة)
+            // ... (باقي دوال المشهد: createBackground, createRoad, generateBackgroundObject, spawnFinishLine, onCrossFinishLine, update تبقى كما هي)
 
             createBackground() {
                 const graphics = this.add.graphics();
@@ -870,6 +903,9 @@
             }
             
             showQuestion(questionData) {
+                // ⬇️ إخفاء زر الإكمال عند عرض السؤال ⬇️
+                continueQuizBtn.style.display = 'none';
+
                 document.getElementById('questionText').textContent = questionData.q;
                 
                 const optionsContainer = document.getElementById('optionsContainer');
@@ -913,9 +949,11 @@
                     
                     this.findAndRemoveQuestionBox(); 
                     
+                    // ⬇️ عند الإجابة الصحيحة، يتم عرض زر الإكمال ⬇️
                     setTimeout(() => {
-                        this.resumeGame();
-                    }, 1500);
+                        continueQuizBtn.style.display = 'block';
+                    }, 500); // تأخير بسيط لتركيز الانتباه
+                    
                 } else {
                     this.wrongSound.play(); 
                     selectedOptionElement.classList.add('incorrect');
@@ -941,11 +979,12 @@
                     errorOverlay.style.display = 'flex';
                     errorIcon.style.opacity = 1;
                     
+                    // ⬇️ عند الإجابة الخاطئة، يتم عرض زر الإكمال بعد عرض مؤشر الخطأ ⬇️
                     setTimeout(() => {
                         errorIcon.style.opacity = 0;
                         errorOverlay.style.display = 'none';
-                        this.resumeGame();
-                    }, 4000);
+                        continueQuizBtn.style.display = 'block';
+                    }, 2000); // زيادة التأخير ليشمل ظهور مؤشر الخطأ
                 }
             }
 
@@ -970,6 +1009,9 @@
             }
 
             resumeGame() {
+                // ⬇️ إخفاء زر الإكمال ⬇️
+                continueQuizBtn.style.display = 'none';
+
                 questionUI.style.display = 'none';
                 scrollSpeed = baseSpeed;
                 this.physics.resume();
@@ -1075,5 +1117,3 @@
     </script>
 </body>
 </html>
-
-
