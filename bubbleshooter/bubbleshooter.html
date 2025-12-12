@@ -7,178 +7,159 @@
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 
 <style>
-  /* === تنسيقات شاشة النهاية (مضافة) === */
-  .summary-overlay {
-      position: fixed; 
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.95);
-      display: none; 
-      justify-content: center;
-      align-items: center;
-      z-index: 5000;
-  }
+/* === تنسيقات شاشة النهاية (مضافة) === */
+.summary-overlay {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    display: none; 
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+}
 
-  .summary-content {
-      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
-      border-radius: 15px;
-      padding: 25px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
-      border: 4px solid #f72585;
-      width: 95%;
-      max-width: 750px;
-      max-height: 95vh;
-      display: flex;
-      flex-direction: column;
-      text-align: center;
-  }
+.summary-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+    border: 4px solid #f72585;
+    width: 95%;
+    max-width: 750px;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
 
-  .scrollable-review {
-      overflow-y: auto;
-      max-height: calc(95vh - 120px);
-      margin: 5px 0;
-      padding: 8px;
-      border: 1px dashed #4cc9f0;
-      text-align: right;
-      line-height: 1.8;
-      font-size: 22px;
-      white-space: pre-wrap;
-      color: #fff;
-  }
+.scrollable-review {
+    overflow-y: auto;
+    max-height: calc(95vh - 120px);
+    margin: 5px 0;
+    padding: 8px;
+    border: 1px dashed #4cc9f0;
+    text-align: right;
+    line-height: 1.8;
+    font-size: 22px;
+    white-space: pre-wrap;
+    color: #fff;
+}
 
-  .summary-content h2 {
-      font-size: 32px;
-      color: #4cc9f0;
-      margin-bottom: 5px;
-  }
+.summary-content h2 {
+    font-size: 32px;
+    color: #4cc9f0;
+    margin-bottom: 5px;
+}
 
-  .summary-content p {
-      font-size: 24px;
-      color: #2ecc71;
-      font-weight: bold;
-      margin-bottom: 5px;
-  }
+.summary-content p {
+    font-size: 24px;
+    color: #2ecc71;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
 
-  .summary-content h3 {
-      font-size: 20px;
-      color: #fff;
-      border-bottom: 1px solid #fff;
-      padding-bottom: 3px;
-  }
+.summary-content h3 {
+    font-size: 20px;
+    color: #fff;
+    border-bottom: 1px solid #fff;
+    padding-bottom: 3px;
+}
 
-  .modal-btn {
-      display: block;
-      width: 80%;
-      margin: 20px auto 0;
-      padding: 15px 20px;
-      background-color: #f72585;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 1.4rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-  }
+.modal-btn {
+    display: block;
+    width: 80%;
+    margin: 20px auto 0;
+    padding: 15px 20px;
+    background-color: #f72585;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
 
-  .modal-btn:hover {
-      background-color: #d11c70;
-  }
-  
-  /* === تنسيقات الصفحة العامة === */
-  body {
+.modal-btn:hover {
+    background-color: #d11c70;
+}
+
+/* === تنسيقات الصفحة العامة === */
+body {
     margin: 0;
-    /* خلفية برتقالية دافئة ومناسبة للطفل 12 سنة */
     background: linear-gradient(135deg, #FFD580 0%, #FFB347 100%);
     font-family: 'Segoe UI', 'Tajawal', Tahoma, Geneva, Verdana, sans-serif;
-    /* مهم لتعطيل الإيماءات غير المرغوب فيها على الموبايل */
     touch-action: none;  
     overflow: hidden;  
     height: 100vh;
     display: flex;
     flex-direction: column;
-  }
+}
 
-  /* === رأس الصفحة (السؤال) === */
-  header {
+/* === رأس الصفحة (السؤال) === */
+header {
     background: #2c3e50;  
     color: #fff;
     text-align: center;
-    padding: 10px 15px; /* تم تقليل البادينج */
-    
-    /* 🌟 الحل الجذري: تثبيت ارتفاع الرأس لـ 40% من ارتفاع الشاشة */
+    padding: 10px 15px;
     height: 40vh; 
     min-height: 40vh;
     max-height: 40vh; 
-    
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* يبدأ المحتوى من الأعلى */
+    justify-content: flex-start;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     z-index: 10;
-    
-    /* 🌟 الحل الجذري: منع التمرير نهائياً */
     overflow-y: hidden; 
-  }
+}
 
-  header h3 {
-    margin: 5px 0 5px 0; /* تم تقليل الهوامش */
-    /* 🌟 التعديل: مقاس خط مرن ومناسب لـ 40% من الشاشة */
+header h3 {
+    margin: 5px 0 5px 0;
     font-size: clamp(1.6rem, 5vw, 2.2rem);  
     color: #FFD700;
     font-weight: bold;
     line-height: 1.3;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-  }
+}
 
- .answers {
-    /* 🌟 الحل الجذري: استخدام فليكس لتوزيع الخيارات على المساحة المتاحة */
-    flex-grow: 1; 
-    display: flex;
-    flex-direction: column; /* ترتيب الخيارات عمودياً */
-    
-    /* ✅ التصحيح 1: ضبط المسافة بين العناصر لـ 5 بكسل ثابتة */
-    gap: 5px; 
-    
-    /* ✅ التصحيح 2: ترك التوزيع يبدأ من الأعلى (لمنع التمدد العشوائي) */
-    justify-content: flex-start; 
-    
-    text-align: right;  
-    padding: 5px 10px; 
-    margin-top: 5px; 
-    overflow-y: hidden; 
-  }
-  
- .answers span {
-    display: block;  
-    /* 🌟 التعديل: مقاس خط مرن ومناسب */
-    font-size: clamp(1.2rem, 4vw, 1.8rem);  
-    margin: 0; /* ✅ تم إزالة الهوامش العمودية حيث تم استبدالها بـ gap */
-    padding: 6px 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.2); 
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    font-weight: 600;
-    line-height: 1.4;
-    
-    /* ✅ التصحيح 3: السماح للنص بالالتفاف على سطرين أو أكثر */
-    white-space: normal; 
-    height: auto; 
-    
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-  }
-  
-  .answers span:last-child {
-      border-bottom: none;
-  }
+.answers {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    gap: 5px; 
+    justify-content: flex-start; 
+    text-align: right;  
+    padding: 5px 10px; 
+    margin-top: 5px; 
+    overflow-y: hidden; 
+}
 
-  /* === منطقة اللعبة (Main) === */
-  main {
-    /* 🌟 الحل الجذري: تثبيت ارتفاع منطقة اللعبة لـ 60% */
+.answers span {
+    display: block;  
+    font-size: clamp(1.2rem, 4vw, 1.8rem);  
+    margin: 0; 
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.2); 
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: normal; 
+    height: auto; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+}
+
+.answers span:last-child {
+    border-bottom: none;
+}
+
+/* === منطقة اللعبة (Main) === */
+main {
     flex: 1;  
     height: 60vh;
     max-height: 60vh;
@@ -187,33 +168,30 @@
     justify-content: center;
     align-items: center;
     position: relative;
-    padding: 5px; /* تم تقليل البادينج */
-  }
+    padding: 5px;
+}
 
-  /* الإطار الخارجي للعبة */
-  #game-frame {
+/* الإطار الخارجي للعبة */
+#game-frame {
     width: 95vw;  
-    /* 🌟 الحل الجذري: جعل ارتفاع الإطار يملأ الـ 60% المتاحة */
     height: 100%; 
     flex-grow: 1; 
     max-width: 700px;  
-    /* خلفية برتقالية خفيفة ومناسبة للأطفال */
     background: #E8F5E9;  
-    /* إطار خارجي ملون وجذاب للأطفال */
-    border: 10px solid #FF8C42; /* تم تقليل سمك الإطار */
+    border: 10px solid #FF8C42;
     border-radius: 20px;
     overflow: hidden;
     position: relative;
     box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  }
+}
 
-  #game-container {
+#game-container {
     width: 100%;
     height: 100%;
-  }
+}
 
-  /* === مؤثرات الخطأ === */
-  #wrongFlash {
+/* === مؤثرات الخطأ === */
+#wrongFlash {
     position: fixed;
     inset: 0;
     background: rgba(255, 0, 0, 0);
@@ -223,10 +201,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-  }
+}
 
-  /* علامة الخطأ الكبيرة */
-  #errorMark {
+/* علامة الخطأ الكبيرة */
+#errorMark {
     font-size: 10rem;
     color: white;
     background: rgba(231, 76, 60, 0.9);
@@ -239,138 +217,138 @@
     box-shadow: 0 0 30px rgba(0,0,0,0.4);
     border: 8px solid white;
     font-weight: bold;
-  }
+}
 
-  /* تأثيرات تفاعلية للخيارات عند اللمس */
-  @media (hover: hover) {
+/* تأثيرات تفاعلية للخيارات عند اللمس */
+@media (hover: hover) {
     .answers span:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-      transform: scale(1.02);
-      transition: transform 0.2s;
+        background-color: rgba(255, 255, 255, 0.2);
+        transform: scale(1.02);
+        transition: transform 0.2s;
     }
-  }
+}
 
-  /* تحسينات للشاشات الصغيرة جداً */
-  @media (max-width: 480px) {
+/* تحسينات للشاشات الصغيرة جداً */
+@media (max-width: 480px) {
     header {
-      height: 40vh; /* تثبيت الارتفاع لـ 40% */
-      min-height: 40vh;  
-      padding: 10px 8px; /* تعديل البادينج */
+        height: 40vh;
+        min-height: 40vh;  
+        padding: 10px 8px;
     }
     
     header h3 {
-      font-size: clamp(1.4rem, 4.5vw, 2.0rem);
+        font-size: clamp(1.4rem, 4.5vw, 2.0rem);
     }
     
     .answers span {
-      font-size: clamp(1.1rem, 3.5vw, 1.6rem);
-      padding: 5px 8px;
+        font-size: clamp(1.1rem, 3.5vw, 1.6rem);
+        padding: 5px 8px;
     }
 
     main {
-      height: 60vh; /* تثبيت الارتفاع لـ 60% */
-      max-height: 60vh;
-      min-height: 60vh;
+        height: 60vh;
+        max-height: 60vh;
+        min-height: 60vh;
     }
     
     #game-frame {
-      height: 100%; /* يجب أن يملأ الإطار مساحة الـ main */
-      flex-grow: 1;
-      border-width: 8px;
+        height: 100%;
+        flex-grow: 1;
+        border-width: 8px;
     }
-  }
+}
 
-  /* === تنسيقات شاشة التقديم (تمت استعادة النسخة الأصلية) === */
-  #introScreen {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, #FFD580 0%, #FFB347 100%); 
-      z-index: 1000; 
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      color: #2c3e50; /* لون النص الأساسي */
-      text-align: center;
-      transition: opacity 0.5s ease;
-      opacity: 1;
-  }
-  
-  #introScreen.hidden {
-      opacity: 0;
-      pointer-events: none;
-  }
+/* === تنسيقات شاشة التقديم === */
+#introScreen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #FFD580 0%, #FFB347 100%); 
+    z-index: 1000; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: #2c3e50;
+    text-align: center;
+    transition: opacity 0.5s ease;
+    opacity: 1;
+}
 
-  .intro-content {
-      background: #fff;
-      color: #2c3e50;
-      padding: 30px; 
-      border-radius: 15px;
-      max-width: 500px;
-      width: 90%;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-      max-height: 90vh; 
-      overflow-y: auto; 
-      box-sizing: border-box; 
-  }
+#introScreen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
 
-  .intro-content h2 {
-      color: #FF8C42;
-      font-size: 2.5rem;
-      margin-top: 0;
-      border-bottom: 3px solid #FF8C42;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-  }
+.intro-content {
+    background: #fff;
+    color: #2c3e50;
+    padding: 30px; 
+    border-radius: 15px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    max-height: 90vh; 
+    overflow-y: auto; 
+    box-sizing: border-box; 
+}
 
-  .intro-content p {
-      font-size: 1.1rem; 
-      line-height: 1.6;
-      margin-bottom: 15px;
-      text-align: center;
-  }
-  
-  .intro-content h3 {
-      color: #2c3e50;
-      font-size: 1.3rem;
-      margin-top: 20px;
-  }
-  
-  .intro-content ul {
-      list-style-type: disc;
-      padding-right: 20px;
-      text-align: right;
-  }
-  
-  .intro-content ul li {
-      background: #f8f8f8;
-      padding: 8px;
-      margin-bottom: 5px;
-      border-radius: 5px;
-      font-weight: 500;
-      font-size: 1rem;
-      border-right: 3px solid #2c3e50;
-  }
+.intro-content h2 {
+    color: #FF8C42;
+    font-size: 2.5rem;
+    margin-top: 0;
+    border-bottom: 3px solid #FF8C42;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
 
-  #startButton {
-      background: #2c3e50;
-      color: white;
-      border: none;
-      padding: 15px 40px;
-      font-size: 1.5rem;
-      font-weight: bold;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-top: 30px;
-      box-shadow: 0 5px 0 #1c2833;
-      transition: all 0.1s ease;
-  }
+.intro-content p {
+    font-size: 1.1rem; 
+    line-height: 1.6;
+    margin-bottom: 15px;
+    text-align: center;
+}
 
-  #startButton:active {
-      transform: translateY(5px);
-      box-shadow: 0 0 0 #1c2833;
-  }
+.intro-content h3 {
+    color: #2c3e50;
+    font-size: 1.3rem;
+    margin-top: 20px;
+}
+
+.intro-content ul {
+    list-style-type: disc;
+    padding-right: 20px;
+    text-align: right;
+}
+
+.intro-content ul li {
+    background: #f8f8f8;
+    padding: 8px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    font-weight: 500;
+    font-size: 1rem;
+    border-right: 3px solid #2c3e50;
+}
+
+#startButton {
+    background: #2c3e50;
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 30px;
+    box-shadow: 0 5px 0 #1c2833;
+    transition: all 0.1s ease;
+}
+
+#startButton:active {
+    transform: translateY(5px);
+    box-shadow: 0 0 0 #1c2833;
+}
 </style>
 </head>
 
@@ -378,15 +356,7 @@
 
 <div id="introScreen">
     <div class="intro-content">
-        <h2>🚀 لعبة المدفع والفقاعات</h2>
-        <p>مرحباً أيها البطل! هل أنت مستعد لاختبار معلوماتك العلمية في تحدي ممتع؟</p>
-        
-        <h3>🏆 الهدف من اللعبة</h3>
-        <ul>
-            <li>التعلم والمراجعة.</li>
-            <li>الاستمتاع وقضاء وقت مسلي.</li>
-        </ul>
-        
+        <h1>🚀 لعبة المدفع والفقاعات</h1>
         <h3>🎯 طريقة اللعب</h3>
         <ul>
             <li>**الإجابة أولاً:** اقرأ السؤال وخيارات الإجابة في المنطقة العلوية.</li>
@@ -399,16 +369,16 @@
 <header id="questionHeader"></header>
 
 <main>
-  <section id="game-frame">
-    <div id="score-display" style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.7); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 1.2rem; border: 2px solid #FFD700; z-index: 100;">
-        النقاط: <span>0</span>
-    </div>
-    <div id="game-container"></div>
-  </section>
+    <section id="game-frame">
+        <div id="score-display" style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.7); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 1.2rem; border: 2px solid #FFD700; z-index: 100;">
+            النقاط: <span>0</span>
+        </div>
+        <div id="game-container"></div>
+    </section>
 </main>
 
 <div id="wrongFlash">
-  <div id="errorMark">✖</div>
+    <div id="errorMark">✖</div>
 </div>
 
 <div class="summary-overlay" id="summaryOverlay">
@@ -434,7 +404,7 @@ function shuffleArray(array) {
 }
 
 /* ======================
-    1. البيانات (الأسئلة) - تم إضافة ID لكل سؤال
+    1. البيانات (الأسئلة) - 7 أسئلة
 ====================== */
 const QUESTIONS = [
     { "id": 1, "q": "تعيش شجرة المانجروف في بيئة المياه المالحة، ولهذا تمتلك تكيفاً تركيبياً هو:", "o": [ "أوراق عريضة تطفو على الماء", "جذور قصيرة ضعيفة", "جذور طويلة وقوية لمقاومة الأمواج" ], "a": 2 },
@@ -442,7 +412,8 @@ const QUESTIONS = [
     { "id": 3, "q": "البيئة التي ينمو فيها نبات زنبق الماء (اللوتس) هي المستنقعات، وتتميز هذه البيئة بـ:", "o": [ "مياه مالحة وأمواج قوية", "تربة جافة ودرجات حرارة مرتفعة", "مياه راكدة وكميات كبيرة من الطين" ], "a": 2 },
     { "id": 4, "q": "يمتلك نبات زنبق الماء أوراقاً عريضة تطفو على سطح الماء، وهذا التكيف التركيبي يساعده على:", "o": [ "مقاومة التيارات المائية", "تخزين الماء الزائد", "امتصاص قدر كبير من ضوء الشمس" ], "a": 2 },
     { "id": 5, "q": "ما هي البيئة التي تتكيف شجرة الصنوبر للعيش فيها؟", "o": [ "المستنقعات المائية", "الصحاري الجافة", "المناطق الثلجية شديدة البرودة" ], "a": 2 },
-    { "id": 6, "q": "تنمو شجرة الصنوبر على شكل مثلث، وهذا التكيف التركيبي يسمح بـ:", "o": [ "جذب المزيد من ضوء الشمس", "زيادة سرعة نمو الأغصان", "سهولة انزلاق الثلج من عليها دون كسر الفروع" ], "a": 2 }
+    { "id": 6, "q": "تنمو شجرة الصنوبر على شكل مثلث، وهذا التكيف التركيبي يسمح بـ:", "o": [ "جذب المزيد من ضوء الشمس", "زيادة سرعة نمو الأغصان", "سهولة انزلاق الثلج من عليها دون كسر الفروع" ], "a": 2 },
+    { "id": 7, "q": "أي من الحيوانات التالية يمتلك تكيفاً سلوكياً للهرب من الحرارة؟", "o": [ "أذن طويلة لتبريد الجسم", "فرش سميك", "الاختباء في الجحور نهاراً" ], "a": 2 } 
 ];
 
 /* ======================
@@ -453,7 +424,6 @@ const config = {
     parent: 'game-container',
     width: 600,
     height: 800,
-    // لون خلفية برتقالي خفيف ومناسب للأطفال
     backgroundColor: '#E8F5E9',
     scale: {
         mode: Phaser.Scale.FIT,
@@ -472,14 +442,14 @@ const config = {
 const game = new Phaser.Game(config);
 
 /* ======================
-    3. المتغيرات العامة - تم إضافة متغيرات النقاط ونهاية اللعبة
+    3. المتغيرات العامة (المُعدلة)
 ====================== */
 let cannon, bubbles, invisibleWall;
 let currentQ = 0;
 let canShoot = true;
 let missedShots = 0;
-let shootAngle = -90; // متغير لتخزين الزاوية
-let aimLine; // كائن خط التوجيه
+let shootAngle = -90; 
+let aimLine; 
 
 const BUBBLE_IMG_SIZE = 300;
 const totalQuestions = QUESTIONS.length; 
@@ -487,6 +457,11 @@ let score = 0;
 let wrongQuestions = []; 
 let gameFinished = false; 
 let scoreDisplay; 
+
+// قائمة لمعرفات الأسئلة التي تم احتساب نقاطها 
+let scoredQuestions = []; 
+// قائمة لمعرفات الأسئلة التي تم الإجابة عليها خطأً ولو مرة واحدة (مما يمنع احتساب نقاطها لاحقاً)
+let penalizedQuestions = [];
 
 
 /* ======================
@@ -509,12 +484,11 @@ document.getElementById('startButton').addEventListener('click', hideIntroScreen
     4. التحميل (Preload)
 ====================== */
 function preload(){
-    // ملاحظة: تم تعديل المسار هنا إلى 'assets/' ليتوافق مع التحميلات الأخرى في الكود الأصلي
-    this.load.image('cannon','assets/cannon.png');
-    this.load.image('shoot','assets/shoot.png');
-    this.load.image('bubble1','assets/bubble1.png');
-    this.load.image('bubble2','assets/bubble2.png');
-    this.load.image('bubble3','assets/bubble3.png');
+    this.load.image('cannon','bubbleassets/cannon.png');
+    this.load.image('shoot','bubbleassets/shoot.png');
+    this.load.image('bubble1','bubbleassets/bubble1.png');
+    this.load.image('bubble2','bubbleassets/bubble2.png');
+    this.load.image('bubble3','bubbleassets/bubble3.png');
     this.load.audio('correct','../assets/correct.mp3');
     this.load.audio('wrong','../assets/wrong.mp3');
     this.load.audio('win','../assets/win.mp3');
@@ -524,7 +498,7 @@ function preload(){
     5. الإنشاء (Create)
 ====================== */
 function create(){
-    // 🌟 التعديل الأول: خلط مصفوفة الأسئلة عند بدء اللعبة
+    // 🌟 خلط مصفوفة الأسئلة عند بدء اللعبة
     shuffleArray(QUESTIONS);
 
     const width = this.scale.width;
@@ -553,7 +527,6 @@ function create(){
     const cannonHeight = height * 0.10;
     const cannonScale = cannonHeight / 300;
 
-    // 🌟 التعديل المطلوب: تم تغيير موضع المدفع العمودي من 0.90 إلى 0.95
     cannon = this.add.sprite(width/2, height * 0.8, 'cannon') 
         .setScale(cannonScale)
         .setDepth(1);
@@ -607,7 +580,6 @@ function updateAimLine(scene, pointer) {
     shootAngle = Phaser.Math.Angle.Between(cannonX, cannonY, pointerX, pointerY);
 
     // لضمان الإطلاق للأعلى فقط
-    // إذا كانت الزاوية موجبة (تدل على الإطلاق للأسفل)، نجعلها قريبة من الصفر أو -180
     if (shootAngle > 0) {
         if (pointerX < cannonX) {
              shootAngle = Phaser.Math.DegToRad(-179); // لليسار
@@ -679,41 +651,54 @@ function fire(scene){
 }
 
 /* ======================
-    8. منطق الإصابة (Hit) - تم تعديله لإضافة النقاط وتسجيل الأخطاء
+    8. منطق الإصابة (Hit) - 🛠️ تم إصلاح مشكلة تكرار سؤال المراجعة 🛠️
 ====================== */
 function bubbleHit(scene, bubble){
     const isCorrect = bubble.getData('isCorrect');
     const questionId = bubble.getData('questionId'); 
     bubble.destroy();
 
+    const wrongIndex = wrongQuestions.findIndex(q => q.id === questionId);
+    const isReviewQuestion = wrongIndex > -1;
+
     if(isCorrect){
         scene.correctSound.play();
         
-        // ⬇️ تحديث النقاط ⬇️
-        score += 10;
-        scoreDisplay.textContent = score; 
-
-        // ⬇️ التحقق من إزالة السؤال من قائمة الأسئلة الخاطئة (إذا كان مكرر) ⬇️
-        const wrongIndex = wrongQuestions.findIndex(q => q.id === questionId);
-        if (wrongIndex > -1) {
-            // إزالة السؤال من المراجعة بعد الإجابة عليه صحيحاً
-            wrongQuestions.splice(wrongIndex, 1);
+        // ⬇️ منطق النقاط (ثابت) ⬇️
+        const isPenalized = penalizedQuestions.includes(questionId);
+        const alreadyScored = scoredQuestions.includes(questionId);
+        
+        if (!isPenalized && !alreadyScored) { 
+            score += 10;
+            scoreDisplay.textContent = score; 
+            scoredQuestions.push(questionId); 
         }
 
-        scene.time.delayedCall(500, () => {
-            // إذا لم نكن نراجع سؤالاً خاطئاً، ننتقل للسؤال التالي
-            if (wrongIndex === -1 && currentQ < totalQuestions) {
-                 currentQ++;
-            }
+        // ⬇️ منطق الانتقال المُحكم ⬇️
+        
+        if (isReviewQuestion) {
+            // الحالة 1: الإجابة الصحيحة على سؤال مراجعة (المحاولة الثانية)
+            // نُزيل السؤال من قائمة المراجعة نهائياً
+            wrongQuestions.splice(wrongIndex, 1);
             
-            // ⬇️ التحقق من نهاية اللعبة ⬇️
+        } else {
+            // الحالة 2: الإجابة الصحيحة في المحاولة الأولى
+            // نزيد عداد الأسئلة الرئيسية للانتقال للسؤال التالي
+            currentQ++;
+        }
+        
+        scene.time.delayedCall(500, () => {
+             // التحقق من نهاية اللعبة: هل انتهت الأسئلة الأصلية وهل قائمة المراجعة فارغة؟
             if (currentQ >= totalQuestions && wrongQuestions.length === 0) {
                  gameOver(scene, true); 
             } else {
+                 // عرض السؤال التالي: سيعطي showQuestion الأولوية لقائمة المراجعة إذا لم تكن فارغة
                  showQuestion(scene);
             }
         });
+
     } else {
+        // ⬇️ منطق الخطأ (كما هو) ⬇️
         const flash = document.getElementById('wrongFlash');
         const mark = document.getElementById('errorMark');
 
@@ -725,17 +710,25 @@ function bubbleHit(scene, bubble){
             mark.style.display = 'none';
         }, 400);
 
-        // ⬇️ تسجيل السؤال كإجابة خاطئة ⬇️
         let currentQuestion;
-        if (wrongQuestions.length > 0) {
+        
+        // إذا كان سؤال مراجعة، نأخذ بياناته من wrongQuestions
+        if (isReviewQuestion) {
             currentQuestion = wrongQuestions[0];
-        } else if (currentQ < totalQuestions) {
-            currentQuestion = QUESTIONS.find(q => q.id === questionId); // نجد السؤال من قائمة الأسئلة الأصلية باستخدام ID
+        } 
+        // إذا كان سؤال جديد (أو انتهت المراجعة)، نأخذ بياناته من QUESTIONS
+        else if (currentQ < totalQuestions) {
+            currentQuestion = QUESTIONS[currentQ]; 
         } else {
-             // لا يوجد سؤال لتسجيله كخطأ
              return; 
         }
 
+        // إضافة السؤال إلى قائمة العقوبة (يمنع النقاط)
+        if (currentQuestion && !penalizedQuestions.includes(currentQuestion.id)) {
+            penalizedQuestions.push(currentQuestion.id);
+        }
+
+        // إضافة السؤال لقائمة المراجعة (إذا لم يكن موجوداً)
         if (currentQuestion && !wrongQuestions.some(q => q.id === currentQuestion.id)) {
              wrongQuestions.push({
                  id: currentQuestion.id,
@@ -746,14 +739,14 @@ function bubbleHit(scene, bubble){
         }
         
         scene.time.delayedCall(600, () => {
-            // الاستمرار في السؤال الحالي/المراجع
+            // إعادة عرض السؤال نفسه (أول سؤال في قائمة المراجعة أو السؤال الجديد)
             showQuestion(scene); 
         });
     }
 }
 
 /* ======================
-    9. عرض السؤال وتوليد الفقاعات - تم تعديله لدعم مراجعة الأخطاء
+    9. عرض السؤال وتوليد الفقاعات 
 ====================== */
 function showQuestion(scene){
     if (gameFinished) return;
@@ -791,7 +784,7 @@ function showQuestion(scene){
 
     // بناء محتوى الخيارات في الـ HTML (يستخدم الترتيب العشوائي)
     let answersHtml = '';
-    for(let i = 0; i < shuffledOptions.length; i++) {
+    for(let i=0; i<shuffledOptions.length; i++) {
         answersHtml += `<span style="color:${colors[i]}">${i + 1}: ${shuffledOptions[i]}</span>`;
     }
 
@@ -823,7 +816,7 @@ function showQuestion(scene){
 
         // 🌟 تخزين حالة الإجابة الصحيحة و Question ID في الفقاعة
         b.setData('isCorrect', i === newCorrectIndex);
-        b.setData('questionId', q.id); // 🆕
+        b.setData('questionId', q.id); 
         
         b.setVelocity(
             Phaser.Math.Between(-50, 50),
@@ -849,6 +842,7 @@ function showSummaryBox(finalScore, title, reviewContent) {
 
     // 1. ملء المحتوى
     summaryTitle.textContent = title;
+    // الحد الأقصى للنقاط ليعكس عدد الأسئلة: 7 أسئلة * 10 نقاط = 70
     summaryScore.textContent = `النقاط المحتسبة: ${finalScore} / ${QUESTIONS.length * 10}`;
 
     scrollableReview.innerHTML = reviewContent;
@@ -863,7 +857,7 @@ function showSummaryBox(finalScore, title, reviewContent) {
     summaryOverlay.style.display = 'flex';
 }
 
-// ⬇️ دالة إنهاء اللعبة ⬇️
+// ⬇️ دالة إنهاء اللعبة (تم التعديل لعرض جميع الأسئلة) ⬇️
 function gameOver(scene, completed) {
     if (gameFinished) return;
     gameFinished = true; 
@@ -873,33 +867,39 @@ function gameOver(scene, completed) {
     document.getElementById('questionHeader').innerHTML = `<h3>انتهت اللعبة!</h3>`;
 
     const finalScore = score;
-    const maxScore = QUESTIONS.length * 10;
+    // الحد الأقصى للنقاط ليعكس عدد الأسئلة: 7 أسئلة * 10 نقاط = 70
+    const maxScore = QUESTIONS.length * 10; 
     let title = 'لعبة رائعة! 🌟';
     
     if (finalScore === maxScore) {
         title = 'مذهل! الإجابة على جميع الأسئلة بشكل صحيح! 🏆';
-    } else if (finalScore < maxScore && finalScore > 0) {
+    } else if (finalScore < maxScore && finalScore >= 0) {
         title = 'نتيجة جيدة! يمكنك المحاولة مرة أخرى لتحسينها! 💪';
-    } else if (finalScore === 0) {
-        title = 'لا بأس! حاول التركيز أكثر في المرة القادمة. 💡';
-    }
+    } 
 
     // تجهيز مراجعة الأسئلة
     let reviewContent = '';
     
-    if (wrongQuestions.length > 0) {
-        wrongQuestions.forEach((q, index) => {
-            const correctAnswer = q.o[q.a];
-            reviewContent += `
-                <p style="font-weight: bold; color: #f72585;">السؤال ${index + 1} (تمت الإجابة عليه خطأً):</p>
-                <p style="margin-right: 15px;">**${q.q}**</p>
-                <p style="margin-right: 15px; color: #4cc9f0;">الإجابة الصحيحة: ${correctAnswer}</p>
-                <hr style="border-color: #333; margin: 10px 0;">
-            `;
-        });
-    } else {
-         reviewContent = '<p style="font-weight: bold; color: #2ecc71; text-align: center;">🎉 لقد أجبت على جميع الأسئلة بنجاح في المحاولة الأخيرة!</p>';
-    }
+    // استعراض مصفوفة الأسئلة الأصلية بالكامل
+    QUESTIONS.forEach((q, index) => {
+        const correctAnswer = q.o[q.a];
+        
+        // التحقق مما إذا كان السؤال حصل على نقاط (أي تمت الإجابة عليه صحيحاً من أول مرة)
+        const wasScored = scoredQuestions.includes(q.id);
+        
+        const reviewTitleColor = wasScored ? '#2ecc71' : '#f72585'; // أخضر لـ Scored، أحمر لـ Not Scored
+        const reviewTitleEmoji = wasScored ? '✅' : '❌';
+        const reviewTitleText = wasScored ? '(تمت الإجابة عليها صحيحاً في المحاولة الأولى)' : '(لم يتم احتساب نقاطها)';
+        
+        reviewContent += `
+            <p style="font-weight: bold; color: ${reviewTitleColor};">
+                ${reviewTitleEmoji} السؤال ${index + 1} ${reviewTitleText}:
+            </p>
+            <p style="margin-right: 15px;">**${q.q}**</p>
+            <p style="margin-right: 15px; color: #4cc9f0;">الإجابة الصحيحة: ${correctAnswer}</p>
+            <hr style="border-color: #333; margin: 10px 0;">
+        `;
+    });
 
     // عرض شاشة الملخص
     showSummaryBox(finalScore, title, reviewContent);
