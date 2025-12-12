@@ -87,6 +87,99 @@
     background-color: #d11c70;
 }
 
+/* === تنسيقات نافذة الخطأ الجديدة (Modern Error Modal) === */
+.error-modal-overlay {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); /* خلفية معتمة */
+    display: none; /* تبدأ مخفية */
+    justify-content: center;
+    align-items: center;
+    z-index: 6000; /* أعلى من شاشة الملخص */
+}
+
+.error-modal-content {
+    background: #fff;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(255, 0, 0, 0.4);
+    border: 5px solid #ff4b4b; /* إطار أحمر جذاب */
+    width: 90%;
+    max-width: 550px;
+    text-align: center;
+    transform: scale(0.9);
+    animation: bounceIn 0.3s ease-out forwards;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.error-modal-content h2 {
+    font-size: 2.5rem;
+    color: #ff4b4b;
+    margin-bottom: 10px;
+}
+
+.error-modal-content p#modalMessage {
+    font-size: 1.4rem;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.correct-answer-box {
+    background-color: #fce4ec; /* وردي فاتح */
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border: 2px dashed #ff4b4b;
+}
+
+.correct-answer-box h3 {
+    color: #ff4b4b;
+    font-size: 1.2rem;
+    margin: 0 0 5px 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+#correctAnswerText {
+    font-size: 1.6rem;
+    color: #333;
+    font-weight: bold;
+    line-height: 1.4;
+}
+
+.modal-instruction {
+    font-size: 1rem;
+    color: #777;
+    margin-bottom: 15px;
+}
+
+.modal-btn-action {
+    display: block;
+    width: 90%;
+    margin: 15px auto 0;
+    padding: 15px 20px;
+    background-color: #4CAF50; /* زر أخضر للاستمرار */
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.modal-btn-action:hover {
+    background-color: #45a049;
+}
+
 /* === تنسيقات الصفحة العامة === */
 body {
     margin: 0;
@@ -190,7 +283,7 @@ main {
     height: 100%;
 }
 
-/* === مؤثرات الخطأ === */
+/* === مؤثرات الخطأ القديمة (تم تعطيلها الآن) === */
 #wrongFlash {
     position: fixed;
     inset: 0;
@@ -203,7 +296,6 @@ main {
     align-items: center;
 }
 
-/* علامة الخطأ الكبيرة */
 #errorMark {
     font-size: 10rem;
     color: white;
@@ -389,6 +481,21 @@ main {
         <div class="scrollable-review" id="scrollableReview">
         </div>
         <button class="modal-btn" id="restartBtn">👍 حسناً، أعد اللعب</button>
+    </div>
+</div>
+
+<div class="error-modal-overlay" id="errorModalOverlay">
+    <div class="error-modal-content">
+        <h2 id="modalTitle">يا للأسف! 😕</h2>
+        <p id="modalMessage">لقد أخطأت في اختيار الفقاعة.</p>
+        
+        <div class="correct-answer-box">
+            <h3>الإجابة الصحيحة هي:</h3>
+            <p id="correctAnswerText"></p>
+        </div>
+        
+        <p class="modal-instruction">سيتم تسجيل هذا السؤال للمراجعة لاحقاً.</p>
+        <button class="modal-btn-action" id="continueBtn">أكمل اللعب</button>
     </div>
 </div>
 <script>
@@ -651,7 +758,7 @@ function fire(scene){
 }
 
 /* ======================
-    8. منطق الإصابة (Hit) - 🛠️ تم التعديل لمنطق الانتقال بعد الخطأ 🛠️
+    8. منطق الإصابة (Hit) - 🛠️ تم التعديل لمنطق الانتقال بعد الخطأ وعرض النافذة 🛠️
 ====================== */
 function bubbleHit(scene, bubble){
     const isCorrect = bubble.getData('isCorrect');
@@ -698,18 +805,10 @@ function bubbleHit(scene, bubble){
         });
 
     } else {
-        // ⬇️ منطق الخطأ (تم التعديل للانتقال للسؤال التالي) ⬇️
-        const flash = document.getElementById('wrongFlash');
-        const mark = document.getElementById('errorMark');
-
+        // ⬇️ منطق الخطأ (تم التعديل للانتقال للسؤال التالي وعرض النافذة) ⬇️
+        
         scene.wrongSound.play();
-        flash.style.background = 'rgba(255,0,0,0.4)';
-        mark.style.display = 'flex';
-        setTimeout(() => {
-            flash.style.background = 'rgba(255,0,0,0)';
-            mark.style.display = 'none';
-        }, 400);
-
+        
         let currentQuestion;
         
         // إذا كان سؤال مراجعة، نأخذ بياناته من wrongQuestions
@@ -738,23 +837,60 @@ function bubbleHit(scene, bubble){
              });
         }
         
-        // 🔴 التعديل هنا: زيادة عداد الأسئلة الأصلية للانتقال للسؤال التالي إذا لم يكن سؤال مراجعة
+        // 🔴 زيادة عداد الأسئلة الأصلية للانتقال للسؤال التالي إذا لم يكن سؤال مراجعة
         if (!isReviewQuestion) {
             currentQ++; 
         }
 
-        scene.time.delayedCall(600, () => {
-            // عرض السؤال التالي (الأصلي التالي أو أول سؤال مراجعة إذا انتهت الأسئلة الأصلية)
-            showQuestion(scene); 
+        scene.time.delayedCall(100, () => {
+             // 💡 إيقاف الفيزياء ومسح الفقاعات وعرض النافذة الجديدة
+             scene.physics.pause(); 
+             bubbles.clear(true, true); 
+             showErrorModal(scene, currentQuestion); 
         });
     }
 }
 
 /* ======================
-    9. عرض السؤال وتوليد الفقاعات - 🛠️ تم التعديل على منطق الأولويات 🛠️
+    11. وظيفة عرض نافذة الخطأ (المضافة)
+====================== */
+function showErrorModal(scene, question) {
+    const overlay = document.getElementById('errorModalOverlay');
+    const answerText = document.getElementById('correctAnswerText');
+    const continueBtn = document.getElementById('continueBtn');
+    
+    // 1. تحديد الإجابة الصحيحة من السؤال
+    const correctAnswer = question.o[question.a];
+    answerText.textContent = correctAnswer;
+
+    // 2. إظهار النافذة
+    overlay.style.display = 'flex';
+    
+    // 3. تعطيل الإطلاق مؤقتاً
+    canShoot = false;
+    
+    // 4. ربط زر "أكمل اللعب"
+    continueBtn.onclick = () => {
+        // إخفاء النافذة
+        overlay.style.display = 'none';
+        
+        // الانتقال إلى السؤال التالي (الذي تم حسابه في bubbleHit)
+        showQuestion(scene);
+        
+        // تفعيل الإطلاق
+        canShoot = true;
+    };
+}
+
+
+/* ======================
+    9. عرض السؤال وتوليد الفقاعات - 🛠️ تم التعديل على منطق الأولويات واستئناف الفيزياء 🛠️
 ====================== */
 function showQuestion(scene){
     if (gameFinished) return;
+
+    // 💡 استئناف الفيزياء لتبدأ الفقاعات بالحركة مجدداً
+    scene.physics.resume(); 
 
     let q;
     
@@ -835,7 +971,7 @@ function showQuestion(scene){
 }
 
 /* ======================
-    10. وظائف نهاية اللعبة والملخص - مضافة
+    10. وظائف نهاية اللعبة والملخص
 ====================== */
 
 // ⬇️ دالة عرض ملخص اللعبة ⬇️
@@ -863,7 +999,7 @@ function showSummaryBox(finalScore, title, reviewContent) {
     summaryOverlay.style.display = 'flex';
 }
 
-// ⬇️ دالة إنهاء اللعبة (تم التعديل لعرض جميع الأسئلة) ⬇️
+// ⬇️ دالة إنهاء اللعبة ⬇️
 function gameOver(scene, completed) {
     if (gameFinished) return;
     gameFinished = true; 
